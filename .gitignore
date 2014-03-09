@@ -1,0 +1,17 @@
+# Mac OS X
+.DS_Store
+*.swp
+*.lock
+
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+*.moved-aside
+*~.nib
+project.xcworkspace/
+xcuserdata
+DerivedData/
+build/
