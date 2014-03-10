@@ -54,6 +54,9 @@ namespace fibio { namespace fibers { namespace detail {
         for(std::thread &t : threads_) {
             t.join();
         }
+        threads_.clear();
+        started_=false;
+        io_service_.reset();
     }
     
     /*
