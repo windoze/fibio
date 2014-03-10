@@ -4,8 +4,6 @@ TODO List for Fiberized.IO
 BUGS
 ----
 * scheduler::add_thread caused problem
-* Detach fiber doesn't work well with fiberize(...), as the std::{cin,cout,cerr} switch streambuf back when fiberized main exists.
-  User must make sure that main fiber exists *after* all fibers using them.
 
 Core
 ----
