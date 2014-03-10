@@ -147,7 +147,9 @@ namespace fibio { namespace fibers { namespace detail {
                 p.f_->schedule();
             }
         });
-        fiber_object::current_fiber_->yield();
+        if (fiber_object::current_fiber_) {
+            fiber_object::current_fiber_->yield();
+        }
     }
     
     void condition_variable_object::notify_all() {
@@ -177,7 +179,9 @@ namespace fibio { namespace fibers { namespace detail {
                 }
             });
         }
-        fiber_object::current_fiber_->yield();
+        if (fiber_object::current_fiber_) {
+            fiber_object::current_fiber_->yield();
+        }
     }
 }}} // End of namespace fibio::fibers::detail
 
