@@ -27,6 +27,7 @@ namespace fibio { namespace fibers {
         // void add_worker_thread(size_t nthr=1);
         
         static scheduler get_instance();
+        static void reset_instance();
         
         std::shared_ptr<detail::scheduler_object> m_;
     };
@@ -48,6 +49,8 @@ namespace fibio { namespace fibers {
 
         fiber(std::function<void()> &&f);
         fiber(scheduler &s, std::function<void()> &&f);
+        void set_name(const std::string &s);
+        std::string get_name();
         
         std::shared_ptr<detail::fiber_object> m_;
     };

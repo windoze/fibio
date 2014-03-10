@@ -13,8 +13,6 @@
 #include <fibio/fibers/fss.hpp>
 #include <fibio/fibers/mutex.hpp>
 #include <fibio/fibers/condition_variable.hpp>
-#include <fibio/stream/iostream.hpp>
-#include <fibio/fibers/fiberize.hpp>
 
 #include "fiber_object.hpp"
 #include "scheduler_object.hpp"
@@ -30,20 +28,25 @@ namespace fibio { namespace fibers { namespace detail {
     , entry_(std::move(entry))
     , runner_(([this](caller_t &c){ runner_wrapper(c); }))
     , caller_(0)
-    {
-        // std::cout << "Create" << reinterpret_cast<unsigned long>(this) << std::endl;
+    {}
+    
+    fiber_object::~fiber_object() {
+        //printf("Destroy fiber 0x%lx \n", reinterpret_cast<unsigned long>(this));
     }
     
-    fiber_object::~fiber_object()
-    {
-        //printf("Destroy fiber 0x%lx \n", reinterpret_cast<unsigned long>(this));
+    void fiber_object::set_name(const std::string &s) {
+        std::lock_guard<std::mutex> lock(fiber_mutex_);
+        name_=s;
+    }
+    
+    std::string fiber_object::get_name() {
+        std::lock_guard<std::mutex> lock(fiber_mutex_);
+        return name_;
     }
     
     void fiber_object::runner_wrapper(caller_t &c) {
         // Need this to complete constructor without running entry_
-        c([this](){
-            state_=READY;
-        });
+        c([](){});
         
         // Now we're out of constructor
         caller_=&c;
@@ -56,12 +59,20 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void fiber_object::schedule() {
-        //std::lock_guard<std::mutex> lock(fiber_mutex_);
-        state_=READY;
+        std::lock_guard<std::mutex> lock(fiber_mutex_);
         fiber_ptr_t pthis(shared_from_this());
         fiber_strand_.post([pthis](){
+            pthis->state_=READY;
             pthis->one_step();
         });
+    }
+    
+    void fiber_object::detach() {
+        std::lock_guard<std::mutex> lock(fiber_mutex_);
+        if (state_!=STOPPED) {
+            // Hold a reference to this, make sure detached fiber live till ends
+            this_ref_=shared_from_this();
+        }
     }
     
     void fiber_object::one_step() {
@@ -99,16 +110,25 @@ namespace fibio { namespace fibers { namespace detail {
             // Do nothing
             // Must make sure this fiber will be posted elsewhere later, otherwise it will hold forever
         } else if (s==STOPPED) {
-            // Fiber ended, clean up join queue
             std::lock_guard<std::mutex> lock(fiber_mutex_);
+            // Fiber ended, clean up join queue
             for (std::function<void()> f: cleanup_queue_) {
                 f();
             }
             cleanup_queue_.clear();
+            // Clean up FSS
+            for (auto &v: fss_) {
+                if (v.second.first && v.second.second) {
+                    (*(v.second.first))(v.second.second);
+                }
+            }
+            // Post exit message to scheduler
             scheduler_ptr_t s=sched_;
-            io_service_.post([s](){
-                s->on_fiber_exit();
+            fiber_ptr_t this_fiber(shared_from_this());
+            fiber_strand_.post([s, this_fiber](){
+                s->on_fiber_exit(this_fiber);
             });
+            //printf("fiber 0x%lx existed\n", reinterpret_cast<unsigned long>(this));
         }
     }
     
@@ -249,6 +269,14 @@ namespace fibio { namespace fibers {
     : m_(s.m_->make_fiber(std::move(f)))
     {}
     
+    void fiber::set_name(const std::string &s) {
+        m_->set_name(s);
+    }
+    
+    std::string fiber::get_name() {
+        return m_->get_name();
+    }
+
     bool fiber::joinable() const {
         // Return true iff this is a fiber and not the current calling fiber
         return (m_ && detail::fiber_object::current_fiber_!=m_.get());
@@ -271,6 +299,10 @@ namespace fibio { namespace fibers {
     }
     
     void fiber::detach() {
+        detail::fiber_ptr_t this_fiber=m_;
+        m_->fiber_strand_.post([this_fiber](){
+            this_fiber->detach();
+        });
         m_.reset();
     }
     
@@ -291,6 +323,8 @@ namespace fibio { namespace fibers {
         void yield() {
             if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                 ::fibio::fibers::detail::fiber_object::current_fiber_->yield();
+            } else {
+                throw std::system_error(std::make_error_code(std::errc::no_such_process));
             }
         }
         
@@ -306,6 +340,8 @@ namespace fibio { namespace fibers {
             void sleep_usec(uint64_t usec) {
                 if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                     ::fibio::fibers::detail::fiber_object::current_fiber_->sleep_usec(usec);
+                } else {
+                    throw std::system_error(std::make_error_code(std::errc::no_such_process));
                 }
             }
             
@@ -317,57 +353,5 @@ namespace fibio { namespace fibers {
             }
         }   // End of namespace detail
     }   // End of namespace this_fiber
-    
-    fiberized_std_stream_guard::fiberized_std_stream_guard()
-    : old_cin_buf_(0)
-    , old_cout_buf_(0)
-    , old_cerr_buf_(0)
-    , cin_buf_(new sbuf_t())
-    , cout_buf_(new sbuf_t())
-    , cerr_buf_(new sbuf_t())
-    {
-        old_cin_buf_=std::cin.rdbuf(cin_buf_);
-        old_cout_buf_=std::cout.rdbuf(cout_buf_);
-        old_cerr_buf_=std::cerr.rdbuf(cerr_buf_);
-        cin_buf_->open(0);
-        cout_buf_->open(1);
-        cerr_buf_->open(2);
-        // Set cerr to unbuffered
-        std::cerr.rdbuf()->pubsetbuf(0, 0);
-    }
-    
-    fiberized_std_stream_guard::~fiberized_std_stream_guard() {
-        cin_buf_->release();
-        cout_buf_->release();
-        cerr_buf_->release();
-        std::cin.rdbuf(old_cin_buf_);
-        std::cout.rdbuf(old_cout_buf_);
-        std::cerr.rdbuf(old_cerr_buf_);
-        delete cin_buf_;
-        delete cout_buf_;
-        delete cerr_buf_;
-    }
-    
-    int fiberize(size_t nthr, std::function<int(int, char*[])> &&entry, int argc, char *argv[]) {
-        int ret=0;
-        try
-        {
-            fibio::scheduler sched=fibio::scheduler::get_instance();
-            sched.start(nthr);
-            fibio::fiber f([&](){
-                fiberized_std_stream_guard fg;
-                ret=entry(argc, argv);
-            });
-            sched.join();
-        }
-        catch (std::exception& e)
-        {
-            std::cerr << "Exception: " << e.what() << "\n";
-        }
-        if(detail::scheduler_object::the_instance_) {
-            detail::scheduler_object::the_instance_.reset();
-        }
-        return ret;
-    }
 }}  // End of namespace fibio::fibers
 

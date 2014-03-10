@@ -71,9 +71,11 @@ namespace fibio { namespace fibers { namespace detail {
     }
      */
     
-    void scheduler_object::on_fiber_exit() {
+    void scheduler_object::on_fiber_exit(fiber_ptr_t p) {
         std::lock_guard<std::mutex> guard(m_);
         fiber_count_--;
+        // Release this_ref for detached fibers
+        p->this_ref_.reset();
     }
     
     void scheduler_object::on_check_timer(std::error_code ec) {
@@ -121,5 +123,11 @@ namespace fibio { namespace fibers {
     
     scheduler scheduler::get_instance() {
         return scheduler(detail::scheduler_object::get_instance());
+    }
+    
+    void scheduler::reset_instance() {
+        if (detail::scheduler_object::the_instance_) {
+            return detail::scheduler_object::the_instance_.reset();
+        }
     }
 }}  // End of namespace fibio::fibers

@@ -18,6 +18,7 @@
 		2D7E6C5F18CCCEA200B7C4E5 /* libboost_context-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D7E6C5C18CCCEA200B7C4E5 /* libboost_context-mt.a */; };
 		2D7E6C6018CCCEA200B7C4E5 /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D7E6C5D18CCCEA200B7C4E5 /* libboost_coroutine-mt.a */; };
 		2D7E6C6118CCCEA200B7C4E5 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D7E6C5E18CCCEA200B7C4E5 /* libboost_system-mt.a */; };
+		2DD3B6E218CDB59A009E1F3E /* fiberize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD3B6E018CDB59A009E1F3E /* fiberize.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -951,6 +952,7 @@
 		2D7E6C5D18CCCEA200B7C4E5 /* libboost_coroutine-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_coroutine-mt.a"; path = "../../../../usr/local/Cellar/boost/1.55.0/lib/libboost_coroutine-mt.a"; sourceTree = "<group>"; };
 		2D7E6C5E18CCCEA200B7C4E5 /* libboost_system-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_system-mt.a"; path = "../../../../usr/local/Cellar/boost/1.55.0/lib/libboost_system-mt.a"; sourceTree = "<group>"; };
 		2DD3B6DF18CCF8B7009E1F3E /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		2DD3B6E018CDB59A009E1F3E /* fiberize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fiberize.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1082,6 +1084,7 @@
 				2D7E687B18CCCD5D00B7C4E5 /* mutex_object.hpp */,
 				2D7E687C18CCCD5D00B7C4E5 /* scheduler_object.cpp */,
 				2D7E687D18CCCD5D00B7C4E5 /* scheduler_object.hpp */,
+				2DD3B6E018CDB59A009E1F3E /* fiberize.cpp */,
 			);
 			path = fiber;
 			sourceTree = "<group>";
@@ -2772,6 +2775,7 @@
 				2D7E688818CCCD5D00B7C4E5 /* scheduler_object.cpp in Sources */,
 				2D7E688618CCCD5D00B7C4E5 /* fiber_object.cpp in Sources */,
 				2D7E688718CCCD5D00B7C4E5 /* mutex_object.cpp in Sources */,
+				2DD3B6E218CDB59A009E1F3E /* fiberize.cpp in Sources */,
 				2D7E688518CCCD5D00B7C4E5 /* cv_object.cpp in Sources */,
 				2D7E688918CCCD5D00B7C4E5 /* posix.cpp in Sources */,
 			);

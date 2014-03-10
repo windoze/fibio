@@ -79,6 +79,9 @@ namespace fibio { namespace fibers { namespace detail {
         fiber_object(scheduler_ptr_t sched, std::function<void()> &&entry);
         ~fiber_object();
         
+        void set_name(const std::string &s);
+        std::string get_name();
+        
         // Following functions can only be called inside coroutine
         void yield();
         void join(fiber_ptr_t f);
@@ -88,6 +91,8 @@ namespace fibio { namespace fibers { namespace detail {
         void runner_wrapper(caller_t &c);
         void schedule();
         void one_step();
+        
+        void detach();
         
         void add_cleanup_function(std::function<void()> &&f);
         
@@ -120,6 +125,8 @@ namespace fibio { namespace fibers { namespace detail {
         std::error_code last_error_;
         cleanup_queue_t cleanup_queue_;
         fss_map_t fss_;
+        fiber_ptr_t this_ref_;
+        std::string name_;
         
         static __thread fiber_object *current_fiber_;
     };

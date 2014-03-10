@@ -26,7 +26,7 @@ namespace fibio { namespace fibers { namespace detail {
         // FIXME: It doesn't work correctly
         //void add_thread(size_t nthr);
         
-        void on_fiber_exit();
+        void on_fiber_exit(fiber_ptr_t p);
         void on_check_timer(std::error_code ec);
         
         static std::shared_ptr<scheduler_object> get_instance();
@@ -40,6 +40,7 @@ namespace fibio { namespace fibers { namespace detail {
         timer_ptr_t check_timer_;
         
         std::atomic<bool> started_;
+        std::vector<fiber_ptr_t> detached_fibers_;
         
         static std::once_flag instance_inited_;
         static std::shared_ptr<scheduler_object> the_instance_;

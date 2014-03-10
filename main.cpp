@@ -26,6 +26,7 @@ concurrent::concurrent_queue<int> q;
 fibio::fiber_specific_ptr<int> int_fss;
 
 void f(int n) {
+#if 1
     int_fss.reset(new int(n));
     {
         lock_guard<mutex> lock(m);
@@ -42,6 +43,7 @@ void f(int n) {
         lock_guard<mutex> lock(m);
         std::cout << "fiber " << n << " sees fss is " << *int_fss << std::endl;
     }
+#endif
 }
 
 void child() {
@@ -97,7 +99,7 @@ void parent() {
         if(1)
         {
             unique_lock<mutex> lock(m);
-            cv_status r=cv.wait_for(lock, std::chrono::seconds(30));
+            cv_status r=cv.wait_for(lock, std::chrono::seconds(1));
             if (r==cv_status::timeout) {
                 std::cout << "fiber parent: cv timeout" << std::endl;
             } else {
@@ -187,11 +189,8 @@ void parent1() {
     f.join();
 }
 
-FIBERIZED_MAIN(int argc, char *argv[])
+int main_fiber(int argc, char *argv[])
 {
-    // Fiberized main starts with one worker thread
-    //fibio::fibers::scheduler::get_instance().add_worker_thread(2);
-    
     // std::{cin,cout,cerr} is fiberized
     // std::cout is buffered
     std::cout << "Hello, world1\n";
@@ -206,7 +205,9 @@ FIBERIZED_MAIN(int argc, char *argv[])
     
     std::vector<fiber> fibers;
     for (int i=0; i<30; i++) {
-        fibers.push_back(fiber(([i](){ f(i); })));
+        fibers.push_back(fiber([i](){ f(i); }));
+        //fiber fb([i](){ f(i); });
+        //fb.detach();
     }
     
     fibers.push_back(fiber(parent));
@@ -217,11 +218,17 @@ FIBERIZED_MAIN(int argc, char *argv[])
         f.join();
     }
     
+    //this_fiber::sleep_for(std::chrono::seconds(3));
     {
         lock_guard<mutex> lock(m);
         std::cout << "fiber main sees fss is " << *int_fss << std::endl;
         std::cout << "main fiber exited" << std::endl;
     }
+    return 0;
+}
+
+int main(int argc, char *argv[]) {
+    fibio::fibers::fiberize(3, main_fiber, argc, argv);
     return 0;
 }
 
