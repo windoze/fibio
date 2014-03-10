@@ -64,7 +64,7 @@
 		2D7E688018CCCD5D00B7C4E5 /* posix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = posix.cpp; sourceTree = "<group>"; };
 		2D7E688118CCCD5D00B7C4E5 /* tcp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tcp.cpp; sourceTree = "<group>"; };
 		2D7E688218CCCD5D00B7C4E5 /* udp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = udp.cpp; sourceTree = "<group>"; };
-		2D7E688318CCCD5D00B7C4E5 /* TODO */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = TODO; sourceTree = "<group>"; };
+		2D7E688318CCCD5D00B7C4E5 /* TODO.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = TODO.md; sourceTree = "<group>"; };
 		2D7E688F18CCCE0E00B7C4E5 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		2D7E689018CCCE0E00B7C4E5 /* asio.manifest */ = {isa = PBXFileReference; lastKnownFileType = text; path = asio.manifest; sourceTree = "<group>"; };
 		2D7E689118CCCE0E00B7C4E5 /* autogen.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = autogen.sh; sourceTree = "<group>"; };
@@ -954,6 +954,7 @@
 		2DD3B6DF18CCF8B7009E1F3E /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		2DD3B6E018CDB59A009E1F3E /* fiberize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fiberize.cpp; sourceTree = "<group>"; };
 		2DD3B6E318CDBEE0009E1F3E /* std_stream_guard.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = std_stream_guard.hpp; sourceTree = "<group>"; };
+		2DD3B6E418CDC3E7009E1F3E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -977,7 +978,8 @@
 				2D7E6C5D18CCCEA200B7C4E5 /* libboost_coroutine-mt.a */,
 				2D7E6C5E18CCCEA200B7C4E5 /* libboost_system-mt.a */,
 				2DD3B6DF18CCF8B7009E1F3E /* .gitignore */,
-				2D7E688318CCCD5D00B7C4E5 /* TODO */,
+				2DD3B6E418CDC3E7009E1F3E /* README.md */,
+				2D7E688318CCCD5D00B7C4E5 /* TODO.md */,
 				2D7E688D18CCCE0E00B7C4E5 /* asio */,
 				2D7E685C18CCCD5D00B7C4E5 /* include */,
 				2D7E687418CCCD5D00B7C4E5 /* src */,
