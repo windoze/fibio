@@ -33,6 +33,18 @@ namespace fibio { namespace stream {
                  buffer_out_ + bf_size - 1 );
         }
         
+        streambuf(asio::io_service &iosvc)
+        : sd_(iosvc)
+        {
+            memset(buffer_in_, 0, bf_size);
+            memset(buffer_out_, 0, bf_size);
+            setg(buffer_in_ + pb_size,
+                 buffer_in_ + pb_size,
+                 buffer_in_ + pb_size);
+            setp(buffer_out_,
+                 buffer_out_ + bf_size - 1 );
+        }
+        
         /**
          * Constructor
          *

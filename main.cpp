@@ -205,14 +205,14 @@ int main_fiber(int argc, char *argv[])
     
     std::vector<fiber> fibers;
     for (int i=0; i<30; i++) {
-        fibers.push_back(fiber([i](){ f(i); }));
-        //fiber fb([i](){ f(i); });
-        //fb.detach();
+        //fibers.push_back(fiber([i](){ f(i); }));
+        fiber fb([i](){ f(i); });
+        fb.detach();
     }
     
-    fibers.push_back(fiber(parent));
-    fibers.push_back(fiber(parent1));
-    fibers.push_back(fiber(test_connect));
+    //fibers.push_back(fiber(parent));
+    //fibers.push_back(fiber(parent1));
+    //fibers.push_back(fiber(test_connect));
 
     for (fiber &f : fibers) {
         f.join();

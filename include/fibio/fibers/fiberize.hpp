@@ -10,25 +10,10 @@
 #define fibio_fiberize_hpp
 
 #include <type_traits>
-#include <fibio/stream/iostream.hpp>
+#include <fibio/fibers/fiber.hpp>
 
 namespace fibio { namespace fibers {
     namespace detail {
-        struct fiberized_std_stream_guard {
-            typedef stream::streambuf<io::posix::stream_descriptor> sbuf_t;
-            typedef sbuf_t *sbuf_ptr_t;
-            
-            fiberized_std_stream_guard();
-            ~fiberized_std_stream_guard();
-            
-            std::streambuf *old_cin_buf_;
-            std::streambuf *old_cout_buf_;
-            std::streambuf *old_cerr_buf_;
-            sbuf_ptr_t cin_buf_;
-            sbuf_ptr_t cout_buf_;
-            sbuf_ptr_t cerr_buf_;
-        };
-        
         template<typename T>
         struct to_int_if_void {
             typedef T type;
@@ -62,9 +47,7 @@ namespace fibio { namespace fibers {
             fibio::scheduler sched=fibio::scheduler::get_instance();
             sched.start(nthr);
             fibio::fiber f([&](){
-                detail::fiberized_std_stream_guard fg;
                 detail::to_int_if_void<ActualRet>::assign(ret, fn(args...));
-                //ret=fn(args...);
                 
             });
             sched.join();
