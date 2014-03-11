@@ -17,22 +17,14 @@ namespace fibio { namespace fibers {
         template<typename T>
         struct to_int_if_void {
             typedef T type;
-            template<class = typename std::enable_if<std::is_move_assignable<T>::value>::type >
-            inline static void assign(T &lhs, T&&rhs) {
-                lhs=std::move(rhs);
-            }
-            template<class = typename std::enable_if<!std::is_move_assignable<T>::value>::type >
-            inline static void assign(T &lhs, const T& rhs) {
-                lhs=std::move(rhs);
-            }
+            inline static void assign(T &lhs, T&&rhs) { lhs=std::move(rhs); }
+            inline static void assign(T &lhs, const T& rhs) { lhs=rhs; }
         };
         
         template<>
         struct to_int_if_void<void> {
             typedef int type;
-            inline static void assign(type &lhs, ...) {
-                lhs=0;
-            }
+            inline static void assign(type &lhs, ...) { lhs=0; }
         };
     }   // End of namespace fibio::fibers::detail
     
@@ -42,8 +34,7 @@ namespace fibio { namespace fibers {
     typename std::result_of<Fn(Args...)>::type fiberize(size_t nthr, Fn &&fn, Args&& ...args) {
         typedef typename std::result_of<Fn(Args...)>::type ActualRet;
         Ret ret;
-        try
-        {
+        try {
             fibio::scheduler sched=fibio::scheduler::get_instance();
             sched.start(nthr);
             fibio::fiber f([&](){
@@ -51,9 +42,7 @@ namespace fibio { namespace fibers {
                 
             });
             sched.join();
-        }
-        catch (std::exception& e)
-        {
+        } catch (std::exception& e) {
             std::cerr << "Exception: " << e.what() << "\n";
         }
         fibio::scheduler::reset_instance();
