@@ -9,6 +9,12 @@
 #ifndef fibio_io_ops_hpp
 #define fibio_io_ops_hpp
 
+// Clang version Apple LLVM version 5.1 (clang-503.0.38) (based on LLVM 3.4svn) failed to compile follow code
+#if (__clang_major__==5) && (__clang_minor__==1) && (__clang_patchlevel__==0) && (__apple_build_version__==5030038)
+#define FIBIO_CLANG_BUG
+#endif
+
+#ifndef FIBIO_CLANG_BUG
 #include "../fiber/fiber_object.hpp"
 
 namespace fibio { namespace io { namespace detail {
@@ -423,5 +429,7 @@ namespace fibio { namespace io { namespace detail {
 namespace fibio { namespace fibers { namespace this_fiber { namespace detail {
     asio::io_service &get_io_service();
 }}}}    // End of namespace fibio::fibers::this_fiber::detail
+
+#endif  // !defined(FIBIO_CLANG_BUG)
 
 #endif
