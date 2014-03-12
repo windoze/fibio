@@ -81,11 +81,7 @@ namespace fibio { namespace stream {
     protected:
         virtual std::streamsize showmanyc() override {
             if ( gptr() == egptr() ) {
-                // Getting area is empty, fetch something
-                if (traits_type::eq_int_type(underflow(), traits_type::eof())) {
-                    // underflow() hits eof
-                    return -1;
-                }
+                underflow();
             }
             return egptr()-gptr();
         }
@@ -93,17 +89,17 @@ namespace fibio { namespace stream {
         int_type underflow() {
             if (gptr() == egptr()) {
                 std::error_code ec;
-                size_t bytes_transferred_=io::read_some(sd_,
+                size_t bytes_transferred=io::read_some(sd_,
                                                         &get_buffer_[0]+ putback_max,
-                                                        putback_max,
+                                                        buffer_size-putback_max,
                                                         read_timeout_,
                                                         ec);
-                if (ec) {
+                if (ec || bytes_transferred==0) {
                     return traits_type::eof();
                 }
                 setg(&get_buffer_[0],
                      &get_buffer_[0] + putback_max,
-                     &get_buffer_[0] + putback_max + bytes_transferred_);
+                     &get_buffer_[0] + putback_max + bytes_transferred);
                 return traits_type::to_int_type(*gptr());
             } else {
                 return traits_type::eof();
