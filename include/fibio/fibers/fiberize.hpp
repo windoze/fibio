@@ -50,4 +50,8 @@ namespace fibio { namespace fibers {
     }
 }}  // End of namespace fibio::fibers
 
+namespace fibio {
+    using fibers::fiberize;
+}
+
 #endif
