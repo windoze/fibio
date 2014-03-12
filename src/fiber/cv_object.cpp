@@ -53,7 +53,7 @@ namespace fibio { namespace fibers { namespace detail {
                 this_cv->suspended_.push_back(suspended_item({m, this_fiber, t}));
                 t->expires_from_now(std::chrono::microseconds(usec));
                 t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_cv, t, &ret](std::error_code ec){
-                    if(ec==std::errc::operation_canceled) {
+                    if(ec) {
                         // Timer canceled, wait successful
                         return;
                     }
