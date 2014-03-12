@@ -30,10 +30,13 @@
 #if defined(DEBUG) && !defined(NDEBUG)
 #   define CHECK_CURRENT_FIBER assert(::fibio::fibers::detail::fiber_object::current_fiber_)
 #else
+/*
 #   define CHECK_CURRENT_FIBER \
     do if(!::fibio::fibers::detail::fiber_object::current_fiber_) \
         throw std::make_error_code(std::errc::no_such_process) \
     while(0)
+ */
+#   define CHECK_CURRENT_FIBER
 #endif
 
 namespace fibio { namespace fibers { namespace detail {
