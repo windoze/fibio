@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 2.8)
+set(SOURCE_LIST)
+file(GLOB FIBER_SRC "fiber/*.[ch]pp")
+file(GLOB IO_SRC "io/*.[ch]pp")
+file(GLOB HTTP_SRC "http/*.[ch]pp")
+list(APPEND SOURCE_LIST ${FIBER_SRC} ${IO_SRC} ${HTTP_SRC})
+add_library(fibio STATIC ${SOURCE_LIST})
