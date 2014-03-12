@@ -29,7 +29,7 @@ namespace fibio { namespace io {
     
     tcp::endpoint resolve(const tcp::query &addr, std::error_code &);
     tcp::acceptor listen(const tcp::endpoint &ep, bool reuse_addr, std::error_code &);
-    // socket accept(acceptor &a, std::error_code &);
+    tcp::socket accept(tcp::acceptor &a, std::error_code &);
     std::error_code connect(tcp::socket &,const tcp::endpoint &remote_ep, const tcp::endpoint &local_ep, uint64_t timeout);
     
     size_t read_some(tcp::socket &s, char *buffer, size_t sz, uint64_t timeout_usec, std::error_code &);
