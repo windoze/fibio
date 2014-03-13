@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(fiberized.io)
+project(fibio)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -DASIO_STANDALONE -std=c++11 -ftemplate-depth=256")
 if(APPLE)

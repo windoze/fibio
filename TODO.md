@@ -45,7 +45,7 @@ Utilities
 * Stream with compression
     * zlib
     * bzip2
-    * snappy
+    * snappy(?)
 * Database driver
     * Redis driver
     * MongoDB driver(?)

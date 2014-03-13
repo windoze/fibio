@@ -1,6 +1,6 @@
 //
-//  test_mutex.cpp
-//  fiberized.io
+//  test_http_client.cpp
+//  fibio
 //
 //  Created by Chen Xu on 14-3-12.
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#pragma GCC diagnostic ignored "-Wdeprecated-register"
 #include <boost/random.hpp>
 #include <fibio/fiber.hpp>
 #include <strstream>
@@ -21,19 +22,19 @@ void http_client() {
     fibio::http::client::client c;
     http::client::request req;
     req.url_="/";
-    req.set_host("fiberized.io");
+    req.set_host("fibio");
     // Default method
     assert(req.method_==http::common::method::GET);
     // Default version
     assert(req.version_==http::common::http_version::HTTP_1_1);
     assert(req.get_persistent()==true);
     assert(req.get_content_length()==0);
-    assert(req.headers_["host"]=="fiberized.io");
+    assert(req.headers_["host"]=="fibio");
     req.version_=http::common::http_version::HTTP_1_0;
     assert(req.get_persistent()==false);
     req.version_=http::common::http_version::HTTP_1_1;
     
-    c.connect("fiberized.io", 80);
+    c.connect("fibio", 80);
     for(int i=0; i<10; i++) {
         http::client::response resp;
         if(c.send_request(req, resp)) {

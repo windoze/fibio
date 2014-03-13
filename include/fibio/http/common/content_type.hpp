@@ -1,6 +1,6 @@
 //
 //  content_type.hpp
-//  fiberized.io
+//  fibio
 //
 //  Created by Chen Xu on 14-3-11.
 //  Copyright (c) 2014 0d0a.com. All rights reserved.

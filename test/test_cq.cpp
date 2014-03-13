@@ -1,6 +1,6 @@
 //
-//  test_mutex.cpp
-//  fiberized.io
+//  test_cq.cpp
+//  fibio
 //
 //  Created by Chen Xu on 14-3-12.
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#pragma GCC diagnostic ignored "-Wdeprecated-register"
 #include <boost/random.hpp>
 #include <fibio/fiber.hpp>
 #include <fibio/concurrent/concurrent_queue.hpp>
