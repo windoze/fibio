@@ -50,6 +50,16 @@ namespace fibio { namespace stream {
             return fibio::io::connect(sd_, ep, endpoint_t(), connect_timeout_);
         }
         
+        void swap(basic_streambuf &other) {
+            std::swap(sd_, other.sd_);
+            std::swap(get_buffer_, other.get_buffer_);
+            std::swap(put_buffer_, other.put_buffer_);
+            std::swap(connect_timeout_, other.connect_timeout_);
+            std::swap(read_timeout_, other.read_timeout_);
+            std::swap(write_timeout_, other.write_timeout_);
+            std::swap(unbuffered_, other.unbuffered_);
+        }
+        
         inline bool is_open() const
         { return sd_.is_open(); }
         
@@ -191,5 +201,12 @@ namespace fibio { namespace stream {
     template<typename StreamDescriptor>
     using streambuf=basic_streambuf<StreamDescriptor>;
 }}  // End of namespace fibio::stream
+
+namespace std {
+    template<typename StreamDescriptor>
+    void swap(fibio::stream::basic_streambuf<StreamDescriptor> &lhs, fibio::stream::basic_streambuf<StreamDescriptor> &rhs) {
+        lhs.swap(rhs);
+    }
+}
 
 #endif

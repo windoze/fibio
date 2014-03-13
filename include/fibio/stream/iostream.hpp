@@ -58,6 +58,10 @@ namespace fibio { namespace stream {
         basic_iostream(const basic_iostream&) = delete;
         basic_iostream& operator=(const basic_iostream&) = delete;
         
+        void swap(basic_iostream &other) {
+            this->sbuf_.swap(other.sbuf_);
+        }
+        
         template <typename... T>
         std::error_code open(T... x) {
             return this->sbuf_.open(x...);
@@ -101,11 +105,17 @@ namespace fibio { namespace stream {
         template<typename Rep, typename Period>
         void set_write_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
         { this->sbuf_.set_write_timeout(timeout_duration); }
-        
     };
 
     typedef basic_iostream<fibio::io::tcp::socket> tcp_stream;
     typedef basic_iostream<fibio::io::posix::stream_descriptor> posix_stream;
 }}  // End of namespace fibio::stream
+
+namespace std {
+    template<typename StreamDescriptor>
+    void swap(fibio::stream::basic_iostream<StreamDescriptor> &lhs, fibio::stream::basic_iostream<StreamDescriptor> &rhs) {
+        lhs.swap(rhs);
+    }
+}
 
 #endif
