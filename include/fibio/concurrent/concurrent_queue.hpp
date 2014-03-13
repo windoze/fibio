@@ -11,6 +11,7 @@
 
 #include <deque>
 #include <queue>
+#include <iterator>
 #include <fibio/fibers/mutex.hpp>
 #include <fibio/fibers/condition_variable.hpp>
 
@@ -143,6 +144,106 @@ namespace fibio { namespace concurrent {
             return true;
         }
 
+        template<class Rep, class Period>
+        inline bool try_push_for(const T &data, const std::chrono::duration<Rep,Period>& timeout_duration) {
+            LockType lock(the_mutex_);
+            if (!opened_) {
+                // Cannot push into a closed queue
+                return false;
+            }
+            // Wait until queue is closed or not full
+            std::cv_status ret=cv_status::no_timeout;
+            while((the_queue_.size()>=capacity_) && opened_)
+            {
+                ret=full_cv_.wait_for(lock, timeout_duration);
+            }
+            if (!opened_) {
+                // Queue closed
+                return false;
+            }
+            if (ret==cv_status::no_timeout) {
+                the_queue_.push(std::move(data));
+                empty_cv_.notify_one();
+                return true;
+            }
+            return false;
+        }
+
+        template<class Rep, class Period>
+        inline bool try_push_for(T &&data, const std::chrono::duration<Rep,Period>& timeout_duration) {
+            LockType lock(the_mutex_);
+            if (!opened_) {
+                // Cannot push into a closed queue
+                return false;
+            }
+            // Wait until queue is closed or not full
+            std::cv_status ret=cv_status::no_timeout;
+            while((the_queue_.size()>=capacity_) && opened_)
+            {
+                ret=full_cv_.wait_for(lock, timeout_duration);
+            }
+            if (!opened_) {
+                // Queue closed
+                return false;
+            }
+            if (ret==cv_status::no_timeout) {
+                the_queue_.push(std::move(data));
+                empty_cv_.notify_one();
+                return true;
+            }
+            return false;
+        }
+        
+        template< class Clock, class Duration >
+        bool try_push_until(const T &data, const std::chrono::time_point<Clock,Duration>& timeout_time ) {
+            LockType lock(the_mutex_);
+            if (!opened_) {
+                // Cannot push into a closed queue
+                return false;
+            }
+            // Wait until queue is closed or not full
+            std::cv_status ret=cv_status::no_timeout;
+            while((the_queue_.size()>=capacity_) && opened_)
+            {
+                ret=full_cv_.wait_until(lock, timeout_time);
+            }
+            if (!opened_) {
+                // Queue closed
+                return false;
+            }
+            if (ret==cv_status::no_timeout) {
+                the_queue_.push(std::move(data));
+                empty_cv_.notify_one();
+                return true;
+            }
+            return false;
+        }
+        
+        template< class Clock, class Duration >
+        bool try_push_until(T &&data, const std::chrono::time_point<Clock,Duration>& timeout_time ) {
+            LockType lock(the_mutex_);
+            if (!opened_) {
+                // Cannot push into a closed queue
+                return false;
+            }
+            // Wait until queue is closed or not full
+            std::cv_status ret=cv_status::no_timeout;
+            while((the_queue_.size()>=capacity_) && opened_)
+            {
+                ret=full_cv_.wait_for(lock, timeout_time);
+            }
+            if (!opened_) {
+                // Queue closed
+                return false;
+            }
+            if (ret==cv_status::no_timeout) {
+                the_queue_.push(std::move(data));
+                empty_cv_.notify_one();
+                return true;
+            }
+            return false;
+        }
+        
         inline bool pop(T &popped_value) {
             LockType lock(the_mutex_);
             // Wait only if the queue is open and empty
@@ -174,7 +275,53 @@ namespace fibio { namespace concurrent {
             return true;
         }
         
-        template<typename OutIterator>
+        template<class Rep, class Period>
+        inline bool try_pop_for(T &popped_value, const std::chrono::duration<Rep,Period>& timeout_duration) {
+            LockType lock(the_mutex_);
+            // Wait only if the queue is open and empty
+            std::cv_status ret=cv_status::no_timeout;
+            while(the_queue_.empty() && opened_)
+            {
+                ret=empty_cv_.wait_for(lock, timeout_duration);
+            }
+            if (the_queue_.empty()) {
+                // Last loop ensure queue will not empty only if queue is closed
+                // So here we have an empty and closed queue
+                return false;
+            }
+            if (ret==cv_status::no_timeout) {
+                std::swap(popped_value, the_queue_.front());
+                the_queue_.pop();
+                full_cv_.notify_one();
+                return true;
+            }
+            return false;
+        }
+        
+        template< class Clock, class Duration >
+        bool try_pop_until(T &popped_value, const std::chrono::time_point<Clock,Duration>& timeout_time ) {
+            LockType lock(the_mutex_);
+            // Wait only if the queue is open and empty
+            std::cv_status ret=cv_status::no_timeout;
+            while(the_queue_.empty() && opened_)
+            {
+                ret=empty_cv_.wait_until(lock, timeout_time);
+            }
+            if (the_queue_.empty()) {
+                // Last loop ensure queue will not empty only if queue is closed
+                // So here we have an empty and closed queue
+                return false;
+            }
+            if (ret==cv_status::no_timeout) {
+                std::swap(popped_value, the_queue_.front());
+                the_queue_.pop();
+                full_cv_.notify_one();
+                return true;
+            }
+            return false;
+        }
+
+            template<typename OutIterator>
         inline size_type pop_n(OutIterator oi, size_type nelem)
         {
             LockType lock(the_mutex_);
@@ -213,7 +360,7 @@ namespace fibio { namespace concurrent {
         }
         
         // Minimal for loop support
-        struct iterator {
+        struct iterator : std::iterator<std::input_iterator_tag, T> {
             iterator()
             : queue_(0)
             , popped_(false)
