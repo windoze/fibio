@@ -39,7 +39,7 @@ void parent() {
     
     io::tcp::acceptor acc=io::listen(io::tcp::endpoint(asio::ip::tcp::v4(), 23456), true);
     std::error_code ec;
-    stream::tcp_stream str(io::accept(acc, ec));
+    stream::tcp_stream str(io::accept(acc, 0, ec));
     assert(!ec);
     std::string line;
     std::getline(str, line);
