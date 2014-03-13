@@ -1,6 +1,6 @@
 //
 //  response.hpp
-//  fiberized.io
+//  fibio
 //
 //  Created by Chen Xu on 14-3-11.
 //  Copyright (c) 2014年 0d0a.com. All rights reserved.
@@ -37,6 +37,12 @@ namespace fibio { namespace http { namespace client {
         std::unique_ptr<boost::iostreams::restriction<std::istream>> restriction_;
         std::unique_ptr<std::istream> body_stream_;
     };
+
+    inline std::istream &operator>>(std::istream &is, response &v) {
+        v.read(is);
+        return is;
+    }
+
 }}} // End of namespace fibio::http::client
 
 
