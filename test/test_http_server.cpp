@@ -34,7 +34,7 @@ void the_client() {
     // Default version
     assert(req.get_http_version()==http_version::INVALID);
     assert(req.get_content_length()==0);
-    assert(req.headers_["host"]=="localhost:23456");
+    assert(req.get_host()=="localhost:23456");
     req.set_http_version(http_version::HTTP_1_0);
     assert(req.get_persistent()==false);
     req.set_http_version(http_version::HTTP_1_1);
@@ -60,6 +60,7 @@ void the_client() {
             }
             // This server returns a 200 response
             assert(resp.get_status_code()==status_code::OK);
+            assert(resp.get_status_msg()=="OK");
             assert(resp.get_http_version()==http_version::HTTP_1_1);
             
             size_t cl=resp.get_content_length();
@@ -89,8 +90,7 @@ void servant(http_server::connection sc) {
         resp.set_status_code(status_code::OK);
         resp.set_http_version(req.get_http_version());
         resp.set_persistent(req.get_persistent());
-        resp.set_status_msg("OK");
-        resp.headers_["Content-Type"]="text/plain";
+        resp.set_content_type("text/plain");
         resp.body_stream() << s << s;
         sc.send(resp);
     }

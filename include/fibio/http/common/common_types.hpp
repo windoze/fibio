@@ -130,6 +130,7 @@ namespace fibio { namespace http { namespace common {
         void clear();
         bool read(std::istream &is);
         bool write(std::ostream &os) const;
+        void set_status_code(status_code sc, const std::string &msg="");
 
         http_version version_=http_version::INVALID;
         status_code status_=status_code::INVALID;

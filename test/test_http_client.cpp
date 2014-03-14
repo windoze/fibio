@@ -32,7 +32,7 @@ void the_client() {
     req.set_http_version(http_version::HTTP_1_1);
     assert(req.get_persistent()==true);
     assert(req.get_content_length()==0);
-    assert(req.headers_["host"]=="fiberized.io");
+    assert(req.get_host()=="fiberized.io");
     req.set_http_version(http_version::HTTP_1_0);
     assert(req.get_persistent()==false);
     req.set_http_version(http_version::HTTP_1_1);

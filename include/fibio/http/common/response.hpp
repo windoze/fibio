@@ -64,8 +64,9 @@ namespace fibio { namespace http { namespace common {
         inline status_code get_status_code() const
         { return status_.status_; }
         
-        inline void set_status_code(status_code sc)
-        { status_.status_=sc; }
+        inline void set_status_code(status_code sc, const std::string &msg="") {
+            status_.set_status_code(sc, msg);
+        }
         
         inline const std::string &get_status_msg() const
         { return status_.message_; }

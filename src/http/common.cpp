@@ -94,6 +94,50 @@ namespace fibio { namespace http { namespace common {
             {"PATCH",   method::PATCH},
             {"PURGE",   method::PURGE},
         };
+        
+        const std::map<status_code, std::string> status_msg_map={
+            {status_code::CONTINUE                        , "Continue"},
+            {status_code::SWITCHING_PROTOCOLS             , "Switching Protocols"},
+            {status_code::OK                              , "OK"},
+            {status_code::CREATED                         , "Created"},
+            {status_code::ACCEPTED                        , "Accepted"},
+            {status_code::NON_AUTHORITATIVE_INFORMATION   , "Non-Authoritative Information"},
+            {status_code::NO_CONTENT                      , "No Content"},
+            {status_code::RESET_CONTENT                   , "Reset Content"},
+            {status_code::PARTIAL_CONTENT                 , "Partial Content"},
+            {status_code::MULTIPLE_CHOICES                , "Multiple Choices"},
+            {status_code::MOVED_PERMANENTLY               , "Moved Permanently"},
+            {status_code::FOUND                           , "Found"},
+            {status_code::SEE_OTHER                       , "See Other"},
+            {status_code::NOT_MODIFIED                    , "Not Modified"},
+            {status_code::USE_PROXY                       , "Use Proxy"},
+            //status_code::{UNUSED                        , "(Unused)"},
+            {status_code::TEMPORARY_REDIRECT              , "Temporary Redirect"},
+            {status_code::BAD_REQUEST                     , "Bad Request"},
+            {status_code::UNAUTHORIZED                    , "Unauthorized"},
+            {status_code::PAYMENT_REQUIRED                , "Payment Required"},
+            {status_code::FORBIDDEN                       , "Forbidden"},
+            {status_code::NOT_FOUND                       , "Not Found"},
+            {status_code::METHOD_NOT_ALLOWED              , "Method Not Allowed"},
+            {status_code::NOT_ACCEPTABLE                  , "Not Acceptable"},
+            {status_code::PROXY_AUTHENTICATION_REQUIRED   , "Proxy Authentication Required"},
+            {status_code::REQUEST_TIMEOUT                 , "Request Timeout"},
+            {status_code::CONFLICT                        , "Conflict"},
+            {status_code::GONE                            , "Gone"},
+            {status_code::LENGTH_REQUIRED                 , "Length Required"},
+            {status_code::PRECONDITION_FAILED             , "Precondition Failed"},
+            {status_code::REQUEST_ENTITY_TOO_LARGE        , "Request Entity Too Large"},
+            {status_code::REQUEST_URI_TOO_LONG            , "Request-URI Too Long"},
+            {status_code::UNSUPPORTED_MEDIA_TYPE          , "Unsupported Media Type"},
+            {status_code::REQUESTED_RANGE_NOT_SATISFIABLE , "Requested Range Not Satisfiable"},
+            {status_code::EXPECTATION_FAILED              , "Expectation Failed"},
+            {status_code::INTERNAL_SERVER_ERROR           , "Internal Server Error"},
+            {status_code::NOT_IMPLEMENTED                 , "Not Implemented"},
+            {status_code::BAD_GATEWAY                     , "Bad Gateway"},
+            {status_code::SERVICE_UNAVAILABLE             , "Service Unavailable"},
+            {status_code::GATEWAY_TIMEOUT                 , "Gateway Timeout"},
+            {status_code::HTTP_VERSION_NOT_SUPPORTED      , "HTTP Version Not Supported"},
+        };
     }
     
     std::ostream &operator<<(std::ostream &os, const http_version &v) {
@@ -144,7 +188,7 @@ namespace fibio { namespace http { namespace common {
     
     //std::ostream &operator<<(std::ostream &os, const request_line &v) {
     bool request_line::write(std::ostream &os) const {
-        os << method_ << ' ' << url_ << ' ' << version_;
+        os << method_ << ' ' << url_ << ' ' << version_ << "\r\n";
         return true;
     }
     
@@ -200,7 +244,7 @@ namespace fibio { namespace http { namespace common {
     
     //std::ostream &operator<<(std::ostream &os, const status_line &v) {
     bool status_line::write(std::ostream &os) const {
-        os << version_ << ' ' << uint(status_) << ' ' << message_;
+        os << version_ << ' ' << uint(status_) << ' ' << message_ << "\r\n";
         return true;
     }
     
@@ -250,6 +294,18 @@ namespace fibio { namespace http { namespace common {
             message_.assign(first, line.end());
         }
         return true;
+    }
+    
+    void status_line::set_status_code(status_code sc, const std::string &msg) {
+        status_=sc;
+        if (msg.empty()) {
+            std::map<status_code, std::string>::const_iterator i=detail::status_msg_map.find(sc);
+            if (i!=detail::status_msg_map.end()) {
+                message_=i->second;
+            }
+        } else {
+            message_=msg;
+        }
     }
     
     std::ostream &operator<<(std::ostream &os, const header_map &v) {

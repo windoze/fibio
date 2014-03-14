@@ -76,7 +76,6 @@ namespace fibio { namespace http { namespace server {
     
     bool response::write(std::ostream &os) const {
         if (!status_.write(os)) return false;
-        os << "\r\n";
         if (!headers_.write(os)) return false;
         if (os.eof() || os.fail() || os.bad()) return false;
         common::header_map::const_iterator i=headers_.find("Connection");

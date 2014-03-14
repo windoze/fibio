@@ -31,7 +31,6 @@ namespace fibio { namespace http { namespace client {
     
     bool request::write(std::ostream &os) const {
         if (!req_line_.write(os)) return false;
-        os << "\r\n";
         if (!headers_.write(os)) return false;
         common::header_map::const_iterator i=headers_.find("Connection");
         // Make sure there is a Connection header
