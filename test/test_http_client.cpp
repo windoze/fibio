@@ -21,20 +21,22 @@ using namespace fibio;
 void http_client() {
     fibio::http::client::client c;
     http::client::request req;
-    req.url_="/";
-    req.set_host("fibio");
+    req.req_line_.url_="/";
+    req.set_host("fiberized.io");
     // Default method
-    assert(req.method_==http::common::method::GET);
+    assert(req.req_line_.method_==http::common::method::INVALID);
+    req.req_line_.method_=http::common::method::GET;
     // Default version
-    assert(req.version_==http::common::http_version::HTTP_1_1);
+    assert(req.req_line_.version_==http::common::http_version::INVALID);
+    req.req_line_.version_=http::common::http_version::HTTP_1_1;
     assert(req.get_persistent()==true);
     assert(req.get_content_length()==0);
-    assert(req.headers_["host"]=="fibio");
-    req.version_=http::common::http_version::HTTP_1_0;
+    assert(req.headers_["host"]=="fiberized.io");
+    req.req_line_.version_=http::common::http_version::HTTP_1_0;
     assert(req.get_persistent()==false);
-    req.version_=http::common::http_version::HTTP_1_1;
+    req.req_line_.version_=http::common::http_version::HTTP_1_1;
     
-    c.connect("fibio", 80);
+    c.connect("fiberized.io", 80);
     for(int i=0; i<10; i++) {
         http::client::response resp;
         if(c.send_request(req, resp)) {
@@ -46,18 +48,12 @@ void http_client() {
 
             size_t cl=resp.get_content_length();
             std::string s;
-            std::vector<char> buf;
-            buf.resize(100);
-            while(!resp.body_stream().eof()) {
-                resp.body_stream().read(&buf[0], 100);
-                size_t sz=resp.body_stream().gcount();
-                if (sz==0) {
-                    break;
-                }
-                s.append(buf.begin(),buf.begin()+sz);
-            }
+            std::stringstream ss;
+            ss << resp.body_stream().rdbuf();
+            s=ss.str();
             assert(s.size()==cl);
-            assert(resp.body_stream().fail());
+            // Make sure we triggered EOF condition
+            resp.body_stream().peek();
             assert(resp.body_stream().eof());
             //std::cout << s << std::endl;
         }
