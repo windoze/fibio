@@ -125,7 +125,7 @@ int main_fiber(int argc, char *argv[]) {
     std::vector<fiber> fibers;
     fiber(the_server).detach();
     this_fiber::sleep_for(std::chrono::seconds(1));
-    size_t n=200;
+    size_t n=10;
     for (int i=0; i<n; i++) {
         fibers.push_back(fiber(the_client));
     }
