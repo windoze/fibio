@@ -334,5 +334,11 @@ namespace fibio { namespace http { namespace common {
     
 }}} // End of namespace fibio::http::common
 
+namespace fibio { namespace http {
+    using common::http_version;
+    using common::method;
+    using common::status_code;
+}}  // End of namespace fibio::http
+
 
 #endif

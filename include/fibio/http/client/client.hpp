@@ -37,4 +37,8 @@ namespace fibio { namespace http { namespace client {
     };
 }}} // End of namespace fibio::http::client
 
+namespace fibio { namespace http {
+    typedef client::client http_client;
+}}  // End of namespace fibio::http
+
 #endif
