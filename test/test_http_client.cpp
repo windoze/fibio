@@ -17,32 +17,33 @@
 #include <boost/lexical_cast.hpp>
 
 using namespace fibio;
+using namespace fibio::http;
 
-void http_client() {
-    fibio::http::client::client c;
-    http::client::request req;
+void the_client() {
+    http_client c;
+    http_client::request req;
     req.req_line_.url_="/";
     req.set_host("fiberized.io");
     // Default method
-    assert(req.req_line_.method_==http::common::method::INVALID);
-    req.req_line_.method_=http::common::method::GET;
+    assert(req.req_line_.method_==method::INVALID);
+    req.req_line_.method_=method::GET;
     // Default version
-    assert(req.req_line_.version_==http::common::http_version::INVALID);
-    req.req_line_.version_=http::common::http_version::HTTP_1_1;
+    assert(req.req_line_.version_==http_version::INVALID);
+    req.req_line_.version_=http_version::HTTP_1_1;
     assert(req.get_persistent()==true);
     assert(req.get_content_length()==0);
     assert(req.headers_["host"]=="fiberized.io");
-    req.req_line_.version_=http::common::http_version::HTTP_1_0;
+    req.req_line_.version_=http_version::HTTP_1_0;
     assert(req.get_persistent()==false);
-    req.req_line_.version_=http::common::http_version::HTTP_1_1;
+    req.req_line_.version_=http_version::HTTP_1_1;
     
     c.connect("fiberized.io", 80);
     for(int i=0; i<10; i++) {
         http::client::response resp;
         if(c.send_request(req, resp)) {
             // This server returns a 301 response
-            assert(resp.status_.version_==http::common::http_version::HTTP_1_1);
-            assert(resp.status_.status_==http::common::status_code::MOVED_PERMANENTLY);
+            assert(resp.status_.version_==http_version::HTTP_1_1);
+            assert(resp.status_.status_==status_code::MOVED_PERMANENTLY);
             //std::cout << resp.status_ << std::endl;
             //std::cout << resp.headers_ << std::endl;
 
@@ -63,7 +64,7 @@ void http_client() {
 int main_fiber(int argc, char *argv[]) {
     std::vector<fiber> fibers;
     for (int i=0; i<10; i++) {
-        fibers.push_back(fiber(http_client));
+        fibers.push_back(fiber(the_client));
     }
     for (fiber &f : fibers) {
         f.join();
