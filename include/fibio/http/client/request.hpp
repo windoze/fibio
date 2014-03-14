@@ -42,7 +42,7 @@ namespace fibio { namespace http { namespace client {
                 set_content_type(content_type);
         }
 
-        void write(std::ostream &os) const;
+        bool write(std::ostream &os) const;
 
         boost::interprocess::basic_ovectorstream<std::string> body_stream_;
     };

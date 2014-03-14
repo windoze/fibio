@@ -39,7 +39,7 @@ namespace fibio { namespace http { namespace common {
 
         inline bool get_persistent() const {
             std::string conn=headers_["connection"];
-            if (version_<http_version::HTTP_1_1) {
+            if (req_line_.version_<http_version::HTTP_1_1) {
                 // Default to non-persistent
                 return iequal()(conn, "keep-alive");
             }
@@ -51,9 +51,28 @@ namespace fibio { namespace http { namespace common {
             headers_["Connection"]= v ? "keep-alive" : "close";
         }
 
-        http_version version_=http_version::HTTP_1_1;
-        method method_=method::GET;
-        std::string url_;
+        inline method get_method() const
+        { return req_line_.method_; }
+        
+        inline void get_method(method m)
+        { req_line_.method_=m; }
+        
+        inline std::string get_url() const
+        { return req_line_.url_; }
+        
+        inline void get_url(const std::string &u)
+        { req_line_.url_=u; }
+        
+        inline void get_url(std::string &&u)
+        { req_line_.url_=std::move(u); }
+        
+        inline http_version get_http_version() const
+        { return req_line_.version_; }
+        
+        inline void set_http_version(http_version hv)
+        { req_line_.version_=hv; }
+        
+        request_line req_line_;
         header_map headers_;
     };
 }}} // End of namespace fibio::http::common

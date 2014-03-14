@@ -29,6 +29,32 @@ namespace fibio { namespace http { namespace common {
             headers_["Content-Type"]=v;
         }
         
+        inline header_value_type get_host() const {
+            return headers_["host"];
+        }
+        
+        inline void set_host(const header_value_type &v) {
+            headers_["Host"]=v;
+        }
+        
+        inline void set_host(header_value_type &&v) {
+            headers_["Host"]=v;
+        }
+        
+        inline bool get_persistent() const {
+            std::string conn=headers_["connection"];
+            if (status_.version_<http_version::HTTP_1_1) {
+                // Default to non-persistent
+                return iequal()(conn, "keep-alive");
+            }
+            // Default to persistent
+            return conn.empty() || iequal()(conn, "keep-alive");
+        }
+        
+        inline void set_persistent(bool v) {
+            headers_["Connection"]= v ? "keep-alive" : "close";
+        }
+
         inline http_version get_http_version() const
         { return status_.version_; }
         

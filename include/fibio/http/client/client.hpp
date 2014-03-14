@@ -11,8 +11,6 @@
 
 #include <string>
 #include <functional>
-#include <chrono>
-#include <boost/lexical_cast.hpp>
 #include <fibio/stream/iostream.hpp>
 #include <fibio/http/client/request.hpp>
 #include <fibio/http/client/response.hpp>
@@ -31,7 +29,7 @@ namespace fibio { namespace http { namespace client {
         void disconnect();
         void do_request(std::function<bool(request &)> &&prepare,
                         std::function<bool(response &)> &&process);
-        bool send_request(request &req, response &resp);
+        bool send_request(const request &req, response &resp);
         
         std::string server_;
         std::string port_;

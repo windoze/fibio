@@ -20,7 +20,7 @@ namespace fibio { namespace http { namespace client {
         
         size_t get_content_length() const;
         
-        void read(std::istream &is);
+        bool read(std::istream &is);
         
         inline bool has_body() const {
             return get_content_length()>0 && body_stream_.get();

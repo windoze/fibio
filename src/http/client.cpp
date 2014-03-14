@@ -13,9 +13,7 @@
 
 namespace fibio { namespace http { namespace client {
     void request::clear() {
-        version_=common::http_version::HTTP_1_1;
-        method_=common::method::GET;
-        url_.clear();
+        req_line_.clear();
         headers_.clear();
     }
     
@@ -31,8 +29,8 @@ namespace fibio { namespace http { namespace client {
         return body_stream_.vector().size();
     }
     
-    void request::write(std::ostream &os) const {
-        os << method_ << ' ' << url_ << ' ' << version_ << "\r\n";
+    bool request::write(std::ostream &os) const {
+        os << req_line_ << "\r\n";
         os << headers_ ;
         common::header_map::const_iterator i=headers_.find("Connection");
         // Make sure there is a Connection header
@@ -42,10 +40,13 @@ namespace fibio { namespace http { namespace client {
         os << "Content-Length: " << get_content_length() << "\r\n";
         os << "\r\n";
         os << body_stream_.vector();
+        os.flush();
+        return !os.eof() && !os.fail() && !os.bad();
     }
     
     void response::clear() {
-        status_=common::status_line();
+        drop_body();
+        status_.clear();
         headers_.clear();
         restriction_.reset();
         body_stream_.reset();
@@ -61,11 +62,14 @@ namespace fibio { namespace http { namespace client {
         return sz;
     }
     
-    void response::read(std::istream &is) {
+    bool response::read(std::istream &is) {
         is >> status_;
         is >> headers_;
+        if (status_.status_==common::status_code::INVALID) {
+            return false;
+        }
         if (is.eof()) {
-            return;
+            return false;
         }
         // Setup body stream
         namespace bio = boost::iostreams;
@@ -73,6 +77,7 @@ namespace fibio { namespace http { namespace client {
         bio::filtering_istream *in=new bio::filtering_istream;
         in->push(*restriction_);
         body_stream_.reset(in);
+        return true;
     }
     
     void response::drop_body() {
@@ -116,20 +121,14 @@ namespace fibio { namespace http { namespace client {
         stream_.close();
     }
     
-    bool client::send_request(request &req, response &resp) {
-        try {
-            resp.clear();
-            stream_ << req;
-            stream_.flush();
-            if (stream_.eof()) {
-                return false;
-            }
-            resp.read(stream_);
-        } catch(boost::bad_lexical_cast &e) {
-            // Response format error
-            //printf("XXXXXXX\n");
-        }
-        return true;
+    bool client::send_request(const request &req, response &resp) {
+        if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
+        // Make sure there is no pending data in the last response
+        resp.clear();
+        if(!req.write(stream_)) return false;
+        if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
+        //if (!stream_.is_open()) return false;
+        return resp.read(stream_);
     }
     
     void client::do_request(std::function<bool(request &)> &&prepare,

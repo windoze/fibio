@@ -19,6 +19,7 @@
 
 namespace fibio { namespace http { namespace common {
     enum class http_version : uint16_t {
+        INVALID=0x0000,
         HTTP_0_9=0x0009,
         HTTP_1_0=0x0100,
         HTTP_1_1=0x0101,
@@ -28,6 +29,7 @@ namespace fibio { namespace http { namespace common {
     std::istream &operator>>(std::istream &os, http_version &v);
     
     enum class method : uint16_t {
+        INVALID,
         DELETE,
         GET,
         HEAD,
@@ -65,6 +67,7 @@ namespace fibio { namespace http { namespace common {
     std::istream &operator>>(std::istream &is, method &v);
     
     enum class status_code : uint16_t {
+        INVALID                         =0,
         CONTINUE                        =100,
         SWITCHING_PROTOCOLS             =101,
         OK                              =200,
@@ -108,9 +111,20 @@ namespace fibio { namespace http { namespace common {
         HTTP_VERSION_NOT_SUPPORTED      =505,
     };
     
+    struct request_line {
+        void clear();
+        method method_=method::INVALID;
+        std::string url_;
+        http_version version_=http_version::INVALID;
+    };
+    
+    std::ostream &operator<<(std::ostream &os, const request_line &v);
+    std::istream &operator>>(std::istream &is, request_line &v);
+    
     struct status_line {
-        http_version version_;
-        status_code status_;
+        void clear();
+        http_version version_=http_version::INVALID;
+        status_code status_=status_code::INVALID;
         std::string message_;
     };
     
