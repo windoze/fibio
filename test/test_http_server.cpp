@@ -26,18 +26,18 @@ void the_client() {
     http_client c;
     http_client::request req;
     std::string req_body("hello");
-    req.req_line_.url_="/";
+    req.set_url("/");
     req.set_host("localhost:23456");
     // Default method
-    assert(req.req_line_.method_==method::INVALID);
-    req.req_line_.method_=http::common::method::GET;
+    assert(req.get_method()==method::INVALID);
+    req.set_method(http::common::method::GET);
     // Default version
-    assert(req.req_line_.version_==http_version::INVALID);
+    assert(req.get_http_version()==http_version::INVALID);
     assert(req.get_content_length()==0);
     assert(req.headers_["host"]=="localhost:23456");
-    req.req_line_.version_=http_version::HTTP_1_0;
+    req.set_http_version(http_version::HTTP_1_0);
     assert(req.get_persistent()==false);
-    req.req_line_.version_=http_version::HTTP_1_1;
+    req.set_http_version(http_version::HTTP_1_1);
     assert(req.get_persistent()==true);
     req.body_stream() << "hello";
     req.body_stream().flush();
@@ -59,8 +59,8 @@ void the_client() {
                 assert(false);
             }
             // This server returns a 200 response
-            assert(resp.status_.status_==status_code::OK);
-            assert(resp.status_.version_==http_version::HTTP_1_1);
+            assert(resp.get_status_code()==status_code::OK);
+            assert(resp.get_http_version()==http_version::HTTP_1_1);
             
             size_t cl=resp.get_content_length();
             std::string s;
@@ -86,10 +86,10 @@ void servant(http_server::connection sc) {
         s=ss.str();
 
         http_server::response resp;
-        resp.status_.status_=status_code::OK;
-        resp.status_.version_=req.req_line_.version_;
+        resp.set_status_code(status_code::OK);
+        resp.set_http_version(req.get_http_version());
         resp.set_persistent(req.get_persistent());
-        resp.status_.message_="OK";
+        resp.set_status_msg("OK");
         resp.headers_["Content-Type"]="text/plain";
         resp.body_stream() << s << s;
         sc.send(resp);

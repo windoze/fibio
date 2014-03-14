@@ -22,28 +22,28 @@ using namespace fibio::http;
 void the_client() {
     http_client c;
     http_client::request req;
-    req.req_line_.url_="/";
+    req.set_url("/");
     req.set_host("fiberized.io");
     // Default method
-    assert(req.req_line_.method_==method::INVALID);
-    req.req_line_.method_=method::GET;
+    assert(req.get_method()==method::INVALID);
+    req.set_method(method::GET);
     // Default version
-    assert(req.req_line_.version_==http_version::INVALID);
-    req.req_line_.version_=http_version::HTTP_1_1;
+    assert(req.get_http_version()==http_version::INVALID);
+    req.set_http_version(http_version::HTTP_1_1);
     assert(req.get_persistent()==true);
     assert(req.get_content_length()==0);
     assert(req.headers_["host"]=="fiberized.io");
-    req.req_line_.version_=http_version::HTTP_1_0;
+    req.set_http_version(http_version::HTTP_1_0);
     assert(req.get_persistent()==false);
-    req.req_line_.version_=http_version::HTTP_1_1;
+    req.set_http_version(http_version::HTTP_1_1);
     
     c.connect("fiberized.io", 80);
     for(int i=0; i<10; i++) {
         http::client::response resp;
         if(c.send_request(req, resp)) {
             // This server returns a 301 response
-            assert(resp.status_.version_==http_version::HTTP_1_1);
-            assert(resp.status_.status_==status_code::MOVED_PERMANENTLY);
+            assert(resp.get_http_version()==http_version::HTTP_1_1);
+            assert(resp.get_status_code()==status_code::MOVED_PERMANENTLY);
             //std::cout << resp.status_ << std::endl;
             //std::cout << resp.headers_ << std::endl;
 
