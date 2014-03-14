@@ -54,16 +54,16 @@ namespace fibio { namespace http { namespace common {
         inline method get_method() const
         { return req_line_.method_; }
         
-        inline void get_method(method m)
+        inline void set_method(method m)
         { req_line_.method_=m; }
         
         inline std::string get_url() const
         { return req_line_.url_; }
         
-        inline void get_url(const std::string &u)
+        inline void set_url(const std::string &u)
         { req_line_.url_=u; }
         
-        inline void get_url(std::string &&u)
+        inline void set_url(std::string &&u)
         { req_line_.url_=std::move(u); }
         
         inline http_version get_http_version() const
