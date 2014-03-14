@@ -116,7 +116,7 @@ namespace fibio { namespace io {
                             this_fiber->state_=fibers::detail::fiber_object::RUNNING;
                             this_fiber->one_step();
                         } else {
-                            s.cancel();
+                            a.cancel();
                         }
                     }
                 }));
@@ -345,7 +345,7 @@ namespace fibio { namespace io {
                             this_fiber->state_=fibers::detail::fiber_object::RUNNING;
                             this_fiber->one_step();
                         } else {
-                            s.cancel();
+                            a.cancel();
                         }
                     }
                 }));
