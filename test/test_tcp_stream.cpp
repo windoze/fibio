@@ -20,7 +20,9 @@ using namespace fibio;
 void child() {
     this_fiber::sleep_for(std::chrono::seconds(1));
     stream::tcp_stream str;
-    str.connect("127.0.0.1", "23456");
+    stream::tcp_stream str1;
+    str1.connect("127.0.0.1", "23456");
+    std::swap(str, str1);
     str << "hello" << std::endl;
     for(int i=0; i<100; i++) {
         // Receive a random number from server and send it back
@@ -39,7 +41,9 @@ void parent() {
     
     io::tcp::acceptor acc=io::listen(io::tcp::endpoint(asio::ip::tcp::v4(), 23456), true);
     std::error_code ec;
-    stream::tcp_stream str(io::accept(acc, 0, ec));
+    stream::tcp_stream str1(io::accept(acc, 0, ec));
+    stream::tcp_stream str;
+    str.swap(str1);
     assert(!ec);
     std::string line;
     std::getline(str, line);
