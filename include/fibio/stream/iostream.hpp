@@ -52,7 +52,10 @@ namespace fibio { namespace stream {
         {}
         
         // Non-movable
-        basic_iostream(basic_iostream &&src)=delete;
+        basic_iostream(basic_iostream &&src)
+        : streambase_t(std::move(src))
+        , std::iostream(&(this->sbuf_))
+        {}
         
         // Non-copyable
         basic_iostream(const basic_iostream&) = delete;

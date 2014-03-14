@@ -22,6 +22,8 @@ namespace fibio { namespace stream {
         : sd_(fibio::fibers::this_fiber::detail::get_io_service())
         { init_buffers(); }
         
+        basic_streambuf(basic_streambuf &&other)=default;
+        
         basic_streambuf(StreamDescriptor &&sd)
         : sd_(std::move(sd))
         { init_buffers(); }
@@ -51,7 +53,11 @@ namespace fibio { namespace stream {
         }
         
         void swap(basic_streambuf &other) {
-            std::swap(sd_, other.sd_);
+            StreamDescriptor temp(sd_.get_io_service());
+            temp=std::move(other.sd_);
+            other.sd_=std::move(sd_);
+            sd_=std::move(temp);
+            //std::swap(sd_, other.sd_);
             std::swap(get_buffer_, other.get_buffer_);
             std::swap(put_buffer_, other.put_buffer_);
             std::swap(connect_timeout_, other.connect_timeout_);
