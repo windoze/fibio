@@ -29,15 +29,13 @@ namespace fibio { namespace http { namespace client {
         return body_stream_.vector().size();
     }
     
-    bool request::write(std::ostream &os) const {
+    bool request::write(std::ostream &os) {
         if (!req_line_.write(os)) return false;
-        if (!headers_.write(os)) return false;
-        common::header_map::const_iterator i=headers_.find("Connection");
         // Make sure there is a Connection header
-        if (i==headers_.end()) {
-            os << "Connection: " << (get_persistent() ? "keep-alive" : "close" ) << "\r\n";
-        }
-        os << "Content-Length: " << get_content_length() << "\r\n";
+        set_persistent(get_persistent());
+        // Make sure there is a Content-Length header
+        headers_["Content-Length"]=boost::lexical_cast<std::string>(get_content_length());
+        if (!headers_.write(os)) return false;
         os << "\r\n";
         os << body_stream_.vector();
         os.flush();
@@ -121,7 +119,7 @@ namespace fibio { namespace http { namespace client {
         stream_.close();
     }
     
-    bool client::send_request(const request &req, response &resp) {
+    bool client::send_request(request &req, response &resp) {
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         // Make sure there is no pending data in the last response
         resp.clear();
@@ -129,26 +127,5 @@ namespace fibio { namespace http { namespace client {
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         //if (!stream_.is_open()) return false;
         return resp.read(stream_);
-    }
-    
-    void client::do_request(std::function<bool(request &)> &&prepare,
-                            std::function<bool(response &)> &&process)
-    {
-        request req;
-        response resp;
-        try {
-            if (!prepare(req)) {
-                return;
-            }
-            stream_ << req;
-            stream_.flush();
-            resp.read(stream_);
-            if (!process(resp)) {
-                disconnect();
-            }
-        } catch(boost::bad_lexical_cast &e) {
-            // Response format error
-            //printf("XXXXXXX\n");
-        }
     }
 }}} // End of namespace fibio::http::client

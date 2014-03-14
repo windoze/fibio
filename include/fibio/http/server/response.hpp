@@ -41,15 +41,10 @@ namespace fibio { namespace http { namespace server {
                 set_content_type(content_type);
         }
         
-        bool write(std::ostream &os) const;
+        bool write(std::ostream &os);
         
         boost::interprocess::basic_ovectorstream<std::string> body_stream_;
     };
-    
-    inline std::ostream &operator<<(std::ostream &os, const response &v) {
-        v.write(os);
-        return os;
-    }
 }}} // End of namespace fibio::http::server
 
 #endif

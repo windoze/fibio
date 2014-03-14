@@ -74,17 +74,15 @@ namespace fibio { namespace http { namespace server {
         return body_stream_.vector().size();
     }
     
-    bool response::write(std::ostream &os) const {
+    bool response::write(std::ostream &os) {
         if (!status_.write(os)) return false;
-        if (!headers_.write(os)) return false;
-        if (os.eof() || os.fail() || os.bad()) return false;
-        common::header_map::const_iterator i=headers_.find("Connection");
         // Make sure there is a Connection header
-        if (i==headers_.end()) {
-            os << "Connection: " << (get_persistent() ? "keep-alive" : "close" ) << "\r\n";
-        }
-        os << "Content-Length: " << get_content_length() << "\r\n";
+        set_persistent(get_persistent());
+        // Make sure there is a Content-Length header
+        headers_["Content-Length"]=boost::lexical_cast<std::string>(get_content_length());
+        if (!headers_.write(os)) return false;
         os << "\r\n";
+        if (os.eof() || os.fail() || os.bad()) return false;
         os << body_stream_.vector();
         os.flush();
         return !os.eof() && !os.fail() && !os.bad();
