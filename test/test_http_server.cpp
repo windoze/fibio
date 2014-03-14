@@ -72,7 +72,7 @@ void the_client() {
             assert(cl==req_body.size()*2);
             assert(resp.body_stream().eof());
         } else {
-            std::cout << "XXXXXXXX3" << std::endl;
+            assert(false);
         }
     }
 }
