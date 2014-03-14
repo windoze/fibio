@@ -30,8 +30,9 @@ namespace fibio { namespace http { namespace client {
     }
     
     bool request::write(std::ostream &os) const {
-        os << req_line_ << "\r\n";
-        os << headers_ ;
+        if (!req_line_.write(os)) return false;
+        os << "\r\n";
+        if (!headers_.write(os)) return false;
         common::header_map::const_iterator i=headers_.find("Connection");
         // Make sure there is a Connection header
         if (i==headers_.end()) {
@@ -63,8 +64,8 @@ namespace fibio { namespace http { namespace client {
     }
     
     bool response::read(std::istream &is) {
-        is >> status_;
-        is >> headers_;
+        if (!status_.read(is)) return false;
+        if (!headers_.read(is)) return false;
         if (status_.status_==common::status_code::INVALID) {
             return false;
         }

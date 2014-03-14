@@ -32,8 +32,8 @@ namespace fibio { namespace http { namespace server {
     }
     
     bool request::read(std::istream &is) {
-        is >> req_line_;
-        is >> headers_;
+        if (!req_line_.read(is)) return false;
+        if (!headers_.read(is)) return false;
         if (req_line_.method_==common::method::INVALID) {
             return false;
         }
@@ -75,8 +75,9 @@ namespace fibio { namespace http { namespace server {
     }
     
     bool response::write(std::ostream &os) const {
-        os << status_ << "\r\n";
-        os << headers_ ;
+        if (!status_.write(os)) return false;
+        os << "\r\n";
+        if (!headers_.write(os)) return false;
         if (os.eof() || os.fail() || os.bad()) return false;
         common::header_map::const_iterator i=headers_.find("Connection");
         // Make sure there is a Connection header
@@ -96,7 +97,6 @@ namespace fibio { namespace http { namespace server {
     {}
     
     bool server::connection::recv(request &req, uint64_t timeout) {
-        //if (!stream_.is_open()) return false;
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         req.clear();
         stream_.set_read_timeout(std::chrono::microseconds(timeout));
@@ -104,7 +104,6 @@ namespace fibio { namespace http { namespace server {
     }
     
     bool server::connection::send(response &resp, uint64_t timeout) {
-        //if (!stream_.is_open()) return false;
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         stream_.set_write_timeout(std::chrono::microseconds(timeout));
         if (/*!host_.empty()*/ 0) {

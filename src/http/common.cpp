@@ -142,50 +142,54 @@ namespace fibio { namespace http { namespace common {
         version_=http_version::INVALID;
     }
     
-    std::ostream &operator<<(std::ostream &os, const request_line &v) {
-        os << v.method_ << ' ' << v.url_ << ' ' << v.version_;
-        return os;
+    //std::ostream &operator<<(std::ostream &os, const request_line &v) {
+    bool request_line::write(std::ostream &os) const {
+        os << method_ << ' ' << url_ << ' ' << version_;
+        return true;
     }
     
-    std::istream &operator>>(std::istream &is, request_line &v) {
+    //std::istream &operator>>(std::istream &is, request_line &v) {
+    bool request_line::read(std::istream &is) {
         std::string line;
         std::getline(is, line);
         boost::algorithm::trim(line);
         if (line.empty() || is.eof()) {
-            return is;
+            return false;
         }
         // Method
         auto space=boost::algorithm::is_space();
         std::string::iterator first=line.begin();
         std::string::iterator last=std::find_if(first, line.end(), space);
         if (last==line.end()) {
-            // TODO: Error, invalid format
+            return false;
         }
         std::map<std::string, method, iless>::const_iterator i=detail::name_method_map.find(std::string(first, last));
         if (i==detail::name_method_map.end()) {
             // TODO: Error, unknown method
-            v.method_=method::INVALID;
+            method_=method::INVALID;
+            return false;
         }
-        v.method_=i->second;
+        method_=i->second;
         // URL
         // Skip adjunct spaces
         first=std::find_if_not(last+1, line.end(), space);
         last=std::find_if(first, line.end(), space);
-        v.url_.assign(first, last);
+        url_.assign(first, last);
         // HTTP Version
         first=std::find_if_not(last+1, line.end(), space);
         if (first==line.end()) {
             // No version specified, default to HTTP 1.0
-            v.version_=http_version::HTTP_1_0;
+            version_=http_version::HTTP_1_0;
         } else {
             std::map<std::string, http_version, iless>::const_iterator i=detail::name_http_version_map.find(std::string(first, line.end()));
             if (i==detail::name_http_version_map.end()) {
                 // TODO: Error, unknown HTTP version
-                v.version_=http_version::INVALID;
+                version_=http_version::INVALID;
+                return false;
             }
-            v.version_=i->second;
+            version_=i->second;
         }
-        return is;
+        return true;
     }
     
     void status_line::clear() {
@@ -194,41 +198,47 @@ namespace fibio { namespace http { namespace common {
         message_.clear();
     }
     
-    std::ostream &operator<<(std::ostream &os, const status_line &v) {
-        os << v.version_ << ' ' << uint(v.status_) << ' ' << v.message_;
-        return os;
+    //std::ostream &operator<<(std::ostream &os, const status_line &v) {
+    bool status_line::write(std::ostream &os) const {
+        os << version_ << ' ' << uint(status_) << ' ' << message_;
+        return true;
     }
     
-    std::istream &operator>>(std::istream &is, status_line &v) {
+    //std::istream &operator>>(std::istream &is, status_line &v) {
+    bool status_line::read(std::istream &is) {
         // status_line ::= version code msg
         std::string line;
         std::getline(is, line);
         boost::algorithm::trim(line);
         if (line.empty() || is.eof()) {
-            return is;
+            return false;
         }
         auto space=boost::algorithm::is_space();
         std::string::iterator first=line.begin();
         std::string::iterator last=std::find_if(first, line.end(), space);
         if (last==line.end()) {
             // TODO: Error, invalid format
+            return false;
         }
         std::map<std::string, http_version, iless>::const_iterator i=detail::name_http_version_map.find(std::string(first, last));
         if (i==detail::name_http_version_map.end()) {
             // TODO: Error, unknown HTTP version
-            v.version_=http_version::INVALID;
+            version_=http_version::INVALID;
+            return false;
         }
-        v.version_=i->second;
-        if (v.version_!=http_version::HTTP_0_9 && v.version_!=http_version::HTTP_1_0 && v.version_!=http_version::HTTP_1_1) {
-            std::cout << "XXXXxxXXX" << std::endl;
+        version_=i->second;
+        if (version_!=http_version::HTTP_0_9 && version_!=http_version::HTTP_1_0 && version_!=http_version::HTTP_1_1) {
+            //std::cout << "XXXXxxXXX" << std::endl;
+            return false;
         }
         // Skip adjunct spaces
         first=std::find_if_not(last+1, line.end(), space);
         last=std::find_if(first, line.end(), space);
         try {
-            v.status_=status_code(boost::lexical_cast<uint16_t>(std::string(first, last)));
+            status_=status_code(boost::lexical_cast<uint16_t>(std::string(first, last)));
         } catch(boost::bad_lexical_cast &e) {
-            v.status_=status_code::INVALID;
+            status_=status_code::INVALID;
+            return false;
         }
 
         if (last==line.end()) {
@@ -237,9 +247,9 @@ namespace fibio { namespace http { namespace common {
             // Skip adjunct spaces
             first=std::find_if_not(last+1, line.end(), space);
             // Last part is status message
-            v.message_.assign(first, line.end());
+            message_.assign(first, line.end());
         }
-        return is;
+        return true;
     }
     
     std::ostream &operator<<(std::ostream &os, const header_map &v) {

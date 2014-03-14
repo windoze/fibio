@@ -15,6 +15,8 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <boost/algorithm/string.hpp>
+#include <boost/interprocess/streams/vectorstream.hpp>
 #include <fibio/http/common/content_type.hpp>
 
 namespace fibio { namespace http { namespace common {
@@ -113,23 +115,29 @@ namespace fibio { namespace http { namespace common {
     
     struct request_line {
         void clear();
+        bool read(std::istream &is);
+        bool write(std::ostream &os) const;
+
         method method_=method::INVALID;
         std::string url_;
         http_version version_=http_version::INVALID;
     };
     
-    std::ostream &operator<<(std::ostream &os, const request_line &v);
-    std::istream &operator>>(std::istream &is, request_line &v);
+    //std::ostream &operator<<(std::ostream &os, const request_line &v);
+    //std::istream &operator>>(std::istream &is, request_line &v);
     
     struct status_line {
         void clear();
+        bool read(std::istream &is);
+        bool write(std::ostream &os) const;
+
         http_version version_=http_version::INVALID;
         status_code status_=status_code::INVALID;
         std::string message_;
     };
     
-    std::ostream &operator<<(std::ostream &os, const status_line &v);
-    std::istream &operator>>(std::istream &is, status_line &v);
+    //std::ostream &operator<<(std::ostream &os, const status_line &v);
+    //std::istream &operator>>(std::istream &is, status_line &v);
 
     typedef std::string header_key_type;
     typedef std::string header_value_type;
@@ -324,14 +332,61 @@ namespace fibio { namespace http { namespace common {
             return 1;
         }
         
+        bool read(std::istream &is) {
+            std::string line;
+            boost::interprocess::basic_vectorstream<std::string> value_stream;
+            auto space=boost::algorithm::is_space();
+            header_key_type last_key;
+            while (true) {
+                // TODO: Add max line limit
+                std::getline(is, line);
+                boost::algorithm::trim_right(line);
+                if (!line.empty()) {
+                    if (space(line[0])) {
+                        // Leading space, it is a continuation of last line
+                        if (last_key.empty()) {
+                            // TODO: Error header format
+                            return false;
+                        } else {
+                            // Compress leading spaces (RFC2616,sec4.2)
+                            std::string::iterator i=std::find_if_not(line.begin()+1, line.end(), space);
+                            //v[last_key].append(i, line.end());
+                            (*this)[last_key]+=" ";
+                            (*this)[last_key]+=header_value_type(i, line.end());
+                        }
+                    } else {
+                        // key:value
+                        std::string::iterator i=std::find(line.begin(), line.end(), ':');
+                        header_key_type key(line.begin(), i);
+                        header_value_type value(i+1, line.end());
+                        boost::algorithm::trim(key);
+                        boost::algorithm::trim(value);
+                        if (!key.empty() && !value.empty()) {
+                            (*this)[key]+=value;
+                            last_key=key;
+                        }
+                    }
+                } else {
+                    break;
+                }
+            }
+            return true;
+        }
+        
+        bool write(std::ostream &os) const {
+            for (auto &p: map_) {
+                os << p.first << ": " << p.second << "\r\n";
+            }
+            return true;
+        }
+
         map_type map_;
     };
     
     typedef basic_header_map<header_key_type, header_value_type, iequal> header_map;
     
-    std::ostream &operator<<(std::ostream &os, const header_map &v);
-    std::istream &operator>>(std::istream &is, header_map &v);
-    
+    //std::ostream &operator<<(std::ostream &os, const header_map &v);
+    //std::istream &operator>>(std::istream &is, header_map &v);
 }}} // End of namespace fibio::http::common
 
 namespace fibio { namespace http {
