@@ -42,7 +42,8 @@ namespace fibio { namespace http { namespace server {
             { return send(resp, std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count()); }
             
             std::string host_;
-            stream::tcp_stream stream_;
+            // HACK: deal with copy constructor
+            mutable stream::tcp_stream stream_;
         };
         
         server(const io::tcp::endpoint &ep, const std::string &host);

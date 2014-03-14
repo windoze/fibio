@@ -91,7 +91,7 @@ namespace fibio { namespace http { namespace server {
     }
     
     server::connection::connection(const server::connection &other)
-    : stream_(std::move(const_cast<server::connection&>(other).stream_))
+    : stream_(std::move(other.stream_))
     , host_(other.host_)
     {}
     
