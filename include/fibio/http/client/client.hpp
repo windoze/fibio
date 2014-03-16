@@ -36,7 +36,7 @@ namespace fibio { namespace http { namespace client {
         std::string server_;
         std::string port_;
         stream::tcp_stream stream_;
-        bool auto_decompress_;
+        bool auto_decompress_=false;
     };
 }}} // End of namespace fibio::http::client
 
