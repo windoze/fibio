@@ -31,7 +31,7 @@ namespace fibio { namespace http { namespace server {
         return sz;
     }
     
-    bool request::get_compression() const {
+    bool request::accept_compressed() const {
         std::string c=headers_["Accept-Encoding"];
         if (c.empty()) {
             return false;

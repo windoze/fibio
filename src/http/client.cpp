@@ -57,7 +57,7 @@ namespace fibio { namespace http { namespace client {
         return sz;
     }
     
-    void request::set_compression(bool c) {
+    void request::accept_compressed(bool c) {
         if (c) {
             // Support gzip only for now
             headers_["Accept-Encoding"]="gzip";
@@ -151,12 +151,20 @@ namespace fibio { namespace http { namespace client {
         stream_.close();
     }
     
-    bool client::send_request(request &req, response &resp, bool allow_compression) {
+    void client::set_auto_decompress(bool c) {
+        auto_decompress_=c;
+    }
+    
+    bool client::get_auto_decompress() const {
+        return auto_decompress_;
+    }
+    
+    bool client::send_request(request &req, response &resp) {
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         // Make sure there is no pending data in the last response
         resp.clear();
-        req.set_compression(allow_compression);
-        resp.set_auto_decompression(allow_compression);
+        req.accept_compressed(auto_decompress_);
+        resp.set_auto_decompression(auto_decompress_);
         if(!req.write(stream_)) return false;
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         //if (!stream_.is_open()) return false;

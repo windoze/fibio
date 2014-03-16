@@ -13,7 +13,7 @@ add_executable(test_tcp_stream test_tcp_stream.cpp)
 TARGET_LINK_LIBRARIES(test_tcp_stream fibio ${Boost_LIBRARIES})
 
 add_executable(test_http_client test_http_client.cpp)
-TARGET_LINK_LIBRARIES(test_http_client fibio ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(test_http_client fibio ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 
 add_executable(test_http_server test_http_server.cpp)
-TARGET_LINK_LIBRARIES(test_http_server fibio ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(test_http_server fibio ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})

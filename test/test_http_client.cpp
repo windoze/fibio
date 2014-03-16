@@ -32,7 +32,7 @@ void the_client() {
     req.set_http_version(http_version::HTTP_1_0);
     assert(req.get_persistent()==false);
     req.set_http_version(http_version::HTTP_1_1);
-    
+    c.set_auto_decompress(true);
     c.connect("fiberized.io", 80);
     for(int i=0; i<10; i++) {
         http::client::response resp;

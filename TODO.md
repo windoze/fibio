@@ -45,8 +45,10 @@ Utilities
     * BSON
 * Stream with compression
     * zlib
-    * bzip2
-    * snappy(?)
+        * Client can send compressed request
+        * Client can receive compressed response (DONE)
+        * Server can receive compressed request
+        * Server can send compressed response
 * Database driver
     * Redis driver
     * MongoDB driver(?)
