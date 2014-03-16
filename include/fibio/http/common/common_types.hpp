@@ -294,25 +294,39 @@ namespace fibio { namespace http { namespace common {
         void set(const key_type &k, const mapped_type &v) {
             iterator i=std::find_if(map_.begin(), map_.end(), key_equal(k));
             if(i==map_.end()) {
-                map_.push_back({k, v});
+                if (!v.empty()) {
+                    map_.push_back({k, v});
+                }
             } else {
-                i->second=v;
+                if (v.empty()) {
+                    map_.erase(i);
+                } else {
+                    i->second=v;
+                }
             }
         }
         
         void set(const key_type &k, mapped_type &&v) {
             iterator i=std::find_if(map_.begin(), map_.end(), key_equal(k));
             if(i==map_.end()) {
-                map_.push_back({k, std::move(v)});
+                if (!v.empty()) {
+                    map_.push_back({k, std::move(v)});
+                }
             } else {
-                i->second=std::move(v);
+                if (v.empty()) {
+                    map_.erase(i);
+                } else {
+                    i->second=std::move(v);
+                }
             }
         }
         
         void value_append(const key_type &k, const mapped_type &v) {
             iterator i=std::find_if(map_.begin(), map_.end(), key_equal(k));
             if(i==map_.end()) {
-                map_.push_back({k, v});
+                if (!v.empty()) {
+                    map_.push_back({k, v});
+                }
             } else {
                 i->second+=std::move(v);
             }
@@ -321,7 +335,9 @@ namespace fibio { namespace http { namespace common {
         void value_append(const key_type &k, mapped_type &&v) {
             iterator i=std::find_if(map_.begin(), map_.end(), key_equal(k));
             if(i==map_.end()) {
-                map_.push_back({k, std::move(v)});
+                if (!v.empty()) {
+                    map_.push_back({k, std::move(v)});
+                }
             } else {
                 i->second+=std::move(v);
             }
