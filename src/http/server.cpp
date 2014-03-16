@@ -32,6 +32,7 @@ namespace fibio { namespace http { namespace server {
     }
     
     bool request::read(std::istream &is) {
+        clear();
         if (!req_line_.read(is)) return false;
         if (!headers_.read(is)) return false;
         if (req_line_.method_==common::method::INVALID) {

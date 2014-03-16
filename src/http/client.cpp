@@ -61,6 +61,7 @@ namespace fibio { namespace http { namespace client {
     }
     
     bool response::read(std::istream &is) {
+        clear();
         if (!status_.read(is)) return false;
         if (!headers_.read(is)) return false;
         if (status_.status_==common::status_code::INVALID) {
