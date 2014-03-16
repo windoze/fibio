@@ -8,13 +8,9 @@
 
 #include <iostream>
 #include <vector>
-#include <chrono>
-#pragma GCC diagnostic ignored "-Wdeprecated-register"
-#include <boost/random.hpp>
-#include <fibio/fiber.hpp>
 #include <strstream>
+#include <fibio/fiber.hpp>
 #include <fibio/http/client/client.hpp>
-#include <boost/lexical_cast.hpp>
 
 using namespace fibio;
 using namespace fibio::http;
