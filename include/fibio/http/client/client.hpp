@@ -27,7 +27,7 @@ namespace fibio { namespace http { namespace client {
         std::error_code connect(const std::string &server, const std::string &port);
         std::error_code connect(const std::string &server, int port);
         void disconnect();
-        bool send_request(request &req, response &resp);
+        bool send_request(request &req, response &resp, bool allow_compression=false);
         
         std::string server_;
         std::string port_;

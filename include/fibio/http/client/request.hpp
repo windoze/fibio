@@ -31,6 +31,10 @@ namespace fibio { namespace http { namespace client {
         
         size_t get_content_length() const;
         
+        void set_compression(bool);
+        
+        bool get_compression() const;
+
         const std::string &get_body() const;
         
         std::ostream &body_stream();

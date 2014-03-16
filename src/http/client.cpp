@@ -9,6 +9,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/iostreams/restrict.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 #include <fibio/http/client/client.hpp>
 
 namespace fibio { namespace http { namespace client {
@@ -60,6 +61,27 @@ namespace fibio { namespace http { namespace client {
         return sz;
     }
     
+    void request::set_compression(bool c) {
+        if (c) {
+            // Support gzip only for now
+            headers_["Accept-Encoding"]="gzip";
+        } else {
+            headers_.erase("Accept-Encoding");
+        }
+    }
+    
+    bool request::get_compression() const {
+        return common::iequal()(headers_["Accept-Encoding"], std::string("gzip"));
+    }
+    
+    void response::set_auto_decompression(bool c) {
+        auto_decompress_=c;
+    }
+    
+    bool response::get_auto_decompression() const {
+        return auto_decompress_;
+    }
+    
     bool response::read(std::istream &is) {
         clear();
         if (!status_.read(is)) return false;
@@ -72,10 +94,27 @@ namespace fibio { namespace http { namespace client {
         }
         // Setup body stream
         namespace bio = boost::iostreams;
-        restriction_.reset(new bio::restriction<std::istream>(is, 0, get_content_length()));
-        bio::filtering_istream *in=new bio::filtering_istream;
-        in->push(*restriction_);
-        body_stream_.reset(in);
+        if (1) {
+            bio::filtering_istream *in=new bio::filtering_istream;
+            if (auto_decompress_) {
+                // Support gzip only for now
+                if (common::iequal()(headers_["Content-Encoding"], std::string("gzip"))) {
+                    in->push(boost::iostreams::gzip_decompressor());
+                }
+            }
+            restriction_.reset(new bio::restriction<std::istream>(is, 0, get_content_length()));
+            in->push(*restriction_);
+            body_stream_.reset(in);
+        } else {
+            bio::filtering_istream *in=new bio::filtering_istream;
+            if (auto_decompress_) {
+                // Support gzip only for now
+                if (common::iequal()(headers_["Content-Encoding"], std::string("gzip"))) {
+                    in->push(boost::iostreams::gzip_decompressor());
+                }
+            }
+            in->push(bio::restriction<std::istream>(is, 0, get_content_length()));
+        }
         return true;
     }
     
@@ -120,10 +159,12 @@ namespace fibio { namespace http { namespace client {
         stream_.close();
     }
     
-    bool client::send_request(request &req, response &resp) {
+    bool client::send_request(request &req, response &resp, bool allow_compression) {
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         // Make sure there is no pending data in the last response
         resp.clear();
+        req.set_compression(allow_compression);
+        resp.set_auto_decompression(allow_compression);
         if(!req.write(stream_)) return false;
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         //if (!stream_.is_open()) return false;

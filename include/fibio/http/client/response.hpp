@@ -31,9 +31,14 @@ namespace fibio { namespace http { namespace client {
             return *(body_stream_.get());
         }
         
+        void set_auto_decompression(bool c);
+        
+        bool get_auto_decompression() const;
+        
         // Consume and discard body
         void drop_body();
         
+        bool auto_decompress_=false;
         std::unique_ptr<boost::iostreams::restriction<std::istream>> restriction_;
         std::unique_ptr<std::istream> body_stream_;
     };
