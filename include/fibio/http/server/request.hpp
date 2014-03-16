@@ -20,6 +20,8 @@ namespace fibio { namespace http { namespace server {
         
         size_t get_content_length() const;
         
+        bool get_compression() const;
+        
         bool read(std::istream &is);
         
         inline bool has_body() const {

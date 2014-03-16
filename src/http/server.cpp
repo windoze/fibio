@@ -31,6 +31,15 @@ namespace fibio { namespace http { namespace server {
         return sz;
     }
     
+    bool request::get_compression() const {
+        std::string c=headers_["Accept-Encoding"];
+        if (c.empty()) {
+            return false;
+        }
+        // TODO: Kinda buggy
+        return strcasestr(c.c_str(), "gzip")!=NULL;
+    }
+    
     bool request::read(std::istream &is) {
         clear();
         if (!req_line_.read(is)) return false;
