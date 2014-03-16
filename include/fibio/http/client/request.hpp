@@ -35,20 +35,18 @@ namespace fibio { namespace http { namespace client {
         
         bool get_compression() const;
 
-        const std::string &get_body() const;
-        
         std::ostream &body_stream();
         
         template<typename T>
         void set_body(const T &t, const std::string &content_type=common::content_type<T>::name) {
-            body_stream_ << t;
+            body_stream() << t;
             if (get_content_type().empty())
                 set_content_type(content_type);
         }
 
         bool write(std::ostream &os);
 
-        boost::interprocess::basic_ovectorstream<std::string> body_stream_;
+        boost::interprocess::basic_ovectorstream<std::string> raw_body_stream_;
     };
 }}} // End of namespace fibio::http::client
 

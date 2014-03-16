@@ -18,16 +18,12 @@ namespace fibio { namespace http { namespace client {
         headers_.clear();
     }
     
-    const std::string &request::get_body() const {
-        return body_stream_.vector();
-    }
-    
     std::ostream &request::body_stream() {
-        return body_stream_;
+        return raw_body_stream_;
     }
     
     size_t request::get_content_length() const {
-        return body_stream_.vector().size();
+        return raw_body_stream_.vector().size();
     }
     
     bool request::write(std::ostream &os) {
@@ -38,7 +34,7 @@ namespace fibio { namespace http { namespace client {
         headers_["Content-Length"]=boost::lexical_cast<std::string>(get_content_length());
         if (!headers_.write(os)) return false;
         os << "\r\n";
-        os << body_stream_.vector();
+        os << raw_body_stream_.vector();
         os.flush();
         return !os.eof() && !os.fail() && !os.bad();
     }
@@ -68,10 +64,6 @@ namespace fibio { namespace http { namespace client {
         } else {
             headers_.erase("Accept-Encoding");
         }
-    }
-    
-    bool request::get_compression() const {
-        return common::iequal()(headers_["Accept-Encoding"], std::string("gzip"));
     }
     
     void response::set_auto_decompression(bool c) {
