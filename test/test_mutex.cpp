@@ -9,11 +9,13 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#pragma GCC diagnostic ignored "-Wdeprecated-register"
 #include <boost/random.hpp>
 #include <fibio/fiber.hpp>
 
 using namespace fibio;
 mutex m;
+recursive_mutex m1;
 
 void f(int n) {
     boost::random::mt19937 rng;
@@ -24,10 +26,26 @@ void f(int n) {
     }
 }
 
+void f1(int n) {
+    boost::random::mt19937 rng;
+    boost::random::uniform_int_distribution<> three(1,3);
+    for (int i=0; i<100; i++) {
+        unique_lock<recursive_mutex> lock(m1);
+        {
+            unique_lock<recursive_mutex> lock(m1);
+            this_fiber::sleep_for(std::chrono::milliseconds(three(rng)));
+        }
+        this_fiber::sleep_for(std::chrono::milliseconds(three(rng)));
+    }
+}
+
 int main_fiber(int argc, char *argv[]) {
     std::vector<fiber> fibers;
     for (int i=0; i<100; i++) {
         fibers.push_back(fiber([i](){ f(i); }));
+    }
+    for (int i=0; i<100; i++) {
+        fibers.push_back(fiber([i](){ f1(i); }));
     }
     for (fiber &f : fibers) {
         f.join();
