@@ -321,6 +321,10 @@ namespace fibio { namespace http { namespace common {
             }
         }
         
+        // HACK: Set-Cookie doesn't follow RFC2616,sec4.2 on most systems, which appears multiple times and cannot merge int one comma-seperated value list
+        // i.e. the attribute 'Expires' may has value such as 'Wed, 09 Jun 2021 10:18:14 GMT', which has comma inside the string, that makes merged Set-Cookie header cannot be splitted correctly.
+        // Stores multiple head as a VT seperated string
+        // We only deal with "Set-Cookie", not "Cookie" here as RFC 6265(sec5.4) forbids multiple 'Cookie' header
         void value_append(const key_type &k, const mapped_type &v) {
             iterator i=std::find_if(map_.begin(), map_.end(), key_equal(k));
             if(i==map_.end()) {
@@ -328,7 +332,12 @@ namespace fibio { namespace http { namespace common {
                     map_.push_back({k, v});
                 }
             } else {
-                i->second+=std::move(v);
+                if(iequal()(k, "set-cookie")) {
+                    i->second+='\v';
+                    i->second+=v;
+                } else {
+                    i->second+=v;
+                }
             }
         }
         
@@ -339,7 +348,12 @@ namespace fibio { namespace http { namespace common {
                     map_.push_back({k, std::move(v)});
                 }
             } else {
-                i->second+=std::move(v);
+                if(iequal()(k, "set-cookie")) {
+                    i->second+='\v';
+                    i->second+=std::move(v);
+                } else {
+                    i->second+=std::move(v);
+                }
             }
         }
         
@@ -383,7 +397,19 @@ namespace fibio { namespace http { namespace common {
                         boost::algorithm::trim(key);
                         boost::algorithm::trim(value);
                         if (!key.empty() && !value.empty()) {
-                            (*this)[key]+=value;
+                            iterator i=find(key);
+                            if (i==map_.end()) {
+                                (*this)[key]=value;
+                            } else {
+                                // Header field appeared multiple times (RFC2616,sec4.2)
+                                if (iequal()(key, "set-cookie")) {
+                                    // HACK: @see value_append
+                                    (*this)[key]+=value;
+                                } else {
+                                    (*this)[key]+=",";
+                                    (*this)[key]+=value;
+                                }
+                            }
                             last_key=key;
                         }
                     }
@@ -396,7 +422,19 @@ namespace fibio { namespace http { namespace common {
         
         bool write(std::ostream &os) const {
             for (auto &p: map_) {
-                os << p.first << ": " << p.second << "\r\n";
+                if (iequal()(p.first, "set-cookie")) {
+                    header_value_type::const_iterator first=p.second.begin();
+                    header_value_type::const_iterator last=std::find(p.second.begin(), p.second.end(), '\v');
+                    while(first!=p.second.end()) {
+                        os << p.first << ": " << header_value_type(first, last) << "\r\n";
+                        if(first==p.second.end()) break;
+                        if(last==p.second.end()) break;
+                        first=last+1;
+                        last=std::find(first, p.second.end(), '\v');
+                    }
+                } else {
+                    os << p.first << ": " << p.second << "\r\n";
+                }
             }
             return true;
         }
