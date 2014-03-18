@@ -13,8 +13,7 @@
 #include <fibio/fibers/fiber.hpp>
 
 namespace fibio { namespace fibers {
-//#ifdef __clang__
-#if 0
+#ifdef __clang__
     // Doesn't compile under GCC 4.8.1?
     namespace detail {
         template<typename T>
