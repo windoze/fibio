@@ -16,24 +16,32 @@
 
 namespace fibio { namespace stream {
     template<typename StreamDescriptor>
-    class basic_streambuf : public std::streambuf {
+    class basic_fibio_streambuf : public std::streambuf {
     public:
-        basic_streambuf()
+        basic_fibio_streambuf()
         : sd_(fibio::fibers::this_fiber::detail::get_io_service())
         { init_buffers(); }
         
-        basic_streambuf(basic_streambuf &&other)=default;
+        basic_fibio_streambuf(basic_fibio_streambuf &&other)
+        : sd_(std::move(other.sd_))
+        , get_buffer_(std::move(other.get_buffer_))
+        , put_buffer_(std::move(other.put_buffer_))
+        , connect_timeout_(other.connect_timeout_)
+        , read_timeout_(other.read_timeout_)
+        , write_timeout_(other.write_timeout_)
+        , unbuffered_(other.unbuffered_)
+        {}
         
-        basic_streambuf(StreamDescriptor &&sd)
+        basic_fibio_streambuf(StreamDescriptor &&sd)
         : sd_(std::move(sd))
         { init_buffers(); }
         
-        basic_streambuf(asio::io_service &iosvc)
+        basic_fibio_streambuf(asio::io_service &iosvc)
         : sd_(iosvc)
         { init_buffers(); }
         
         /// Destructor flushes buffered data.
-        ~basic_streambuf() {
+        ~basic_fibio_streambuf() {
             if (pptr() != pbase())
                 overflow(traits_type::eof());
         }
@@ -52,7 +60,7 @@ namespace fibio { namespace stream {
             return fibio::io::connect(sd_, ep, endpoint_t(), connect_timeout_);
         }
         
-        void swap(basic_streambuf &other) {
+        void swap(basic_fibio_streambuf &other) {
             StreamDescriptor temp(sd_.get_io_service());
             temp=std::move(other.sd_);
             other.sd_=std::move(sd_);
@@ -95,6 +103,21 @@ namespace fibio { namespace stream {
         { write_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
 
     protected:
+        pos_type seekoff(off_type off,
+                         std::ios_base::seekdir dir,
+                         std::ios_base::openmode which) override
+        {
+            // Only seeking in input buffer from current pos is allowed
+            if (which!=std::ios_base::in || dir!=std::ios_base::cur) return pos_type(off_type(-1));
+            char_type* newg=gptr()+off;
+            // Cannot seek back into put back area
+            if (newg <eback()+putback_max) return false;
+            // Cannot seek beyond end of get area
+            if (newg >=egptr()) return false;
+            setg(eback(), newg, egptr());
+            return pos_type(off_type(0));
+        }
+        
         virtual std::streamsize showmanyc() override {
             if ( gptr() == egptr() ) {
                 underflow();
@@ -102,7 +125,7 @@ namespace fibio { namespace stream {
             return egptr()-gptr();
         }
         
-        int_type underflow() {
+        int_type underflow() override {
             if (gptr() == egptr()) {
                 std::error_code ec;
                 size_t bytes_transferred=io::read_some(sd_,
@@ -122,7 +145,7 @@ namespace fibio { namespace stream {
             }
         }
         
-        int_type overflow(int_type c) {
+        int_type overflow(int_type c) override {
             std::error_code ec;
             if (unbuffered_) {
                 if (traits_type::eq_int_type(c, traits_type::eof())) {
@@ -163,12 +186,12 @@ namespace fibio { namespace stream {
             }
         }
         
-        int sync()
+        int sync() override
         {
             return overflow(traits_type::eof());
         }
         
-        std::streambuf* setbuf(char_type* s, std::streamsize n)
+        std::streambuf* setbuf(char_type* s, std::streamsize n) override
         {
             if (pptr() == pbase() && s == 0 && n == 0)
             {
@@ -203,14 +226,11 @@ namespace fibio { namespace stream {
         int write_timeout_=0;
         bool unbuffered_=false;
     };
-    
-    template<typename StreamDescriptor>
-    using streambuf=basic_streambuf<StreamDescriptor>;
 }}  // End of namespace fibio::stream
 
 namespace std {
     template<typename StreamDescriptor>
-    void swap(fibio::stream::basic_streambuf<StreamDescriptor> &lhs, fibio::stream::basic_streambuf<StreamDescriptor> &rhs) {
+    void swap(fibio::stream::basic_fibio_streambuf<StreamDescriptor> &lhs, fibio::stream::basic_fibio_streambuf<StreamDescriptor> &rhs) {
         lhs.swap(rhs);
     }
 }

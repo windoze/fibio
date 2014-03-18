@@ -15,7 +15,7 @@
 namespace fibio { namespace stream {
     template<typename StreamDescriptor>
     struct iostream_base {
-        typedef streambuf<StreamDescriptor> streambuf_t;
+        typedef basic_fibio_streambuf<StreamDescriptor> streambuf_t;
         
         iostream_base()=default;
         
@@ -31,12 +31,12 @@ namespace fibio { namespace stream {
     };
     
     template<typename StreamDescriptor>
-    class basic_iostream : private iostream_base<StreamDescriptor>, public std::iostream {
+    class basic_fibio_iostream : private iostream_base<StreamDescriptor>, public std::iostream {
     public:
-        typedef streambuf<StreamDescriptor> streambuf_t;
+        typedef basic_fibio_streambuf<StreamDescriptor> streambuf_t;
         typedef iostream_base<StreamDescriptor> streambase_t;
         
-        basic_iostream()
+        basic_fibio_iostream()
         : streambase_t()
         , std::iostream(&(this->sbuf_))
         {}
@@ -46,22 +46,22 @@ namespace fibio { namespace stream {
          *
          * @param s underlying stream device, such as socket or pipe
          */
-        basic_iostream(StreamDescriptor &&s)
+        basic_fibio_iostream(StreamDescriptor &&s)
         : streambase_t(std::move(s))
         , std::iostream(&(this->sbuf_))
         {}
         
         // Non-movable
-        basic_iostream(basic_iostream &&src)
+        basic_fibio_iostream(basic_fibio_iostream &&src)
         : streambase_t(std::move(src))
         , std::iostream(&(this->sbuf_))
         {}
         
         // Non-copyable
-        basic_iostream(const basic_iostream&) = delete;
-        basic_iostream& operator=(const basic_iostream&) = delete;
+        basic_fibio_iostream(const basic_fibio_iostream&) = delete;
+        basic_fibio_iostream& operator=(const basic_fibio_iostream&) = delete;
         
-        void swap(basic_iostream &other) {
+        void swap(basic_fibio_iostream &other) {
             this->sbuf_.swap(other.sbuf_);
         }
         
@@ -110,13 +110,13 @@ namespace fibio { namespace stream {
         { this->sbuf_.set_write_timeout(timeout_duration); }
     };
 
-    typedef basic_iostream<fibio::io::tcp::socket> tcp_stream;
-    typedef basic_iostream<fibio::io::posix::stream_descriptor> posix_stream;
+    typedef basic_fibio_iostream<fibio::io::tcp::socket> tcp_stream;
+    typedef basic_fibio_iostream<fibio::io::posix::stream_descriptor> posix_stream;
 }}  // End of namespace fibio::stream
 
 namespace std {
     template<typename StreamDescriptor>
-    void swap(fibio::stream::basic_iostream<StreamDescriptor> &lhs, fibio::stream::basic_iostream<StreamDescriptor> &rhs) {
+    void swap(fibio::stream::basic_fibio_iostream<StreamDescriptor> &lhs, fibio::stream::basic_fibio_iostream<StreamDescriptor> &rhs) {
         lhs.swap(rhs);
     }
 }

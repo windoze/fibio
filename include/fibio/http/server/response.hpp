@@ -30,20 +30,21 @@ namespace fibio { namespace http { namespace server {
         
         size_t get_content_length() const;
         
+        void set_content_type(const std::string &);
+        
         const std::string &get_body() const;
         
         std::ostream &body_stream();
         
         template<typename T>
         void set_body(const T &t, const std::string &content_type=common::content_type<T>::name) {
-            body_stream_ << t;
-            if (get_content_type().empty())
-                set_content_type(content_type);
+            set_content_type(content_type);
+            body_stream() << t;
         }
         
         bool write(std::ostream &os);
         
-        boost::interprocess::basic_ovectorstream<std::string> body_stream_;
+        boost::interprocess::basic_ovectorstream<std::string> raw_body_stream_;
     };
 }}} // End of namespace fibio::http::server
 

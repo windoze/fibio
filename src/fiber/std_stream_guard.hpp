@@ -13,7 +13,7 @@
 
 namespace fibio { namespace fibers { namespace detail {
     struct fiberized_std_stream_guard {
-        typedef stream::streambuf<io::posix::stream_descriptor> sbuf_t;
+        typedef stream::basic_fibio_streambuf<io::posix::stream_descriptor> sbuf_t;
         typedef sbuf_t *sbuf_ptr_t;
         
         fiberized_std_stream_guard(asio::io_service &iosvc);

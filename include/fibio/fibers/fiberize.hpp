@@ -13,6 +13,8 @@
 #include <fibio/fibers/fiber.hpp>
 
 namespace fibio { namespace fibers {
+#ifdef __clang__
+    // Doesn't compile under GCC 4.8.1?
     namespace detail {
         template<typename T>
         struct to_int_if_void {
@@ -48,6 +50,24 @@ namespace fibio { namespace fibers {
         fibio::scheduler::reset_instance();
         return (ActualRet)(ret);
     }
+#else
+    inline int fiberize(size_t nthr, std::function<int(int, char *[])> &&fn, int argc, char *argv[]) {
+        int ret;
+        try {
+            fibio::scheduler sched=fibio::scheduler::get_instance();
+            sched.start(nthr);
+            fibio::fiber f([&](){
+                ret=fn(argc, argv);
+                
+            });
+            sched.join();
+        } catch (std::exception& e) {
+            std::cerr << "Exception: " << e.what() << "\n";
+        }
+        fibio::scheduler::reset_instance();
+        return ret;
+    }
+#endif
 }}  // End of namespace fibio::fibers
 
 namespace fibio {

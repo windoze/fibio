@@ -18,12 +18,10 @@ namespace fibio { namespace http { namespace client {
     struct response : common::response {
         void clear();
         
-        size_t get_content_length() const;
-        
         bool read(std::istream &is);
         
         inline bool has_body() const {
-            return get_content_length()>0 && body_stream_.get();
+            return content_length>0 && body_stream_.get();
         }
         
         inline std::istream &body_stream() {
@@ -31,9 +29,14 @@ namespace fibio { namespace http { namespace client {
             return *(body_stream_.get());
         }
         
+        void set_auto_decompression(bool c);
+        
+        bool get_auto_decompression() const;
+        
         // Consume and discard body
         void drop_body();
         
+        bool auto_decompress_=false;
         std::unique_ptr<boost::iostreams::restriction<std::istream>> restriction_;
         std::unique_ptr<std::istream> body_stream_;
     };

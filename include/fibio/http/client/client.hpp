@@ -27,11 +27,16 @@ namespace fibio { namespace http { namespace client {
         std::error_code connect(const std::string &server, const std::string &port);
         std::error_code connect(const std::string &server, int port);
         void disconnect();
+        
+        void set_auto_decompress(bool c);
+        bool get_auto_decompress() const;
+        
         bool send_request(request &req, response &resp);
         
         std::string server_;
         std::string port_;
         stream::tcp_stream stream_;
+        bool auto_decompress_=false;
     };
 }}} // End of namespace fibio::http::client
 

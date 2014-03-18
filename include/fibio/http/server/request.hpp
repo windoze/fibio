@@ -18,12 +18,12 @@ namespace fibio { namespace http { namespace server {
     struct request : common::request {
         void clear();
         
-        size_t get_content_length() const;
+        bool accept_compressed() const;
         
         bool read(std::istream &is);
         
         inline bool has_body() const {
-            return get_content_length()>0 && body_stream_.get();
+            return content_length>0 && body_stream_.get();
         }
         
         inline std::istream &body_stream() {
