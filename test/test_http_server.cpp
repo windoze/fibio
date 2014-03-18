@@ -12,7 +12,7 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-register"
 #include <boost/random.hpp>
 #include <fibio/fiber.hpp>
-#include <strstream>
+#include <sstream>
 #include <boost/lexical_cast.hpp>
 #include <fibio/http/client/client.hpp>
 #include <fibio/http/server/server.hpp>
