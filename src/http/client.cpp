@@ -146,12 +146,15 @@ namespace fibio { namespace http { namespace client {
         return auto_decompress_;
     }
     
-    bool client::send_request(request &req, response &resp) {
+    bool client::send_request(request &req, response &resp, uint64_t timeout) {
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         // Make sure there is no pending data in the last response
         resp.clear();
         req.accept_compressed(auto_decompress_);
         resp.set_auto_decompression(auto_decompress_);
+        stream_.set_connect_timeout(std::chrono::milliseconds(timeout));
+        stream_.set_write_timeout(std::chrono::milliseconds(timeout));
+        stream_.set_read_timeout(std::chrono::milliseconds(timeout));
         if(!req.write(stream_)) return false;
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         //if (!stream_.is_open()) return false;
