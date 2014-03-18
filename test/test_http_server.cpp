@@ -26,22 +26,14 @@ void the_client() {
     http_client c;
     http_client::request req;
     std::string req_body("hello");
-    req.set_url("/");
-    req.set_host("localhost:23456");
+    req.url="/";
     // Default method
-    assert(req.get_method()==method::INVALID);
-    req.set_method(http::common::method::GET);
+    assert(req.method==http_method::INVALID);
+    req.method=http_method::GET;
     // Default version
-    assert(req.get_http_version()==http_version::INVALID);
+    assert(req.version==http_version::INVALID);
+    req.version=http_version::HTTP_1_1;
     assert(req.get_content_length()==0);
-    assert(req.get_host()=="localhost:23456");
-    req.set_http_version(http_version::HTTP_1_0);
-    assert(req.get_persistent()==false);
-    req.set_http_version(http_version::HTTP_1_1);
-    assert(req.get_persistent()==true);
-    req.body_stream() << "hello";
-    req.body_stream().flush();
-    assert(req.get_content_length()==5);
     
     if(c.connect("127.0.0.1", 23456)) {
         assert(false);
@@ -59,18 +51,18 @@ void the_client() {
                 assert(false);
             }
             // This server returns a 200 response
-            assert(resp.get_status_code()==status_code::OK);
-            assert(resp.get_status_msg()=="OK");
-            assert(resp.get_http_version()==http_version::HTTP_1_1);
+            assert(resp.status_code==http_status_code::OK);
+            assert(resp.status_message=="OK");
+            assert(resp.version==http_version::HTTP_1_1);
             
-            size_t cl=resp.get_content_length();
+            size_t cl=resp.content_length;
             std::string s;
             std::stringstream ss;
             ss << resp.body_stream().rdbuf();
             s=ss.str();
             resp.body_stream().peek();
             assert(s.size()==cl);
-            assert(cl==req_body.size()*2);
+            //assert(cl==req_body.size()*2);
             assert(resp.body_stream().eof());
         } else {
             assert(false);
@@ -80,19 +72,32 @@ void the_client() {
 
 void servant(http_server::connection sc) {
     http_server::request req;
+    int count=0;
     while(sc.recv(req)) {
+        //req.write(std::cout);
+        //std::cout.flush();
+
         std::string s;
-        std::stringstream ss;
-        ss << req.body_stream().rdbuf();
-        s=ss.str();
+        if (req.content_length>0 && (req.content_length!=ULONG_MAX)) {
+            std::stringstream ss;
+            ss << req.body_stream().rdbuf();
+            s=ss.str();
+        }
 
         http_server::response resp;
-        resp.set_status_code(status_code::OK);
-        resp.set_http_version(req.get_http_version());
-        resp.set_persistent(req.get_persistent());
-        resp.set_content_type("text/plain");
-        resp.body_stream() << s << s;
+        resp.status_code=http_status_code::OK;
+        resp.version=req.version;
+        resp.keep_alive=req.keep_alive;
+        if(count>=100) resp.keep_alive=false;
+        resp.set_content_type("text/html");
+        resp.body_stream() << "<HTML><HEAD><TITLE>Test</TITLE></HEAD><BODY><TABLE>" << std::endl;
+        for(auto &p: req.headers) {
+            resp.body_stream() << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>" <<std::endl;
+        }
+        resp.body_stream() << "</TABLE></BODY></HTML>" << std::endl;
         sc.send(resp);
+        sc.stream_.flush();
+        count++;
     }
 }
 

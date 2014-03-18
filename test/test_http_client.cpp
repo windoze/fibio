@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include <vector>
-#include <strstream>
+#include <sstream>
 #include <fibio/fiber.hpp>
 #include <fibio/http/client/client.hpp>
 
@@ -18,36 +18,39 @@ using namespace fibio::http;
 void the_client() {
     http_client c;
     http_client::request req;
-    req.set_url("/");
-    req.set_host("fiberized.io");
+    req.url.assign("/");
+    req.headers.insert(std::make_pair("Host", "tank"));
     // Default method
-    assert(req.get_method()==method::INVALID);
-    req.set_method(method::GET);
+    assert(req.method==http_method::INVALID);
+    req.method=http_method::GET;
     // Default version
-    assert(req.get_http_version()==http_version::INVALID);
-    req.set_http_version(http_version::HTTP_1_1);
-    assert(req.get_persistent()==true);
+    assert(req.version==http_version::INVALID);
+    req.version=http_version::HTTP_1_1;
     assert(req.get_content_length()==0);
-    assert(req.get_host()=="fiberized.io");
-    req.set_http_version(http_version::HTTP_1_0);
-    assert(req.get_persistent()==false);
-    req.set_http_version(http_version::HTTP_1_1);
-    c.set_auto_decompress(true);
-    c.connect("fiberized.io", 80);
+    //c.set_auto_decompress(true);
+    
+    req.write(std::cout);
+    
+    c.connect("tank", 80);
     for(int i=0; i<10; i++) {
         http::client::response resp;
         if(c.send_request(req, resp)) {
+            resp.write(std::cout);
             // This server returns a 301 response
-            assert(resp.get_http_version()==http_version::HTTP_1_1);
-            assert(resp.get_status_code()==status_code::MOVED_PERMANENTLY);
+            assert(resp.version==http_version::HTTP_1_1);
+            //assert(resp.status_code==http_status_code::MOVED_PERMANENTLY);
+            assert(resp.status_code==http_status_code::OK);
             //std::cout << resp.status_ << std::endl;
             //std::cout << resp.headers_ << std::endl;
 
-            size_t cl=resp.get_content_length();
+            size_t cl=resp.content_length;
             std::string s;
             std::stringstream ss;
             ss << resp.body_stream().rdbuf();
             s=ss.str();
+            std::cout << s;
+            std::cout.flush();
+            std::cout << s.size() << std::endl;
             assert(s.size()==cl);
             // Make sure we triggered EOF condition
             resp.body_stream().peek();
@@ -59,7 +62,7 @@ void the_client() {
 
 int main_fiber(int argc, char *argv[]) {
     std::vector<fiber> fibers;
-    for (int i=0; i<10; i++) {
+    for (int i=0; i<1; i++) {
         fibers.push_back(fiber(the_client));
     }
     for (fiber &f : fibers) {
