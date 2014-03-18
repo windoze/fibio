@@ -14,6 +14,7 @@ INCLUDE_DIRECTORIES(
     ${Boost_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/asio/asio/include
+    ${CMAKE_SOURCE_DIR}/http-parser
     ${CMAKE_SOURCE_DIR}/include
 )
 
