@@ -16,20 +16,11 @@
 
 namespace fibio { namespace http { namespace client {
     struct request : common::request {
-        request()=default;
-        
-        request(const request &other)
-        : common::request(other)
-        {}
-        
-        request &operator=(const request &other) {
-            common::request::operator=(other);
-            return *this;
-        }
-        
         void clear();
         
         size_t get_content_length() const;
+        
+        void set_content_type(const std::string &);
         
         void accept_compressed(bool);
         
@@ -37,9 +28,8 @@ namespace fibio { namespace http { namespace client {
         
         template<typename T>
         void set_body(const T &t, const std::string &content_type=common::content_type<T>::name) {
+            set_content_type(content_type);
             body_stream() << t;
-            if (get_content_type().empty())
-                set_content_type(content_type);
         }
 
         bool write(std::ostream &os);

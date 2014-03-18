@@ -33,6 +33,9 @@
 		2D131A1F18D1F91A0086156F /* server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D131A1D18D1F91A0086156F /* server.cpp */; };
 		2D131A3218D214D10086156F /* test_http_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D131A3018D214D10086156F /* test_http_server.cpp */; };
 		2D131A3318D214EE0086156F /* fibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* fibio.dylib */; };
+		2D131A6E18D7F38D0086156F /* http_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 2D131A6718D7F3810086156F /* http_parser.c */; };
+		2DD5663D18D870D9002A259D /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DD5663C18D870D9002A259D /* libz.dylib */; };
+		2DD5663F18D870E8002A259D /* libboost_iostreams-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DD5663E18D870E8002A259D /* libboost_iostreams-mt.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -113,6 +116,20 @@
 		2D131A2218D200D90086156F /* server.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = server.hpp; sourceTree = "<group>"; };
 		2D131A2718D214A40086156F /* test_http_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_http_server; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D131A3018D214D10086156F /* test_http_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_http_server.cpp; sourceTree = "<group>"; };
+		2D131A5F18D7F3810086156F /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		2D131A6018D7F3810086156F /* .mailmap */ = {isa = PBXFileReference; lastKnownFileType = text; path = .mailmap; sourceTree = "<group>"; };
+		2D131A6118D7F3810086156F /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
+		2D131A6218D7F3810086156F /* AUTHORS */ = {isa = PBXFileReference; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
+		2D131A6418D7F3810086156F /* parsertrace.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = parsertrace.c; sourceTree = "<group>"; };
+		2D131A6518D7F3810086156F /* url_parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = url_parser.c; sourceTree = "<group>"; };
+		2D131A6618D7F3810086156F /* CONTRIBUTIONS */ = {isa = PBXFileReference; lastKnownFileType = text; path = CONTRIBUTIONS; sourceTree = "<group>"; };
+		2D131A6718D7F3810086156F /* http_parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = http_parser.c; sourceTree = "<group>"; };
+		2D131A6818D7F3810086156F /* http_parser.gyp */ = {isa = PBXFileReference; lastKnownFileType = text; path = http_parser.gyp; sourceTree = "<group>"; };
+		2D131A6918D7F3810086156F /* http_parser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = http_parser.h; sourceTree = "<group>"; };
+		2D131A6A18D7F3810086156F /* LICENSE-MIT */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-MIT"; sourceTree = "<group>"; };
+		2D131A6B18D7F3810086156F /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		2D131A6C18D7F3810086156F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		2D131A6D18D7F3810086156F /* test.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = test.c; sourceTree = "<group>"; };
 		2D7E685F18CCCD5D00B7C4E5 /* concurrent_queue.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = concurrent_queue.hpp; sourceTree = "<group>"; };
 		2D7E686018CCCD5D00B7C4E5 /* fiber.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = fiber.hpp; sourceTree = "<group>"; };
 		2D7E686218CCCD5D00B7C4E5 /* condition_variable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = condition_variable.hpp; sourceTree = "<group>"; };
@@ -1041,6 +1058,8 @@
 		2DD3B6F418CE1A50009E1F3E /* response.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = response.hpp; sourceTree = "<group>"; };
 		2DD3B6F518CF1F0D009E1F3E /* content_type.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = content_type.hpp; sourceTree = "<group>"; };
 		2DD3B6F618CF2F59009E1F3E /* client.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = client.hpp; sourceTree = "<group>"; };
+		2DD5663C18D870D9002A259D /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		2DD5663E18D870E8002A259D /* libboost_iostreams-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_iostreams-mt.a"; path = "../../../../usr/local/Cellar/boost/1.55.0/lib/libboost_iostreams-mt.a"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1056,8 +1075,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2DD5663D18D870D9002A259D /* libz.dylib in Frameworks */,
 				2D1319CD18D0A2D20086156F /* libboost_context-mt.a in Frameworks */,
 				2D1319CE18D0A2D20086156F /* libboost_coroutine-mt.a in Frameworks */,
+				2DD5663F18D870E8002A259D /* libboost_iostreams-mt.a in Frameworks */,
 				2D1319CF18D0A2D20086156F /* libboost_system-mt.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1129,9 +1150,40 @@
 			path = server;
 			sourceTree = "<group>";
 		};
+		2D131A5E18D7F3810086156F /* http-parser */ = {
+			isa = PBXGroup;
+			children = (
+				2D131A5F18D7F3810086156F /* .gitignore */,
+				2D131A6018D7F3810086156F /* .mailmap */,
+				2D131A6118D7F3810086156F /* .travis.yml */,
+				2D131A6218D7F3810086156F /* AUTHORS */,
+				2D131A6318D7F3810086156F /* contrib */,
+				2D131A6618D7F3810086156F /* CONTRIBUTIONS */,
+				2D131A6718D7F3810086156F /* http_parser.c */,
+				2D131A6818D7F3810086156F /* http_parser.gyp */,
+				2D131A6918D7F3810086156F /* http_parser.h */,
+				2D131A6A18D7F3810086156F /* LICENSE-MIT */,
+				2D131A6B18D7F3810086156F /* Makefile */,
+				2D131A6C18D7F3810086156F /* README.md */,
+				2D131A6D18D7F3810086156F /* test.c */,
+			);
+			path = "http-parser";
+			sourceTree = "<group>";
+		};
+		2D131A6318D7F3810086156F /* contrib */ = {
+			isa = PBXGroup;
+			children = (
+				2D131A6418D7F3810086156F /* parsertrace.c */,
+				2D131A6518D7F3810086156F /* url_parser.c */,
+			);
+			path = contrib;
+			sourceTree = "<group>";
+		};
 		2D7E684718CCCD2D00B7C4E5 = {
 			isa = PBXGroup;
 			children = (
+				2DD5663E18D870E8002A259D /* libboost_iostreams-mt.a */,
+				2DD5663C18D870D9002A259D /* libz.dylib */,
 				2D7E6C5C18CCCEA200B7C4E5 /* libboost_context-mt.a */,
 				2D7E6C5D18CCCEA200B7C4E5 /* libboost_coroutine-mt.a */,
 				2D7E6C5E18CCCEA200B7C4E5 /* libboost_system-mt.a */,
@@ -1140,6 +1192,7 @@
 				2D7E688318CCCD5D00B7C4E5 /* TODO.md */,
 				2D13199C18CF85330086156F /* CMakeLists.txt */,
 				2D7E688D18CCCE0E00B7C4E5 /* asio */,
+				2D131A5E18D7F3810086156F /* http-parser */,
 				2D7E685C18CCCD5D00B7C4E5 /* include */,
 				2D7E687418CCCD5D00B7C4E5 /* src */,
 				2D13199D18D09B630086156F /* test */,
@@ -3118,6 +3171,7 @@
 				2D1319C418D0A28F0086156F /* fiber_object.cpp in Sources */,
 				2D1319C618D0A28F0086156F /* scheduler_object.cpp in Sources */,
 				2D1319C518D0A28F0086156F /* mutex_object.cpp in Sources */,
+				2D131A6E18D7F38D0086156F /* http_parser.c in Sources */,
 				2D1319C818D0A28F0086156F /* posix.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3213,6 +3267,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
+					/usr/local/Cellar/boost/1.55.0/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3228,6 +3283,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/lib,
+					/usr/local/Cellar/boost/1.55.0/lib,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3407,6 +3463,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(SRCROOT)/asio/asio/include",
+					"$(SRCROOT)/http-parser",
 					"$(SRCROOT)/include",
 					/usr/local/include,
 				);
@@ -3443,6 +3500,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(SRCROOT)/asio/asio/include",
+					"$(SRCROOT)/http-parser",
 					"$(SRCROOT)/include",
 					/usr/local/include,
 				);
@@ -3513,6 +3571,7 @@
 				2D131A2F18D214A40086156F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		2D7E684B18CCCD2D00B7C4E5 /* Build configuration list for PBXProject "fibio" */ = {
 			isa = XCConfigurationList;

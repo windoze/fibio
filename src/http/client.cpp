@@ -13,9 +13,14 @@
 #include <fibio/http/client/client.hpp>
 
 namespace fibio { namespace http { namespace client {
+    //////////////////////////////////////////////////////////////////////////////////////////
+    // request
+    //////////////////////////////////////////////////////////////////////////////////////////
+    
     void request::clear() {
-        req_line_.clear();
-        headers_.clear();
+        common::request::clear();
+        std::string e;
+        raw_body_stream_.swap_vector(e);
     }
     
     std::ostream &request::body_stream() {
@@ -26,44 +31,34 @@ namespace fibio { namespace http { namespace client {
         return raw_body_stream_.vector().size();
     }
     
+    void request::accept_compressed(bool c) {
+        if (c) {
+            // Support gzip only for now
+            common::header_map::iterator i=headers.find("Accept-Encoding");
+            if (i==headers.end()) {
+                headers.insert(std::make_pair("Accept-Encoding", "gzip"));
+            } else {
+                i->second="gzip";
+            }
+        } else {
+            headers.erase("Accept-Encoding");
+        }
+    }
+    
     bool request::write(std::ostream &os) {
-        if (!req_line_.write(os)) return false;
-        // Make sure there is a Connection header
-        set_persistent(get_persistent());
-        // Make sure there is a Content-Length header
-        headers_["Content-Length"]=boost::lexical_cast<std::string>(get_content_length());
-        if (!headers_.write(os)) return false;
-        os << "\r\n";
+        if (!common::request::write(os)) return false;
         os << raw_body_stream_.vector();
         os.flush();
         return !os.eof() && !os.fail() && !os.bad();
     }
     
+    //////////////////////////////////////////////////////////////////////////////////////////
+    // response
+    //////////////////////////////////////////////////////////////////////////////////////////
+    
     void response::clear() {
         drop_body();
-        status_.clear();
-        headers_.clear();
-        restriction_.reset();
-        body_stream_.reset();
-    }
-    
-    size_t response::get_content_length() const {
-        size_t sz=0;
-        try {
-            sz=boost::lexical_cast<size_t>(headers_.get("content-length", std::string("0")));
-        } catch (boost::bad_lexical_cast &e) {
-            sz=0;
-        }
-        return sz;
-    }
-    
-    void request::accept_compressed(bool c) {
-        if (c) {
-            // Support gzip only for now
-            headers_["Accept-Encoding"]="gzip";
-        } else {
-            headers_.erase("Accept-Encoding");
-        }
+        common::response::clear();
     }
     
     void response::set_auto_decompression(bool c) {
@@ -76,36 +71,22 @@ namespace fibio { namespace http { namespace client {
     
     bool response::read(std::istream &is) {
         clear();
-        if (!status_.read(is)) return false;
-        if (!headers_.read(is)) return false;
-        if (status_.status_==common::status_code::INVALID) {
-            return false;
-        }
-        if (is.eof()) {
-            return false;
-        }
-        // Setup body stream
-        namespace bio = boost::iostreams;
-        if (1) {
+        if (!common::response::read(is)) return false;
+        
+        if (content_length>0) {
+            // Setup body stream
+            namespace bio = boost::iostreams;
             bio::filtering_istream *in=new bio::filtering_istream;
             if (auto_decompress_) {
                 // Support gzip only for now
-                if (common::iequal()(headers_["Content-Encoding"], std::string("gzip"))) {
+                auto i=headers.find("Content-Encoding");
+                if (i!=headers.end() && common::iequal()(i->second, std::string("gzip"))) {
                     in->push(boost::iostreams::gzip_decompressor());
                 }
             }
-            restriction_.reset(new bio::restriction<std::istream>(is, 0, get_content_length()));
+            restriction_.reset(new bio::restriction<std::istream>(is, 0, content_length));
             in->push(*restriction_);
             body_stream_.reset(in);
-        } else {
-            bio::filtering_istream *in=new bio::filtering_istream;
-            if (auto_decompress_) {
-                // Support gzip only for now
-                if (common::iequal()(headers_["Content-Encoding"], std::string("gzip"))) {
-                    in->push(boost::iostreams::gzip_decompressor());
-                }
-            }
-            in->push(bio::restriction<std::istream>(is, 0, get_content_length()));
         }
         return true;
     }
@@ -117,8 +98,14 @@ namespace fibio { namespace http { namespace client {
                 char buf[1024];
                 body_stream().read(buf, sizeof(buf));
             }
+            body_stream_.reset();
+            restriction_.reset();
         }
     }
+    
+    //////////////////////////////////////////////////////////////////////////////////////////
+    // client
+    //////////////////////////////////////////////////////////////////////////////////////////
     
     client::client(const std::string &server, const std::string &port) {
         std::error_code ec=connect(server, port);
