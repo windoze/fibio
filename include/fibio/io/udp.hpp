@@ -13,6 +13,7 @@
 
 namespace fibio { namespace io {
     namespace udp {
+        typedef asio::ip::udp protocol;
         typedef asio::ip::udp::resolver::query query;
         typedef asio::ip::udp::endpoint endpoint;
         typedef asio::ip::udp::socket socket;

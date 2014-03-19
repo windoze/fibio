@@ -13,6 +13,7 @@
 
 namespace fibio { namespace io {
     namespace tcp {
+        typedef asio::ip::tcp protocol;
         typedef asio::ip::tcp::resolver::query query;
         typedef asio::ip::tcp::endpoint endpoint;
         typedef asio::ip::tcp::socket socket;
