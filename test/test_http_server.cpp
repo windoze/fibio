@@ -78,7 +78,7 @@ void servant(http_server::connection sc) {
         //std::cout.flush();
 
         std::string s;
-        if (req.content_length>0 && (req.content_length!=ULONG_MAX)) {
+        if (req.content_length>0) {
             std::stringstream ss;
             ss << req.body_stream().rdbuf();
             s=ss.str();
@@ -104,24 +104,18 @@ void servant(http_server::connection sc) {
 void the_server() {
     http_server svr(io::tcp::endpoint(asio::ip::tcp::v4(), 23456), "localhost:23456");
     std::error_code ec;
-    while (1) {
+    // Check exit flag
+    while (!should_exit) {
         http_server::connection sc;
         ec=svr.accept(sc, std::chrono::seconds(1));
-        // Why ec has system_category instead of generic_category?
-        if (ec.value()==std::make_error_code(std::errc::timed_out).value()) {
-            // No one tried to connect in last 1 second
-            // Check exit flag
-            if (should_exit) {
-                return;
+        if(ec) {
+            // Why ec has system_category instead of generic_category?
+            if (ec.value()!=static_cast<int>(std::errc::timed_out)) {
+                std::cout << ec << std::endl;
             }
-            continue;
+        } else {
+            fiber([sc](){ servant(sc); }).detach();
         }
-        if (ec) {
-            std::cout << ec << std::endl;
-            continue;
-        }
-        fiber s([sc](){ servant(sc); });
-        s.detach();
     }
 }
 
