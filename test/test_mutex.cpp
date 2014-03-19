@@ -42,10 +42,10 @@ void f1(int n) {
 int main_fiber(int argc, char *argv[]) {
     std::vector<fiber> fibers;
     for (int i=0; i<100; i++) {
-        fibers.push_back(fiber([i](){ f(i); }));
+        fibers.push_back(fiber(f, i));
     }
     for (int i=0; i<100; i++) {
-        fibers.push_back(fiber([i](){ f1(i); }));
+        fibers.push_back(fiber(f1, i));
     }
     for (fiber &f : fibers) {
         f.join();

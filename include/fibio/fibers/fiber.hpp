@@ -12,6 +12,7 @@
 #include <memory>
 #include <functional>
 #include <chrono>
+#include <utility>
 #include <asio/io_service.hpp>
 #include <fibio/fibers/detail/forward.hpp>
 
@@ -35,6 +36,20 @@ namespace fibio { namespace fibers {
     struct fiber {
         typedef uintptr_t id;
         
+        template<typename Fn, typename... Args>
+        fiber(Fn fn, Args&&... args)
+        : fiber()
+        {
+            start(std::bind(std::forward<Fn>(fn), std::forward<Args>(args)...));
+        }
+        
+        template<typename Fn, typename... Args>
+        fiber(scheduler &s, Fn fn, Args&&... args)
+        : fiber()
+        {
+            start(s, std::bind(std::forward<Fn>(fn), std::forward<Args>(args)...));
+        }
+        
         fiber() = default;
         fiber(fiber &&other);
         fiber(const fiber&) = delete;
@@ -47,10 +62,11 @@ namespace fibio { namespace fibers {
         
         static unsigned hardware_concurrency();
 
-        fiber(std::function<void()> &&f);
-        fiber(scheduler &s, std::function<void()> &&f);
         void set_name(const std::string &s);
         std::string get_name();
+      
+        void start(std::function<void()> &&f);
+        void start(scheduler &s, std::function<void()> &&f);
         
         std::shared_ptr<detail::fiber_object> m_;
     };
