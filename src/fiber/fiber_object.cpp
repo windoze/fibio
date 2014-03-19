@@ -311,12 +311,7 @@ namespace fibio { namespace fibers {
     }
     
     unsigned fiber::hardware_concurrency() {
-        if (detail::fiber_object::current_fiber_) {
-            return std::min(std::thread::hardware_concurrency(),
-                            unsigned(detail::fiber_object::current_fiber_->sched_->threads_.size()));
-        }
-        return std::min(std::thread::hardware_concurrency(),
-                        unsigned(scheduler::get_instance().m_->threads_.size()));
+        return std::thread::hardware_concurrency();
     }
     
     namespace this_fiber {
