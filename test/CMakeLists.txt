@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
+add_executable(test_fibers test_fibers.cpp)
+TARGET_LINK_LIBRARIES(test_fibers ${FIBIO_LIBS})
+
 add_executable(test_mutex test_mutex.cpp)
 TARGET_LINK_LIBRARIES(test_mutex ${FIBIO_LIBS})
 

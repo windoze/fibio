@@ -40,14 +40,14 @@ namespace fibio { namespace fibers {
         fiber(Fn fn, Args&&... args)
         : fiber()
         {
-            start(std::bind(std::forward<Fn>(fn), std::forward<Args>(args)...));
+            start(std::bind(fn, std::forward<Args>(args)...));
         }
         
         template<typename Fn, typename... Args>
         fiber(scheduler &s, Fn fn, Args&&... args)
         : fiber()
         {
-            start(s, std::bind(std::forward<Fn>(fn), std::forward<Args>(args)...));
+            start(s, std::bind(fn, std::forward<Args>(args)...));
         }
         
         fiber() = default;
