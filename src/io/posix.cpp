@@ -178,7 +178,7 @@ namespace fibio { namespace io {
             // TODO: Error
         }
         if (this_fiber->last_error_) {
-            ec=this_fiber->last_error_;
+            ec=std::make_error_code(static_cast<std::errc>(this_fiber->last_error_.value()));
             this_fiber->last_error_.clear();
         }
         return ret;
@@ -233,7 +233,7 @@ namespace fibio { namespace io {
             // TODO: Error
         }
         if (this_fiber->last_error_) {
-            ec=this_fiber->last_error_;
+            ec=std::make_error_code(static_cast<std::errc>(this_fiber->last_error_.value()));
             this_fiber->last_error_.clear();
         }
         return ret;

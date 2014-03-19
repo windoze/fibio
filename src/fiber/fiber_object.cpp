@@ -136,6 +136,7 @@ namespace fibio { namespace fibers { namespace detail {
         if (last_error_) {
             std::error_code ec=last_error_;
             last_error_.clear();
+            last_error_=std::make_error_code(static_cast<std::errc>(last_error_.value()));
             throw std::system_error(ec);
         }
     }

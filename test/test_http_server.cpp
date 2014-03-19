@@ -109,8 +109,7 @@ void the_server() {
         http_server::connection sc;
         ec=svr.accept(sc, std::chrono::seconds(1));
         if(ec) {
-            // Why ec has system_category instead of generic_category?
-            if (ec.value()!=static_cast<int>(std::errc::timed_out)) {
+            if (ec!=std::make_error_code(std::errc::timed_out)) {
                 std::cout << ec << std::endl;
             }
         } else {
