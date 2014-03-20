@@ -9,7 +9,7 @@ Fiberized.IO is a fast and simple framework without compromises.
 
 The echo server example
 -----------------------
-<pre>
+<pre><code>
 #include &lt;fibio/fiber.hpp&gt;
 #include &lt;fibio/stream/iostream.hpp&gt;
 
@@ -40,4 +40,4 @@ int main_fiber() {
 int main(int argc, char *argv[]) {
     return fibio::fibers::fiberize(4, main_fiber);
 }
-</pre>
+</code></pre>
