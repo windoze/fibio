@@ -10,6 +10,7 @@ Fiberized.IO is a fast and simple framework without compromises.
 The echo server example
 -----------------------
 <pre><code>
+#include &lt;iostream&gt;
 #include &lt;fibio/fiber.hpp&gt;
 #include &lt;fibio/stream/iostream.hpp&gt;
 
@@ -19,25 +20,25 @@ void servant(tcp_stream s) {
     while(!s.eof()) {
         std::string line;
         std::getline(s, line);
-        s << line << std::endl;
+        s &lt;&lt; line &lt;&lt; std::endl;
     }
 }
 
-int main_fiber() {
+int main_fiber(int argc, char *argv[]) {
     try {
-        auto acc=io::listen(12345);
+        auto acc=io::listen(atoi(argv[1]));
         while(1) {
             tcp_stream stream(io::accept(acc));
             fiber(servant, std::move(stream)).detach();
         }
     } catch (std::system_error &e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
         return 1;
     }
     return 0;
 }
 
 int main(int argc, char *argv[]) {
-    return fibio::fibers::fiberize(4, main_fiber);
+    return fibio::fibers::fiberize(4, main_fiber, argc, argv);
 }
 </code></pre>
