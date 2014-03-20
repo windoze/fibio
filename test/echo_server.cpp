@@ -11,7 +11,7 @@
 
 using namespace fibio;
 
-void servant(stream::tcp_stream s) {
+void servant(tcp_stream s) {
     while(!s.eof()) {
         std::string line;
         std::getline(s, line);
@@ -21,9 +21,9 @@ void servant(stream::tcp_stream s) {
 
 int main_fiber(int argc, char *argv[]) {
     try {
-        io::tcp::acceptor acc=io::listen(io::tcp::endpoint(io::tcp::protocol::v4(), 12345), true);
+        auto acc=io::listen(atoi(argv[1]));
         while(1) {
-            stream::tcp_stream stream(io::accept(acc));
+            tcp_stream stream(io::accept(acc));
             fiber(servant, std::move(stream)).detach();
         }
     } catch (std::system_error &e) {
