@@ -16,24 +16,16 @@ The echo server example
 
 using namespace fibio;
 
-void servant(tcp_stream s) {
-    while(!s.eof()) {
-        std::string line;
-        std::getline(s, line);
-        s &lt;&lt; line &lt;&lt; std::endl;
-    }
-}
-
 int main_fiber(int argc, char *argv[]) {
-    try {
-        auto acc=io::listen(atoi(argv[1]));
-        while(1) {
-            tcp_stream stream(io::accept(acc));
-            fiber(servant, std::move(stream)).detach();
-        }
-    } catch (std::system_error &e) {
-        std::cerr &lt;&lt; e.what() &lt;&lt; std::endl;
-        return 1;
+    auto acc=io::listen(atoi(argv[1]));
+    while(1) {
+        fiber([](tcp_stream s){
+            while(!s.eof()) {
+                std::string line;
+                std::getline(s, line);
+                s &lt;&lt; line &lt;&lt; std::endl;
+            }
+        }, io::accept(acc)).detach();
     }
     return 0;
 }
