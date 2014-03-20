@@ -17,9 +17,7 @@ Core
     * c_q<std::mutex, std::c_v> can transfer data from a fiber to outside, as long as there is no size limit(push won't block)
     * Extra work is still needed to make both directions work with size_limit set
 * Shared mutex(RWLock)
-* Barrier
 * Future support
-* Fiber constructor with variadic arguments
 * Logging
 
 Protocol
