@@ -3,7 +3,7 @@ project(fibio)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DASIO_STANDALONE -std=c++11 -ftemplate-depth=256")
 if(APPLE)
-    set(CMAKE_LINK_FLAGS "${CMAKE_LINK_FLAGS} -stdlib=libc++")
+    set(CMAKE_LINK_FLAGS "${CMAKE_LINK_FLAGS} -stdlib=libc++ -Wno-deprecated-register")
 endif(APPLE)
 
 find_package(Threads REQUIRED)

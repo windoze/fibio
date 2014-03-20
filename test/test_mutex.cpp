@@ -9,7 +9,6 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#pragma GCC diagnostic ignored "-Wdeprecated-register"
 #include <boost/random.hpp>
 #include <fibio/fiber.hpp>
 

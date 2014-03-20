@@ -9,11 +9,8 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#pragma GCC diagnostic ignored "-Wdeprecated-register"
-#include <boost/random.hpp>
-#include <fibio/fiber.hpp>
 #include <sstream>
-#include <boost/lexical_cast.hpp>
+#include <fibio/fiber.hpp>
 #include <fibio/http/client/client.hpp>
 #include <fibio/http/server/server.hpp>
 

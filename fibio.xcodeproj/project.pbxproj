@@ -3517,6 +3517,7 @@
 					/usr/local/include,
 				);
 				ONLY_ACTIVE_ARCH = YES;
+				WARNING_CFLAGS = "-Wno-deprecated-register";
 			};
 			name = Debug;
 		};
@@ -3553,6 +3554,7 @@
 					"$(SRCROOT)/include",
 					/usr/local/include,
 				);
+				WARNING_CFLAGS = "-Wno-deprecated-register";
 			};
 			name = Release;
 		};
