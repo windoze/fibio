@@ -117,18 +117,15 @@ void the_server() {
 
 int main_fiber(int argc, char *argv[]) {
     should_exit=false;
-    std::vector<fiber> fibers;
+    fiber_group fibers;
     fiber(the_server).detach();
     this_fiber::sleep_for(std::chrono::seconds(1));
     size_t n=10;
     for (int i=0; i<n; i++) {
-        fibers.push_back(fiber(the_client));
+        fibers.create_fiber(the_client);
     }
-    for (fiber &f : fibers) {
-        f.join();
-        n--;
-        if(n<=0) should_exit=true;
-    }
+    fibers.join_all();
+    should_exit=true;
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }

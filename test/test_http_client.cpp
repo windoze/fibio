@@ -61,13 +61,11 @@ void the_client() {
 }
 
 int main_fiber(int argc, char *argv[]) {
-    std::vector<fiber> fibers;
+    fiber_group fibers;
     for (int i=0; i<1; i++) {
-        fibers.push_back(fiber(the_client));
+        fibers.create_fiber(the_client);
     }
-    for (fiber &f : fibers) {
-        f.join();
-    }
+    fibers.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }

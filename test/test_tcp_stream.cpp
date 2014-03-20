@@ -62,11 +62,9 @@ void parent() {
 }
 
 int main_fiber(int argc, char *argv[]) {
-    std::vector<fiber> fibers;
-    fibers.push_back(fiber(parent));
-    for (fiber &f : fibers) {
-        f.join();
-    }
+    fiber_group fibers;
+    fibers.create_fiber(parent);
+    fibers.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }

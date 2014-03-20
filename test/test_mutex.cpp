@@ -39,16 +39,14 @@ void f1(int n) {
 }
 
 int main_fiber(int argc, char *argv[]) {
-    std::vector<fiber> fibers;
+    fiber_group fibers;
     for (int i=0; i<100; i++) {
-        fibers.push_back(fiber(f, i));
+        fibers.create_fiber(f, i);
     }
     for (int i=0; i<100; i++) {
-        fibers.push_back(fiber(f1, i));
+        fibers.create_fiber(f1, i);
     }
-    for (fiber &f : fibers) {
-        f.join();
-    }
+    fibers.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }

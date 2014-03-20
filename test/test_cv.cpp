@@ -48,11 +48,9 @@ int main_fiber(int argc, char *argv[]) {
     mutex m;
     condition_variable cv;
 
-    std::vector<fiber> fibers;
-    fibers.push_back(fiber(parent, std::ref(m), std::ref(cv)));
-    for (fiber &f : fibers) {
-        f.join();
-    }
+    fiber_group fibers;
+    fibers.create_fiber(parent, std::ref(m), std::ref(cv));
+    fibers.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }

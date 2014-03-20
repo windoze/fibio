@@ -26,18 +26,16 @@ void f2(data &d) {
 }
 
 int main_fiber(int argc, char *argv[]) {
-    std::vector<fiber> fibers;
+    fiber_group fibers;
     
     data d1;
     data d2;
     
-    fibers.push_back(fiber(f1, d1));
-    fibers.push_back(fiber(f2, std::ref(d2)));
+    fibers.create_fiber(f1, d1);
+    fibers.create_fiber(f2, std::ref(d2));
     // Don't compile
     // fibers.push_back(fiber(f2, std::cref(d2)));
-    for (fiber &f : fibers) {
-        f.join();
-    }
+    fibers.join_all();
     assert(d1.n==0);
     assert(d2.n=200);
     std::cout << "main_fiber exiting" << std::endl;

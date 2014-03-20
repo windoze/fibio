@@ -1075,6 +1075,7 @@
 		2DD5664E18DA1BC6002A259D /* test_fibers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_fibers.cpp; sourceTree = "<group>"; };
 		2DD5665218DAB911002A259D /* barrier.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = barrier.hpp; sourceTree = "<group>"; };
 		2DD5665318DADCAC002A259D /* shared_mutex.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = shared_mutex.hpp; sourceTree = "<group>"; };
+		2DD5665518DB1A2D002A259D /* fiber_group.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = fiber_group.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1272,13 +1273,14 @@
 			isa = PBXGroup;
 			children = (
 				2D7E686318CCCD5D00B7C4E5 /* detail */,
-				2D7E686218CCCD5D00B7C4E5 /* condition_variable.hpp */,
 				2D7E686518CCCD5D00B7C4E5 /* fiber.hpp */,
-				2D7E686618CCCD5D00B7C4E5 /* fiberize.hpp */,
-				2D7E686718CCCD5D00B7C4E5 /* fss.hpp */,
+				2DD5665518DB1A2D002A259D /* fiber_group.hpp */,
 				2D7E686818CCCD5D00B7C4E5 /* mutex.hpp */,
+				2D7E686218CCCD5D00B7C4E5 /* condition_variable.hpp */,
+				2D7E686718CCCD5D00B7C4E5 /* fss.hpp */,
 				2DD5665218DAB911002A259D /* barrier.hpp */,
 				2DD5665318DADCAC002A259D /* shared_mutex.hpp */,
+				2D7E686618CCCD5D00B7C4E5 /* fiberize.hpp */,
 			);
 			path = fibers;
 			sourceTree = "<group>";
