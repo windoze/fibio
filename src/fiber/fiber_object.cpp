@@ -258,7 +258,7 @@ namespace fibio { namespace fibers { namespace detail {
 }}}   // End of namespace fibio::fibers::detail
 
 namespace fibio { namespace fibers {
-#if 0
+#ifdef NO_VARIADIC_TEMPLATE
     fiber::fiber(std::function<void()> &&f)
     : m_(scheduler::get_instance().m_->make_fiber(std::move(f)))
     {}
@@ -266,19 +266,19 @@ namespace fibio { namespace fibers {
     fiber::fiber(scheduler &s, std::function<void()> &&f)
     : m_(s.m_->make_fiber(std::move(f)))
     {}
-#endif
-    
-    fiber::fiber(fiber &&other)
-    : m_(std::move(other.m_))
-    {}
-    
+#else
     void fiber::start(std::function<void ()> &&f) {
         m_=scheduler::get_instance().m_->make_fiber(std::move(f));
     }
+#endif
     
-    void fiber::start(fibio::fibers::scheduler &s, std::function<void ()> &&f) {
-        m_=s.m_->make_fiber(std::move(f));
-    }
+    fiber::fiber(fiber &&other) noexcept
+    : m_(std::move(other.m_))
+    {}
+    
+    fiber::fiber(fibio::fibers::scheduler &s, std::function<void ()> &&f)
+    : m_(s.m_->make_fiber(std::move(f)))
+    {}
     
     void fiber::set_name(const std::string &s) {
         m_->set_name(s);

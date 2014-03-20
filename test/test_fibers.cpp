@@ -33,6 +33,8 @@ int main_fiber(int argc, char *argv[]) {
     
     fibers.push_back(fiber(f1, d1));
     fibers.push_back(fiber(f2, std::ref(d2)));
+    // Don't compile
+    // fibers.push_back(fiber(f2, std::cref(d2)));
     for (fiber &f : fibers) {
         f.join();
     }

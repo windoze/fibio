@@ -36,22 +36,20 @@ namespace fibio { namespace fibers {
     struct fiber {
         typedef uintptr_t id;
         
+        explicit fiber(fiber &&other) noexcept;
+        explicit fiber(scheduler &s, std::function<void()> &&f);
+
+#ifdef NO_VARIADIC_TEMPLATE
+        fiber(std::function<void()> &&f);
+#else
         template<typename Fn, typename... Args>
-        fiber(Fn fn, Args&&... args)
-        : fiber()
-        {
-            start(std::bind(fn, std::forward<Args>(args)...));
+        explicit fiber(Fn &&fn, Args&&... args) {
+            start(std::bind(std::forward<Fn>(fn), std::forward<Args>(args)...));
         }
-        
-        template<typename Fn, typename... Args>
-        fiber(scheduler &s, Fn fn, Args&&... args)
-        : fiber()
-        {
-            start(s, std::bind(fn, std::forward<Args>(args)...));
-        }
-        
+        void start(std::function<void()> &&f);
+#endif
+ 
         fiber() = default;
-        fiber(fiber &&other);
         fiber(const fiber&) = delete;
         
         bool joinable() const;
@@ -65,9 +63,6 @@ namespace fibio { namespace fibers {
         void set_name(const std::string &s);
         std::string get_name();
       
-        void start(std::function<void()> &&f);
-        void start(scheduler &s, std::function<void()> &&f);
-        
         std::shared_ptr<detail::fiber_object> m_;
     };
     
