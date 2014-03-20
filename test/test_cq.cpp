@@ -9,34 +9,32 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include <boost/random.hpp>
 #include <fibio/fiber.hpp>
 #include <fibio/concurrent/concurrent_queue.hpp>
+#include <fibio/fibers/barrier.hpp>
 
 using namespace fibio;
 concurrent::concurrent_queue<int> cq;
+constexpr int count=1000;
+barrier bar(count);
 
 void child() {
-    boost::random::mt19937 rng;
-    boost::random::uniform_int_distribution<> three(1,3);
     for (int i=1; i<=1000; i++) {
-        this_fiber::sleep_for(std::chrono::milliseconds(three(rng)));
         cq.push(i);
     }
-    cq.close();
+    // Queue is closed only if all chile fibers are finished
+    if(bar.wait()) cq.close();
 }
 
 void parent() {
-    fibio::fiber f(child);
-    boost::random::mt19937 rng;
-    boost::random::uniform_int_distribution<> three(1,3);
+    for (int n=0; n<count; n++) {
+        fiber(child).detach();
+    }
     int sum=0;
     for (int popped : cq) {
-        this_fiber::sleep_for(std::chrono::milliseconds(three(rng)));
         sum+=popped;
     }
-    assert(sum==500500);
-    f.join();
+    assert(sum==500500 * count);
 }
 
 int main_fiber(int argc, char *argv[]) {

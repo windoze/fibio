@@ -1073,6 +1073,7 @@
 		2DD5663E18D870E8002A259D /* libboost_iostreams-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_iostreams-mt.a"; path = "../../../../usr/local/Cellar/boost/1.55.0/lib/libboost_iostreams-mt.a"; sourceTree = "<group>"; };
 		2DD5664518DA1B99002A259D /* test_fibers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_fibers; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DD5664E18DA1BC6002A259D /* test_fibers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_fibers.cpp; sourceTree = "<group>"; };
+		2DD5665218DAB911002A259D /* barrier.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = barrier.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1204,8 +1205,8 @@
 		2D7E684718CCCD2D00B7C4E5 = {
 			isa = PBXGroup;
 			children = (
-				2DD5663E18D870E8002A259D /* libboost_iostreams-mt.a */,
 				2DD5663C18D870D9002A259D /* libz.dylib */,
+				2DD5663E18D870E8002A259D /* libboost_iostreams-mt.a */,
 				2D7E6C5C18CCCEA200B7C4E5 /* libboost_context-mt.a */,
 				2D7E6C5D18CCCEA200B7C4E5 /* libboost_coroutine-mt.a */,
 				2D7E6C5E18CCCEA200B7C4E5 /* libboost_system-mt.a */,
@@ -1226,13 +1227,13 @@
 			isa = PBXGroup;
 			children = (
 				2D1319B618D0A2360086156F /* fibio.dylib */,
+				2DD5664518DA1B99002A259D /* test_fibers */,
 				2D1319A218D09B850086156F /* test_mutex */,
 				2D1319D518D0A9A60086156F /* test_cv */,
 				2D1319E618D0B1860086156F /* test_cq */,
 				2D1319F718D0B45A0086156F /* test_tcp_stream */,
 				2D131A0818D0BCDD0086156F /* test_http_client */,
 				2D131A2718D214A40086156F /* test_http_server */,
-				2DD5664518DA1B99002A259D /* test_fibers */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1248,9 +1249,9 @@
 		2D7E685D18CCCD5D00B7C4E5 /* fibio */ = {
 			isa = PBXGroup;
 			children = (
-				2D7E685E18CCCD5D00B7C4E5 /* concurrent */,
 				2D7E686018CCCD5D00B7C4E5 /* fiber.hpp */,
 				2D7E686118CCCD5D00B7C4E5 /* fibers */,
+				2D7E685E18CCCD5D00B7C4E5 /* concurrent */,
 				2D7E686918CCCD5D00B7C4E5 /* io */,
 				2D7E687018CCCD5D00B7C4E5 /* stream */,
 				2DD3B6E518CDF606009E1F3E /* http */,
@@ -1275,6 +1276,7 @@
 				2D7E686618CCCD5D00B7C4E5 /* fiberize.hpp */,
 				2D7E686718CCCD5D00B7C4E5 /* fss.hpp */,
 				2D7E686818CCCD5D00B7C4E5 /* mutex.hpp */,
+				2DD5665218DAB911002A259D /* barrier.hpp */,
 			);
 			path = fibers;
 			sourceTree = "<group>";
