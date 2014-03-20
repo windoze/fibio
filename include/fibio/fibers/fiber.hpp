@@ -13,10 +13,28 @@
 #include <functional>
 #include <chrono>
 #include <utility>
+#include <type_traits>
 #include <asio/io_service.hpp>
 #include <fibio/fibers/detail/forward.hpp>
+#include <fibio/fibers/detail/make_tuple_indices.hpp>
 
 namespace fibio { namespace fibers {
+    namespace detail {
+        using fibio::detail::decay_copy;
+        using fibio::detail::apply_tuple;
+        template<typename Fn, typename... Args>
+        std::function<void()> wrap(Fn &&fn, Args&&... args) {
+            typedef std::tuple<typename std::decay<Fn>::type> FP;
+            FP *fp=new FP(decay_copy(std::forward<Fn>(fn)));
+            typedef std::tuple<typename std::decay<Args>::type...> TP;
+            TP *p=new TP(decay_copy(std::forward<Args>(args))...);
+            return [fp, p](){
+                std::unique_ptr<FP> ufp(fp);
+                std::unique_ptr<TP> utp(p);
+                apply_tuple(std::get<0>(*fp), std::move(*p));
+            };
+        }
+    }
     struct scheduler {
         scheduler();
         scheduler(std::shared_ptr<detail::scheduler_object>);
@@ -44,7 +62,7 @@ namespace fibio { namespace fibers {
 #else
         template<typename Fn, typename... Args>
         explicit fiber(Fn &&fn, Args&&... args) {
-            start(std::bind(std::forward<Fn>(fn), std::forward<Args>(args)...));
+            start(detail::wrap(std::forward<Fn>(fn), std::forward<Args>(args)...));
         }
         void start(std::function<void()> &&f);
 #endif
