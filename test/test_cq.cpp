@@ -22,7 +22,7 @@ void child() {
     for (int i=1; i<=1000; i++) {
         cq.push(i);
     }
-    // Queue is closed only if all chile fibers are finished
+    // Queue is closed only if all child fibers are finished
     if(bar.wait()) cq.close();
 }
 
