@@ -10,6 +10,7 @@
 #define fibio_fiber_group_hpp
 
 #include <list>
+#include <algorithm>
 #include <fibio/fibers/shared_mutex.hpp>
 
 namespace fibio { namespace fibers {
