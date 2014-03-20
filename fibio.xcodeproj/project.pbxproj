@@ -1074,6 +1074,7 @@
 		2DD5664518DA1B99002A259D /* test_fibers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_fibers; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DD5664E18DA1BC6002A259D /* test_fibers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_fibers.cpp; sourceTree = "<group>"; };
 		2DD5665218DAB911002A259D /* barrier.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = barrier.hpp; sourceTree = "<group>"; };
+		2DD5665318DADCAC002A259D /* shared_mutex.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = shared_mutex.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1277,6 +1278,7 @@
 				2D7E686718CCCD5D00B7C4E5 /* fss.hpp */,
 				2D7E686818CCCD5D00B7C4E5 /* mutex.hpp */,
 				2DD5665218DAB911002A259D /* barrier.hpp */,
+				2DD5665318DADCAC002A259D /* shared_mutex.hpp */,
 			);
 			path = fibers;
 			sourceTree = "<group>";
@@ -3668,6 +3670,7 @@
 				2DD5664D18DA1B99002A259D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -12,6 +12,7 @@
 #include <fibio/fibers/fiber.hpp>
 #include <fibio/fibers/mutex.hpp>
 #include <fibio/fibers/condition_variable.hpp>
+#include <fibio/fibers/shared_mutex.hpp>
 #include <fibio/fibers/fss.hpp>
 #include <fibio/fibers/fiberize.hpp>
 
