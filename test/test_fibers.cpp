@@ -14,6 +14,9 @@
 using namespace fibio;
 
 struct data {
+    data(int x) : n(x) {}
+    data(data &&other) : n(other.n) { other.n=0; }
+    data(const data &other) : n(other.n) {}
     int n=0;
 };
 
@@ -28,16 +31,27 @@ void f2(data &d) {
 int main_fiber(int argc, char *argv[]) {
     fiber_group fibers;
     
-    data d1;
-    data d2;
+    data d1(1);
+    data d2(2);
+    data d3(3);
     
+    // Make a copy, d1 won't change
     fibers.create_fiber(f1, d1);
-    fibers.create_fiber(f2, std::ref(d2));
+    // Move, d2.n becomes 0
+    fibers.create_fiber(f1, std::move(d2));
+    // Ref, d3.n will be changed
+    fibers.create_fiber(f2, std::ref(d3));
     // Don't compile
-    // fibers.push_back(fiber(f2, std::cref(d2)));
+    // fibers.push_back(fiber(f2, std::cref(d3)));
+    
     fibers.join_all();
-    assert(d1.n==0);
-    assert(d2.n=200);
+    
+    // d1.n unchanged
+    assert(d1.n==1);
+    // d2.n cleared
+    assert(d2.n==0);
+    // d3.n changed
+    assert(d3.n=200);
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }
