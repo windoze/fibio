@@ -12,10 +12,8 @@
 #include <fibio/fiber.hpp>
 
 using namespace fibio;
-mutex m;
-condition_variable cv;
 
-void child() {
+void child(mutex &m, condition_variable &cv) {
     this_fiber::sleep_for(std::chrono::seconds(1));
     cv.notify_one();
     this_fiber::sleep_for(std::chrono::seconds(1));
@@ -24,8 +22,8 @@ void child() {
     cv.notify_one();
 }
 
-void parent() {
-    fibio::fiber f(child);
+void parent(mutex &m, condition_variable &cv) {
+    fibio::fiber f(child, std::ref(m), std::ref(cv));
     {
         unique_lock<mutex> lock(m);
         cv.wait(lock);
@@ -47,8 +45,11 @@ void parent() {
 }
 
 int main_fiber(int argc, char *argv[]) {
+    mutex m;
+    condition_variable cv;
+
     std::vector<fiber> fibers;
-    fibers.push_back(fiber(parent));
+    fibers.push_back(fiber(parent, std::ref(m), std::ref(cv)));
     for (fiber &f : fibers) {
         f.join();
     }
