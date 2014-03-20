@@ -6,6 +6,7 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
+#include <iostream>
 #include <fibio/fiber.hpp>
 #include <fibio/stream/iostream.hpp>
 
