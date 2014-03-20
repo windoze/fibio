@@ -35,6 +35,10 @@ namespace fibio { namespace io {
     
     size_t read_some(tcp::socket &s, char *buffer, size_t sz, uint64_t timeout_usec, std::error_code &);
     size_t write_some(tcp::socket &s, const char *buffer, size_t sz, uint64_t timeout_usec, std::error_code &);
+    
+    // Simplified version
+    tcp::acceptor listen(const char *s, unsigned short port_num);
+    tcp::acceptor listen(unsigned short port_num);
 }}  // End of namespace fibio::io
 
 #endif

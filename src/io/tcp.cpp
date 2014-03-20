@@ -482,4 +482,14 @@ namespace fibio { namespace io {
         }
         return ret;
     }
+    
+    asio::ip::tcp::acceptor listen(const char *s, unsigned short port_num) {
+        asio::ip::tcp::endpoint ep(asio::ip::address::from_string(s), port_num);
+        return listen(ep, true);
+    }
+
+    asio::ip::tcp::acceptor listen(unsigned short port_num) {
+        asio::ip::tcp::endpoint ep(asio::ip::address(), port_num);
+        return listen(ep, true);
+    }
 }}   // End of namespace fibio::io
