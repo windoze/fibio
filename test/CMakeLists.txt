@@ -20,3 +20,6 @@ TARGET_LINK_LIBRARIES(test_http_client ${FIBIO_LIBS} ${ZLIB_LIBRARIES})
 
 add_executable(test_http_server test_http_server.cpp)
 TARGET_LINK_LIBRARIES(test_http_server ${FIBIO_LIBS} ${ZLIB_LIBRARIES})
+
+add_executable(echo_server echo_server.cpp)
+TARGET_LINK_LIBRARIES(echo_server ${FIBIO_LIBS})
