@@ -62,7 +62,8 @@ namespace fibio { namespace detail {
     }
     
     template<typename Fn, typename... Args>
-    std::function<typename std::result_of<Fn(Args...)>::type()> wrap(Fn &&fn, Args&&... args) {
+    auto wrap(Fn &&fn, Args&&... args) -> std::function<typename std::result_of<Fn(Args...)>::type()>
+    {
         typedef std::tuple<typename std::decay<Fn>::type> FP;
         FP *fp=new FP(decay_copy(std::forward<Fn>(fn)));
         typedef std::tuple<typename std::decay<Args>::type...> TP;
