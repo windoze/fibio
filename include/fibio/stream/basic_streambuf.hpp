@@ -216,7 +216,7 @@ namespace fibio { namespace stream {
         }
         
         enum { putback_max = 8 };
-        enum { buffer_size = 10 };
+        enum { buffer_size = 65536 };
         
         StreamDescriptor sd_;
         asio::detail::array<char, buffer_size> get_buffer_;
