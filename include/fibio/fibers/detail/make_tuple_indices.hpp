@@ -60,6 +60,19 @@ namespace fibio { namespace detail {
     inline typename std::decay<T>::type decay_copy(T&& t) {
         return std::forward<T>(t);
     }
+    
+    template<typename Fn, typename... Args>
+    std::function<typename std::result_of<Fn(Args...)>::type()> wrap(Fn &&fn, Args&&... args) {
+        typedef std::tuple<typename std::decay<Fn>::type> FP;
+        FP *fp=new FP(decay_copy(std::forward<Fn>(fn)));
+        typedef std::tuple<typename std::decay<Args>::type...> TP;
+        TP *p=new TP(decay_copy(std::forward<Args>(args))...);
+        return [fp, p](){
+            std::unique_ptr<FP> ufp(fp);
+            std::unique_ptr<TP> utp(p);
+            return apply_tuple(std::get<0>(*fp), std::move(*p));
+        };
+    }
 }}  // End of namespace
 
 #endif

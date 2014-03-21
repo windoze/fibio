@@ -20,20 +20,7 @@
 
 namespace fibio { namespace fibers {
     namespace detail {
-        using fibio::detail::decay_copy;
-        using fibio::detail::apply_tuple;
-        template<typename Fn, typename... Args>
-        std::function<void()> wrap(Fn &&fn, Args&&... args) {
-            typedef std::tuple<typename std::decay<Fn>::type> FP;
-            FP *fp=new FP(decay_copy(std::forward<Fn>(fn)));
-            typedef std::tuple<typename std::decay<Args>::type...> TP;
-            TP *p=new TP(decay_copy(std::forward<Args>(args))...);
-            return [fp, p](){
-                std::unique_ptr<FP> ufp(fp);
-                std::unique_ptr<TP> utp(p);
-                apply_tuple(std::get<0>(*fp), std::move(*p));
-            };
-        }
+        using fibio::detail::wrap;
     }
     struct scheduler {
         scheduler();

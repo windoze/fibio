@@ -28,12 +28,27 @@ void f2(data &d) {
     d.n=200;
 }
 
+struct fiber_entry1 {
+    void operator()(data d) const {
+        d.n=300;
+    }
+};
+
+struct fiber_entry2 {
+    void operator()(data &d) const {
+        d.n=400;
+    }
+};
+
 int main_fiber(int argc, char *argv[]) {
     fiber_group fibers;
     
     data d1(1);
     data d2(2);
     data d3(3);
+    data d4(4);
+    data d5(5);
+    data d6(6);
     
     // Make a copy, d1 won't change
     fibers.create_fiber(f1, d1);
@@ -43,6 +58,9 @@ int main_fiber(int argc, char *argv[]) {
     fibers.create_fiber(f2, std::ref(d3));
     // Don't compile
     // fibers.push_back(fiber(f2, std::cref(d3)));
+    fibers.create_fiber(fiber_entry1(), d4);
+    fibers.create_fiber(fiber_entry1(), std::move(d5));
+    fibers.create_fiber(fiber_entry2(), std::ref(d6));
     
     fibers.join_all();
     
@@ -52,6 +70,12 @@ int main_fiber(int argc, char *argv[]) {
     assert(d2.n==0);
     // d3.n changed
     assert(d3.n=200);
+    // d4.n unchanged
+    assert(d4.n==4);
+    // d5.n cleared
+    assert(d5.n==0);
+    // d6.n changed
+    assert(d6.n=400);
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }
