@@ -51,7 +51,7 @@ namespace fibio { namespace stream {
         , std::iostream(&(this->sbuf_))
         {}
         
-        // Non-movable
+        // Movable
         basic_fibio_iostream(basic_fibio_iostream &&src)
         : streambase_t(std::move(src))
         , std::iostream(&(this->sbuf_))
