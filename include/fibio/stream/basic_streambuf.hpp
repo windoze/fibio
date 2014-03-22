@@ -22,12 +22,12 @@ namespace fibio { namespace stream {
     public:
         basic_fibio_streambuf()
         : sd_(fibio::fibers::this_fiber::detail::get_io_service())
-        , get_buffer_(buffer_size+putback_max)
-        , put_buffer_(buffer_size)
         { init_buffers(); }
         
         basic_fibio_streambuf(basic_fibio_streambuf &&other)
         : sd_(std::move(other.sd_))
+        , get_buffer_(std::move(other.get_buffer_))
+        , put_buffer_(std::move(other.put_buffer_))
         , connect_timeout_(other.connect_timeout_)
         , read_timeout_(other.read_timeout_)
         , write_timeout_(other.write_timeout_)
