@@ -110,7 +110,7 @@ void the_server() {
                 std::cout << ec << std::endl;
             }
         } else {
-            fiber([sc](){ servant(sc); }).detach();
+            fiber(servant, std::move(sc)).detach();
         }
     }
 }
