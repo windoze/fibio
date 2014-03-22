@@ -38,7 +38,7 @@ namespace fibio { namespace fibers { namespace detail {
             //fiber_count_=0;
         }
         // Create std stream guard
-        stream_guard_=std::make_shared<fiberized_std_stream_guard>(io_service_);
+        //stream_guard_=std::make_shared<fiberized_std_stream_guard>(io_service_);
         if (!check_timer_) {
             check_timer_=std::make_shared<timer_t>(io_service_);
         }

@@ -11,8 +11,30 @@
 
 #include <type_traits>
 #include <fibio/fibers/fiber.hpp>
+#include <fibio/stream/basic_streambuf.hpp>
 
 namespace fibio { namespace fibers {
+    namespace detail {
+        struct fiberized_std_stream_guard {
+            typedef stream::basic_fibio_streambuf<io::posix::stream_descriptor> sbuf_t;
+            typedef sbuf_t *sbuf_ptr_t;
+            
+            fiberized_std_stream_guard(asio::io_service &iosvc);
+            ~fiberized_std_stream_guard();
+            
+            void open();
+            
+            std::streambuf *old_cin_buf_;
+            std::streambuf *old_cout_buf_;
+            std::streambuf *old_cerr_buf_;
+            sbuf_ptr_t cin_buf_;
+            sbuf_ptr_t cout_buf_;
+            sbuf_ptr_t cerr_buf_;
+        };
+        
+        typedef std::shared_ptr<fiberized_std_stream_guard> fiberized_std_stream_guard_ptr_t;
+    }   // End of namespace fibio::fibers::detail
+    
 #ifdef __clang__
     // Doesn't compile under GCC 4.8.1?
     namespace detail {
@@ -40,8 +62,8 @@ namespace fibio { namespace fibers {
             fibio::scheduler sched=fibio::scheduler::get_instance();
             sched.start(nthr);
             fibio::fiber f([&](){
+                detail::fiberized_std_stream_guard guard(this_fiber::detail::get_io_service());
                 detail::to_int_if_void<ActualRet>::assign(ret, fn(args...));
-                
             });
             sched.join();
         } catch (std::exception& e) {
@@ -57,8 +79,8 @@ namespace fibio { namespace fibers {
             fibio::scheduler sched=fibio::scheduler::get_instance();
             sched.start(nthr);
             fibio::fiber f([&](){
+                detail::fiberized_std_stream_guard guard(this_fiber::detail::get_io_service());
                 ret=fn(argc, argv);
-                
             });
             sched.join();
         } catch (std::exception& e) {

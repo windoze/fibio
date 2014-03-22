@@ -6,7 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#include "std_stream_guard.hpp"
+#include <fibio/fibers/fiberize.hpp>
+//#include "std_stream_guard.hpp"
 
 namespace fibio { namespace fibers { namespace detail {
     fiberized_std_stream_guard::fiberized_std_stream_guard(asio::io_service &iosvc)
@@ -28,6 +29,8 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     fiberized_std_stream_guard::~fiberized_std_stream_guard() {
+        std::cout.flush();
+        std::cerr.flush();
         cin_buf_->release();
         cout_buf_->release();
         cerr_buf_->release();

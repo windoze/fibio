@@ -14,6 +14,7 @@
 #include <chrono>
 #include <vector>
 #include <fibio/fibers/fiber.hpp>
+#include <fibio/io/io.hpp>
 
 namespace fibio { namespace stream {
     template<typename StreamDescriptor>

@@ -15,7 +15,6 @@
 #include <mutex>
 #include <asio/io_service.hpp>
 #include "fiber_object.hpp"
-#include "std_stream_guard.hpp"
 
 namespace fibio { namespace fibers { namespace detail {
     struct scheduler_object : std::enable_shared_from_this<scheduler_object> {
@@ -41,7 +40,6 @@ namespace fibio { namespace fibers { namespace detail {
         timer_ptr_t check_timer_;
         
         std::atomic<bool> started_;
-        fiberized_std_stream_guard_ptr_t stream_guard_;
         
         static std::once_flag instance_inited_;
         static std::shared_ptr<scheduler_object> the_instance_;

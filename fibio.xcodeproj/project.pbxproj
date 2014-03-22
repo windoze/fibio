@@ -1069,7 +1069,6 @@
 		2D7E6C5E18CCCEA200B7C4E5 /* libboost_system-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_system-mt.a"; path = "../../../../usr/local/Cellar/boost/1.55.0/lib/libboost_system-mt.a"; sourceTree = "<group>"; };
 		2DD3B6DF18CCF8B7009E1F3E /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		2DD3B6E018CDB59A009E1F3E /* fiberize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fiberize.cpp; sourceTree = "<group>"; };
-		2DD3B6E318CDBEE0009E1F3E /* std_stream_guard.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = std_stream_guard.hpp; sourceTree = "<group>"; };
 		2DD3B6E418CDC3E7009E1F3E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		2DD3B6E718CDF62F009E1F3E /* request.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = request.hpp; sourceTree = "<group>"; };
 		2DD3B6E918CDF8C4009E1F3E /* common_types.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common_types.hpp; sourceTree = "<group>"; };
@@ -1362,7 +1361,6 @@
 				2D7E687B18CCCD5D00B7C4E5 /* mutex_object.hpp */,
 				2D7E687C18CCCD5D00B7C4E5 /* scheduler_object.cpp */,
 				2D7E687D18CCCD5D00B7C4E5 /* scheduler_object.hpp */,
-				2DD3B6E318CDBEE0009E1F3E /* std_stream_guard.hpp */,
 				2DD3B6E018CDB59A009E1F3E /* fiberize.cpp */,
 			);
 			path = fiber;
@@ -3758,6 +3756,7 @@
 				2DD5666218DB35C3002A259D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

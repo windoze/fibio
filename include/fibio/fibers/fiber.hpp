@@ -35,6 +35,9 @@ namespace fibio { namespace fibers {
         static scheduler get_instance();
         static void reset_instance();
         
+        void attach_std_stream();
+        void restore_std_stream();
+        
         std::shared_ptr<detail::scheduler_object> m_;
     };
     
