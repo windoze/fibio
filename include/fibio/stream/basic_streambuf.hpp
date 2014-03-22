@@ -12,6 +12,7 @@
 #include <streambuf>
 #include <iostream>
 #include <chrono>
+#include <vector>
 #include <fibio/fibers/fiber.hpp>
 
 namespace fibio { namespace stream {
@@ -20,6 +21,8 @@ namespace fibio { namespace stream {
     public:
         basic_fibio_streambuf()
         : sd_(fibio::fibers::this_fiber::detail::get_io_service())
+        , get_buffer_(buffer_size)
+        , put_buffer_(buffer_size)
         { init_buffers(); }
         
         basic_fibio_streambuf(basic_fibio_streambuf &&other)
@@ -34,10 +37,14 @@ namespace fibio { namespace stream {
         
         basic_fibio_streambuf(StreamDescriptor &&sd)
         : sd_(std::move(sd))
+        , get_buffer_(buffer_size)
+        , put_buffer_(buffer_size)
         { init_buffers(); }
         
         basic_fibio_streambuf(asio::io_service &iosvc)
         : sd_(iosvc)
+        , get_buffer_(buffer_size)
+        , put_buffer_(buffer_size)
         { init_buffers(); }
         
         /// Destructor flushes buffered data.
@@ -204,8 +211,7 @@ namespace fibio { namespace stream {
         }
         
     private:
-        void init_buffers()
-        {
+        void init_buffers() {
             setg(&get_buffer_[0],
                  &get_buffer_[0] + putback_max,
                  &get_buffer_[0] + putback_max);
@@ -216,11 +222,12 @@ namespace fibio { namespace stream {
         }
         
         enum { putback_max = 8 };
-        enum { buffer_size = 65536 };
+        // A practical MTU size
+        enum { buffer_size = 1500+putback_max };
         
         StreamDescriptor sd_;
-        asio::detail::array<char, buffer_size> get_buffer_;
-        asio::detail::array<char, buffer_size> put_buffer_;
+        std::vector<char> get_buffer_;
+        std::vector<char> put_buffer_;
         int connect_timeout_=0;
         int read_timeout_=0;
         int write_timeout_=0;
