@@ -19,11 +19,33 @@ namespace fibio { namespace io {
         typedef asio::ip::udp::socket socket;
     }   // End of namespace fibio::io::udp
     
+    // Resolve
     udp::endpoint resolve(const udp::query &addr);
-    // Open and bind
-    udp::socket listen(const udp::endpoint &ep, bool reuse_addr=true);
-    // Connect to remote, optionally bind to local
-    udp::socket connect(const udp::endpoint &remote_ep, const udp::endpoint &local_ep=udp::endpoint(), uint64_t timeout=0);
+    udp::endpoint resolve(const udp::query &addr, std::error_code &) /*noexcept*/;
+    
+    // Bind
+    std::error_code bind(udp::socket &s, const udp::endpoint &ep);
+    
+    // Connect to remote
+    udp::socket connect(const udp::endpoint &remote_ep, uint64_t timeout=0);
+    std::error_code connect(udp::socket &s, const udp::endpoint &remote_ep, uint64_t timeout=0) /*noexcept*/;
+    
+    // Send
+    size_t send(tcp::socket &s, const char *buffer, size_t sz, uint64_t timeout_usec=0);
+    size_t send(tcp::socket &s, const char *buffer, size_t sz, uint64_t timeout_usec, std::error_code &);
+    
+    // Receive
+    size_t recv(tcp::socket &s, char *buffer, size_t sz, uint64_t timeout_usec=0);
+    size_t recv(tcp::socket &s, char *buffer, size_t sz, uint64_t timeout_usec, std::error_code &);
+    
+    // Send to
+    size_t send_to(tcp::socket &s, const char *buffer, size_t sz, const udp::endpoint &remote_ep, uint64_t timeout_usec=0);
+    size_t send_to(tcp::socket &s, const char *buffer, size_t sz, const udp::endpoint &remote_ep, uint64_t timeout_usec, std::error_code &);
+    
+    // Receive from
+    size_t recv_from(tcp::socket &s, char *buffer, size_t sz, const udp::endpoint &remote_ep, uint64_t timeout_usec=0);
+    size_t recv_from(tcp::socket &s, char *buffer, size_t sz, const udp::endpoint &remote_ep, uint64_t timeout_usec, std::error_code &);
+    
 }}  // End of namespace fibio::io
 
 #endif

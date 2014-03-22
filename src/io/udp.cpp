@@ -67,14 +67,109 @@ namespace fibio { namespace io {
         return ep;
     }
     
-#if 0
-    // TODO:
-    socket listen(const endpoint &ep, bool reuse_addr=true) {
+    std::error_code bind(asio::ip::udp::socket &s, const asio::ip::udp::endpoint &ep) {
+        std::error_code ec;
         
+        s.bind(ep, ec);
+        
+        // HACK
+        ec=std::make_error_code(static_cast<std::errc>(ec.value()));
+
+        return ec;
+    }
+    
+    asio::ip::udp::socket connect(const asio::ip::udp::endpoint &remote_ep, uint64_t timeout) {
+        asio::ip::udp::socket s(fibers::detail::fiber_object::current_fiber_->io_service_);
+        fibers::detail::fiber_ptr_t this_fiber(fibers::detail::fiber_object::current_fiber_->shared_from_this());
+        fibers::detail::timer_t sleep_timer(this_fiber->io_service_);
+        if(timeout>0) sleep_timer.expires_from_now(std::chrono::microseconds(timeout));
+        CHECK_CALLER(this_fiber);
+        if (this_fiber->caller_) {
+            bool timer_triggered=false;
+            bool async_op_triggered=false;
+            (*(this_fiber->caller_))([&, this_fiber](){
+                this_fiber->state_=fibers::detail::fiber_object::BLOCKED;
+                if(timeout>0) sleep_timer.async_wait(this_fiber->fiber_strand_.wrap([&, this_fiber](std::error_code ec){
+                    /*if (ec!=asio::error::operation_aborted)*/ {
+                        timer_triggered=true;
+                        // Timeout, cancel socket op if it's still pending
+                        if(async_op_triggered) {
+                            // Both callback are called, resume fiber
+                            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
+                            this_fiber->one_step();
+                        } else {
+                            s.cancel();
+                        }
+                    }
+                }));
+                s.async_connect(remote_ep, (this_fiber->fiber_strand_.wrap([&, this_fiber](std::error_code ec){
+                    async_op_triggered=true;
+                    // Operation completed, cancel timer
+                    sleep_timer.cancel();
+                    if(ec==asio::error::operation_aborted)
+                        ec=asio::error::timed_out;
+                    this_fiber->last_error_=ec;
+                    if(timeout==0 || timer_triggered) {
+                        // Both callback are called, resume fiber
+                        // this_fiber->schedule();
+                        this_fiber->state_=fibers::detail::fiber_object::RUNNING;
+                        this_fiber->one_step();
+                    }
+                })));
+            });
+        } else {
+            // TODO: Error
+        }
+        this_fiber->throw_on_error();
+        return s;
     }
 
-    socket connect(const endpoint &remote_ep, const endpoint &local_ep=endpoint()) {
-        
+    std::error_code connect(asio::ip::udp::socket &s, const asio::ip::udp::endpoint &remote_ep, uint64_t timeout) {
+        std::error_code ec;
+        fibers::detail::fiber_ptr_t this_fiber(fibers::detail::fiber_object::current_fiber_->shared_from_this());
+        fibers::detail::timer_t sleep_timer(this_fiber->io_service_);
+        if(timeout>0) sleep_timer.expires_from_now(std::chrono::microseconds(timeout));
+        CHECK_CALLER(this_fiber);
+        if (this_fiber->caller_) {
+            bool timer_triggered=false;
+            bool async_op_triggered=false;
+            (*(this_fiber->caller_))([&, this_fiber](){
+                this_fiber->state_=fibers::detail::fiber_object::BLOCKED;
+                if(timeout>0) sleep_timer.async_wait(this_fiber->fiber_strand_.wrap([&, this_fiber](std::error_code ec){
+                    /*if (ec!=asio::error::operation_aborted)*/ {
+                        timer_triggered=true;
+                        // Timeout, cancel socket op if it's still pending
+                        if(async_op_triggered) {
+                            // Both callback are called, resume fiber
+                            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
+                            this_fiber->one_step();
+                        } else {
+                            s.cancel();
+                        }
+                    }
+                }));
+                s.async_connect(remote_ep, (this_fiber->fiber_strand_.wrap([&, this_fiber](std::error_code ec){
+                    async_op_triggered=true;
+                    // Operation completed, cancel timer
+                    sleep_timer.cancel();
+                    if(ec==asio::error::operation_aborted)
+                        ec=asio::error::timed_out;
+                    this_fiber->last_error_=ec;
+                    if(timeout==0 || timer_triggered) {
+                        // Both callback are called, resume fiber
+                        // this_fiber->schedule();
+                        this_fiber->state_=fibers::detail::fiber_object::RUNNING;
+                        this_fiber->one_step();
+                    }
+                })));
+            });
+        } else {
+            // TODO: Error
+        }
+        if (this_fiber->last_error_) {
+            ec=std::make_error_code(static_cast<std::errc>(this_fiber->last_error_.value()));
+            this_fiber->last_error_.clear();
+        }
+        return ec;
     }
-#endif
 }}  // End of namespace fibio::io
