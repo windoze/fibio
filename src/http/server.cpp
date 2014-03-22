@@ -115,11 +115,6 @@ namespace fibio { namespace http { namespace server {
     // server::connection
     //////////////////////////////////////////////////////////////////////////////////////////
     
-    server::connection::connection(const server::connection &other)
-    : stream_(std::move(const_cast<server::connection &>(other).stream_))
-    , host_(other.host_)
-    {}
-    
     void server::connection::close() {
         stream_.close();
     }
