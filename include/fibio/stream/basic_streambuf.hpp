@@ -37,6 +37,7 @@ namespace fibio { namespace stream {
         , read_timeout_(other.read_timeout_)
         , write_timeout_(other.write_timeout_)
         , unbuffered_(other.unbuffered_)
+        , duplex_mode_(other.duplex_mode_)
         {}
         
         basic_fibio_streambuf(StreamDescriptor &&sd)
