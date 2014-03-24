@@ -152,6 +152,7 @@
 		2D131A6B18D7F3810086156F /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		2D131A6C18D7F3810086156F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		2D131A6D18D7F3810086156F /* test.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = test.c; sourceTree = "<group>"; };
+		2D6A7BF318E05C5500AC89EC /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		2D7E685F18CCCD5D00B7C4E5 /* concurrent_queue.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = concurrent_queue.hpp; sourceTree = "<group>"; };
 		2D7E686018CCCD5D00B7C4E5 /* fiber.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = fiber.hpp; sourceTree = "<group>"; };
 		2D7E686218CCCD5D00B7C4E5 /* condition_variable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = condition_variable.hpp; sourceTree = "<group>"; };
@@ -1236,6 +1237,7 @@
 				2D7E6C5E18CCCEA200B7C4E5 /* libboost_system-mt.a */,
 				2DD3B6DF18CCF8B7009E1F3E /* .gitignore */,
 				2DD3B6E418CDC3E7009E1F3E /* README.md */,
+				2D6A7BF318E05C5500AC89EC /* COPYING */,
 				2D7E688318CCCD5D00B7C4E5 /* TODO.md */,
 				2D13199C18CF85330086156F /* CMakeLists.txt */,
 				2D7E688D18CCCE0E00B7C4E5 /* asio */,
