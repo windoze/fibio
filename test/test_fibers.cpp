@@ -81,5 +81,5 @@ int main_fiber(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-    return fibio::fibers::fiberize(1, main_fiber, argc, argv);
+    return fiberize(1, main_fiber, argc, argv);
 }
