@@ -47,7 +47,7 @@ namespace fibio { namespace http { namespace client {
     
     bool request::write(std::ostream &os) {
         if (!common::request::write(os)) return false;
-        os << raw_body_stream_.vector();
+        os.write(&(raw_body_stream_.vector()[0]), raw_body_stream_.vector().size());
         return !os.eof() && !os.fail() && !os.bad();
     }
     
