@@ -49,7 +49,8 @@ namespace fibio { namespace http { namespace server {
             stream::tcp_stream stream_;
         };
         
-        server(const io::tcp::endpoint &ep, const std::string &host);
+        server(const std::string &addr, unsigned short port, const std::string &host);
+        server(unsigned short port, const std::string &host);
         std::error_code accept(connection &sc, uint64_t timeout=0);
         void close();
         
@@ -58,7 +59,7 @@ namespace fibio { namespace http { namespace server {
         { return accept(sc, std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count()); }
 
         std::string host_;
-        io::tcp::acceptor acceptor_;
+        tcp_acceptor acceptor_;
     };
 }}} // End of namespace fibio::http::server
 

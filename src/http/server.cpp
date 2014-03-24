@@ -139,16 +139,21 @@ namespace fibio { namespace http { namespace server {
     // server
     //////////////////////////////////////////////////////////////////////////////////////////
     
-    server::server(const io::tcp::endpoint &ep, const std::string &host)
+    server::server(const std::string &addr, unsigned short port, const std::string &host)
     : host_(host)
-    , acceptor_(io::listen(ep))
+    , acceptor_(addr.c_str(), port)
+    {}
+    
+    server::server(unsigned short port, const std::string &host)
+    : host_(host)
+    , acceptor_(port)
     {}
     
     std::error_code server::accept(server::connection &sc, uint64_t timeout) {
+        acceptor_.set_accept_timeout(std::chrono::microseconds(timeout));
         std::error_code ec;
-        sc.stream_.stream_descriptor()=io::accept(acceptor_, timeout, ec);
+        sc.stream_.assign(acceptor_(ec));
         if (!ec) {
-            ;
             sc.host_=host_;
         }
         return ec;

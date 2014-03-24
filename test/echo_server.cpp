@@ -65,7 +65,7 @@ int main_fiber(int argc, char *argv[]) {
         listen_port=atoi(argv[2]);
     }
     fiber(console).detach();
-    auto acc=stream::tcp_acceptor(address.c_str(), listen_port, std::chrono::seconds(1));
+    auto acc=stream::tcp_acceptor(address, listen_port, std::chrono::seconds(1));
     while(!should_exit) {
         std::error_code ec;
         tcp_stream s=acc(ec);

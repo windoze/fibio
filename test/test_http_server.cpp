@@ -99,7 +99,7 @@ void servant(http_server::connection sc) {
 }
 
 void the_server() {
-    http_server svr(io::tcp::endpoint(io::tcp::protocol::v4(), 23456), "localhost:23456");
+    http_server svr(23456, "localhost:23456");
     std::error_code ec;
     // Check exit flag
     while (!should_exit) {

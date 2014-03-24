@@ -38,9 +38,10 @@ void parent() {
     boost::random::mt19937 rng;
     boost::random::uniform_int_distribution<> rand(1,1000);
     
-    io::tcp::acceptor acc=io::listen(io::tcp::endpoint(asio::ip::tcp::v4(), 23456), true);
+    //io::tcp::acceptor acc=io::listen(io::tcp::endpoint(asio::ip::tcp::v4(), 23456), true);
+    tcp_acceptor acc(23456);
     std::error_code ec;
-    stream::tcp_stream str1(io::accept(acc, 0, ec));
+    stream::tcp_stream str1=acc(ec);
     stream::tcp_stream str;
     str.swap(str1);
     assert(!ec);
