@@ -20,11 +20,7 @@ int main_fiber(int argc, char *argv[]) {
     auto acc=io::listen(atoi(argv[1]));
     while(1) {
         fiber([](tcp_stream s){
-            while(!s.eof()) {
-                std::string line;
-                std::getline(s, line);
-                s &lt;&lt; line &lt;&lt; std::endl;
-            }
+            s &lt;&lt; stream::half_duplex &lt;&lt; s.rdbuf();
         }, io::accept(acc)).detach();
     }
     return 0;
