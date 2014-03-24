@@ -196,6 +196,7 @@ namespace std {
 namespace fibio {
     using stream::tcp_stream;
     using stream::posix_stream;
+    using stream::tcp_acceptor;
 }
 
 #endif

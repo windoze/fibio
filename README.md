@@ -17,11 +17,11 @@ The echo server example
 using namespace fibio;
 
 int main_fiber(int argc, char *argv[]) {
-    auto acc=io::listen(atoi(argv[1]));
+    tcp_acceptor acc(atoi(argv[1]));
     while(1) {
         fiber([](tcp_stream s){
             s &lt;&lt; s.rdbuf();
-        }, io::accept(acc)).detach();
+        }, acc()).detach();
     }
     return 0;
 }
