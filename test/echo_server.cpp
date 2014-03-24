@@ -12,20 +12,13 @@
 
 using namespace fibio;
 
-void servant(tcp_stream s) {
-    while(!s.eof()) {
-        std::string line;
-        std::getline(s, line);
-        s << line << std::endl;
-    }
-}
-
 int main_fiber(int argc, char *argv[]) {
     try {
         auto acc=io::listen(atoi(argv[1]));
         while(1) {
-            tcp_stream stream(io::accept(acc));
-            fiber(servant, std::move(stream)).detach();
+            fiber([](tcp_stream s){
+                s << stream::half_duplex << s.rdbuf();
+            }, io::accept(acc)).detach();
         }
     } catch (std::system_error &e) {
         std::cerr << e.what() << std::endl;

@@ -108,7 +108,19 @@ namespace fibio { namespace stream {
         template<typename Rep, typename Period>
         void set_write_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
         { this->sbuf_.set_write_timeout(timeout_duration); }
+        
+        void set_duplex_mode(duplex_mode dm)
+        { this->sbuf_.set_duplex_mode(dm); }
+        
+        duplex_mode get_duplex_mode() const
+        { return this->sbuf_.get_duplex_mode(); }
     };
+    
+    template<typename StreamDescriptor>
+    basic_fibio_iostream<StreamDescriptor> &operator<<(basic_fibio_iostream<StreamDescriptor> &is, duplex_mode dm) {
+        is.set_duplex_mode(dm);
+        return is;
+    }
 
     typedef basic_fibio_iostream<fibio::io::tcp::socket> tcp_stream;
     typedef basic_fibio_iostream<fibio::io::posix::stream_descriptor> posix_stream;

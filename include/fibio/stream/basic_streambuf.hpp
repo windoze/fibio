@@ -17,6 +17,11 @@
 #include <fibio/io/io.hpp>
 
 namespace fibio { namespace stream {
+    enum duplex_mode {
+        full_duplex,
+        half_duplex,
+    };
+    
     template<typename StreamDescriptor>
     class basic_fibio_streambuf : public std::streambuf {
     public:
@@ -103,7 +108,15 @@ namespace fibio { namespace stream {
         template<typename Rep, typename Period>
         void set_write_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
         { write_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
+        
+        void set_duplex_mode(duplex_mode dm) {
+            duplex_mode_=dm;
+        }
 
+        duplex_mode get_duplex_mode() const {
+            return duplex_mode_;
+        }
+        
     protected:
         pos_type seekoff(off_type off,
                          std::ios_base::seekdir dir,
@@ -128,6 +141,7 @@ namespace fibio { namespace stream {
         }
         
         int_type underflow() override {
+            if (duplex_mode_==half_duplex) sync();
             if (gptr() == egptr()) {
                 std::error_code ec;
                 size_t bytes_transferred=io::read_some(sd_,
@@ -229,6 +243,7 @@ namespace fibio { namespace stream {
         int read_timeout_=0;
         int write_timeout_=0;
         bool unbuffered_=false;
+        duplex_mode duplex_mode_=full_duplex;
     };
 }}  // End of namespace fibio::stream
 
