@@ -68,6 +68,10 @@ namespace fibio { namespace stream {
             this->sbuf_.swap(other.sbuf_);
         }
         
+        void assign(basic_fibio_iostream &&other) {
+            this->sbuf_.swap(other.sbuf_);
+        }
+        
         template <typename... T>
         std::error_code open(T... x) {
             return this->sbuf_.open(x...);
@@ -136,8 +140,8 @@ namespace fibio { namespace stream {
         typedef typename asio::ip::tcp::acceptor acceptor_type;
         typedef typename asio::ip::tcp::endpoint endpoint_type;
 
-        acceptor(const char *s, unsigned short port_num)
-        : acc_(io::listen(s, port_num))
+        acceptor(const std::string &s, unsigned short port_num)
+        : acc_(io::listen(s.c_str(), port_num))
         {}
         
         acceptor(unsigned short port_num)
@@ -145,8 +149,8 @@ namespace fibio { namespace stream {
         {}
         
         template<typename Rep, typename Period>
-        acceptor(const char *s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(io::listen(s, port_num))
+        acceptor(const std::string &s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
+        : acc_(io::listen(s.c_str(), port_num))
         , accept_timeout_(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count())
         {}
 
@@ -162,6 +166,9 @@ namespace fibio { namespace stream {
         
         acceptor(const acceptor &other)=delete;
         acceptor &operator=(const acceptor &other)=delete;
+        
+        void close()
+        { acc_.close(); }
         
         template<typename Rep, typename Period>
         void set_accept_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
