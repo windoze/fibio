@@ -13,11 +13,15 @@
 
 using namespace fibio;
 concurrent::concurrent_queue<int> cq;
-constexpr int count=1000;
-barrier bar(count);
+
+constexpr int children=1000;
+constexpr size_t max_num=100;
+constexpr long sum=max_num*(max_num+1)/2*children;
+
+barrier bar(children);
 
 void child() {
-    for (int i=1; i<=1000; i++) {
+    for (int i=1; i<=max_num; i++) {
         cq.push(i);
     }
     // Queue is closed only if all child fibers are finished
@@ -25,14 +29,14 @@ void child() {
 }
 
 void parent() {
-    for (int n=0; n<count; n++) {
+    for (int n=0; n<children; n++) {
         fiber(child).detach();
     }
-    int sum=0;
+    int s=0;
     for (int popped : cq) {
-        sum+=popped;
+        s+=popped;
     }
-    assert(sum==500500 * count);
+    assert(s==sum);
 }
 
 int main_fiber(int argc, char *argv[]) {
