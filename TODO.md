@@ -4,7 +4,7 @@ TODO List for Fiberized.IO
 BUGS
 ----
 * scheduler::add_thread caused problem, disabled
-* <strike>asio returns error_code with system_category, while std::make_error_code uses generic_category, which makes comparison fail</strike>
+* asio returns error_code with system_category, while std::make_error_code uses generic_category, which makes comparison fail
 
 Core
 ----
@@ -23,10 +23,10 @@ Core
     * Boost.Log integration (?)
     * Log4CXX/Log4CPP/Log4CPlus (?)
 * async/await support (?), this is little hard as creating coroutine inside a fiber may interfere with fiber scheduling, need to find a clean solution to support this
-* <strike>Make sure `fibio::condition_variable` and `std::condition_variable` can be used to communicate between `fiber` and `not-a-fiber`</strike>
-    * <strike>Make sure `not-a-fiber` can notify `fiber` via `fibio::condition_variable`</strike>
-    * <strike>Make sure `fiber` can notify `not-a-fiber` via `std::condition_variable`</strike>
-* <strike>Shared mutex(RWLock)</strike>
+* <del>Make sure `fibio::condition_variable` and `std::condition_variable` can be used to communicate between `fiber` and `not-a-fiber`</del>
+    * <del>Make sure `not-a-fiber` can notify `fiber` via `fibio::condition_variable`</del>
+    * <del>Make sure `fiber` can notify `not-a-fiber` via `std::condition_variable`</del>
+* <del>Shared mutex(RWLock)</del>
 
 Protocol
 --------
@@ -54,7 +54,7 @@ Utilities
 * Stream with compression
     * gzip
         * Client can send compressed request
-        * <strike>Client can receive compressed response (DONE)</strike>
+        * <del>Client can receive compressed response (DONE)</del>
         * Server can receive compressed request
         * Server can send compressed response
     * deflate
