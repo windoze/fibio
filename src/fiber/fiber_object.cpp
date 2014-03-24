@@ -134,10 +134,9 @@ namespace fibio { namespace fibers { namespace detail {
     
     void fiber_object::throw_on_error() {
         if (last_error_) {
-            std::error_code ec=last_error_;
-            last_error_.clear();
+            // FIXME: ASIO uses more than one error categories
             last_error_=std::make_error_code(static_cast<std::errc>(last_error_.value()));
-            throw std::system_error(ec);
+            throw std::system_error(last_error_);
         }
     }
     
