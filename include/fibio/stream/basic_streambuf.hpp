@@ -243,7 +243,7 @@ namespace fibio { namespace stream {
         int read_timeout_=0;
         int write_timeout_=0;
         bool unbuffered_=false;
-        duplex_mode duplex_mode_=full_duplex;
+        duplex_mode duplex_mode_=half_duplex;
     };
 }}  // End of namespace fibio::stream
 

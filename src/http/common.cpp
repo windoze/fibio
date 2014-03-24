@@ -560,7 +560,6 @@ namespace fibio { namespace http { namespace common {
         }
         // End of header
         os.write("\r\n", 2);
-        os.flush();
         return true;
     }
     
@@ -612,7 +611,6 @@ namespace fibio { namespace http { namespace common {
         }
         // End of header
         os.write("\r\n", 2);
-        os.flush();
         return true;
     }
 }}} // End of namespace fibio::http::common

@@ -107,7 +107,6 @@ namespace fibio { namespace http { namespace server {
         }
         if (!common::response::write(os)) return false;
         os << raw_body_stream_.vector();
-        os.flush();
         return !os.eof() && !os.fail() && !os.bad();
     }
     
