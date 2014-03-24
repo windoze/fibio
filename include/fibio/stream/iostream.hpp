@@ -41,6 +41,9 @@ namespace fibio { namespace stream {
         , std::iostream(&(this->sbuf_))
         {}
         
+        ~basic_fibio_iostream()
+        {}
+        
         /**
          * Constructor
          *
@@ -121,9 +124,66 @@ namespace fibio { namespace stream {
         is.set_duplex_mode(dm);
         return is;
     }
-
+    
     typedef basic_fibio_iostream<fibio::io::tcp::socket> tcp_stream;
     typedef basic_fibio_iostream<fibio::io::posix::stream_descriptor> posix_stream;
+
+    template<typename Stream>
+    struct acceptor;
+    
+    template<>
+    struct acceptor<tcp_stream> {
+        typedef typename asio::ip::tcp::acceptor acceptor_type;
+        typedef typename asio::ip::tcp::endpoint endpoint_type;
+
+        acceptor(const char *s, unsigned short port_num)
+        : acc_(io::listen(s, port_num))
+        {}
+        
+        acceptor(unsigned short port_num)
+        : acc_(io::listen(port_num))
+        {}
+        
+        template<typename Rep, typename Period>
+        acceptor(const char *s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
+        : acc_(io::listen(s, port_num))
+        , accept_timeout_(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count())
+        {}
+
+        template<typename Rep, typename Period>
+        acceptor(unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
+        : acc_(io::listen(port_num))
+        , accept_timeout_(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count())
+        {}
+        
+        acceptor(acceptor &&other)
+        : acc_(std::move(other.acc_))
+        {}
+        
+        acceptor(const acceptor &other)=delete;
+        acceptor &operator=(const acceptor &other)=delete;
+        
+        template<typename Rep, typename Period>
+        void set_accept_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
+        { accept_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
+        
+        tcp_stream accept()
+        { return tcp_stream(io::accept(acc_, accept_timeout_)); }
+        
+        tcp_stream accept(std::error_code &ec)
+        { return tcp_stream(io::accept(acc_, accept_timeout_, ec)); }
+        
+        tcp_stream operator()()
+        { return accept(); }
+        
+        tcp_stream operator()(std::error_code &ec)
+        { return accept(ec); }
+        
+        uint64_t accept_timeout_=0;
+        acceptor_type acc_;
+    };
+
+    typedef acceptor<tcp_stream> tcp_acceptor;
 }}  // End of namespace fibio::stream
 
 namespace std {
