@@ -18,27 +18,31 @@ namespace fibio { namespace io {
         typedef asio::ip::tcp::endpoint endpoint;
         typedef asio::ip::tcp::socket socket;
         typedef asio::ip::tcp::acceptor acceptor;
+        typedef asio::ip::tcp::socket::shutdown_type shutdown_type;
     }   // End of namespace fibio::io::tcp
     
     tcp::endpoint resolve(const tcp::query &addr);
-    tcp::acceptor listen(const tcp::endpoint &ep, bool reuse_addr=true);
-    tcp::socket accept(tcp::acceptor &a, uint64_t timeout_usec=0);
-    tcp::socket connect(const tcp::endpoint &remote_ep, const tcp::endpoint &local_ep=tcp::endpoint(), uint64_t timeout_usec=0);
-    
-    size_t read_some(tcp::socket &s, char *buffer, size_t sz, uint64_t timeout_usec=0);
-    size_t write_some(tcp::socket &s, const char *buffer, size_t sz, uint64_t timeout_usec=0);
-    
     tcp::endpoint resolve(const tcp::query &addr, std::error_code &);
+
+    tcp::acceptor listen(const tcp::endpoint &ep, bool reuse_addr=true);
     tcp::acceptor listen(const tcp::endpoint &ep, bool reuse_addr, std::error_code &);
-    tcp::socket accept(tcp::acceptor &a, uint64_t timeout_usec, std::error_code &);
-    std::error_code connect(tcp::socket &,const tcp::endpoint &remote_ep, const tcp::endpoint &local_ep, uint64_t timeout_usec);
-    
-    size_t read_some(tcp::socket &s, char *buffer, size_t sz, uint64_t timeout_usec, std::error_code &);
-    size_t write_some(tcp::socket &s, const char *buffer, size_t sz, uint64_t timeout_usec, std::error_code &);
-    
     // Simplified version
     tcp::acceptor listen(const char *s, unsigned short port_num);
     tcp::acceptor listen(unsigned short port_num);
+
+    tcp::socket accept(tcp::acceptor &a, uint64_t timeout_usec=0);
+    tcp::socket accept(tcp::acceptor &a, uint64_t timeout_usec, std::error_code &);
+
+    tcp::socket connect(const tcp::endpoint &remote_ep, const tcp::endpoint &local_ep=tcp::endpoint(), uint64_t timeout_usec=0);
+    std::error_code connect(tcp::socket &,const tcp::endpoint &remote_ep, const tcp::endpoint &local_ep, uint64_t timeout_usec);
+    
+    size_t read_some(tcp::socket &s, char *buffer, size_t sz, uint64_t timeout_usec=0);
+    size_t read_some(tcp::socket &s, char *buffer, size_t sz, uint64_t timeout_usec, std::error_code &);
+    
+    size_t write_some(tcp::socket &s, const char *buffer, size_t sz, uint64_t timeout_usec=0);
+    size_t write_some(tcp::socket &s, const char *buffer, size_t sz, uint64_t timeout_usec, std::error_code &);
+    
+    std::error_code shutdown(tcp::socket &s, tcp::shutdown_type);
 }}  // End of namespace fibio::io
 
 #endif

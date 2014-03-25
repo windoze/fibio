@@ -93,6 +93,10 @@ namespace fibio { namespace stream {
             }
         }
         
+        template<typename ShutdownType>
+        std::error_code shutdown(ShutdownType s)
+        { return io::shutdown(sd_, s); }
+        
         typename StreamDescriptor::native_handle_type release()
         { return sd_.release(); }
         
@@ -118,7 +122,7 @@ namespace fibio { namespace stream {
         duplex_mode get_duplex_mode() const {
             return duplex_mode_;
         }
-        
+
     protected:
         pos_type seekoff(off_type off,
                          std::ios_base::seekdir dir,
