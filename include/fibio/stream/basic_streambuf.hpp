@@ -128,9 +128,9 @@ namespace fibio { namespace stream {
             if (which!=std::ios_base::in || dir!=std::ios_base::cur) return pos_type(off_type(-1));
             char_type* newg=gptr()+off;
             // Cannot seek back into put back area
-            if (newg <eback()+putback_max) return false;
+            if (newg <eback()+putback_max) return pos_type(off_type(-1));
             // Cannot seek beyond end of get area
-            if (newg >=egptr()) return false;
+            if (newg >=egptr()) return pos_type(off_type(-1));
             setg(eback(), newg, egptr());
             return pos_type(off_type(0));
         }
