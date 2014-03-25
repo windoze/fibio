@@ -80,6 +80,7 @@ namespace fibio { namespace stream {
             std::swap(read_timeout_, other.read_timeout_);
             std::swap(write_timeout_, other.write_timeout_);
             std::swap(unbuffered_, other.unbuffered_);
+            std::swap(duplex_mode_, other.duplex_mode_);
         }
         
         inline bool is_open() const
