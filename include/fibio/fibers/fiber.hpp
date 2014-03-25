@@ -62,7 +62,7 @@ namespace fibio { namespace fibers {
         
         bool joinable() const;
         id get_id() const;
-        void join();
+        void join(bool propagate_exception=false);
         void detach();
         void swap(fiber &other) noexcept(true);
         

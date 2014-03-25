@@ -40,6 +40,10 @@ struct fiber_entry2 {
     }
 };
 
+void ex() {
+    throw std::runtime_error("exception from child fiber");
+}
+
 int main_fiber(int argc, char *argv[]) {
     fiber_group fibers;
     
@@ -61,6 +65,26 @@ int main_fiber(int argc, char *argv[]) {
     fibers.create_fiber(fiber_entry1(), d4);
     fibers.create_fiber(fiber_entry1(), std::move(d5));
     fibers.create_fiber(fiber_entry2(), std::ref(d6));
+    
+    // join with rethrow
+    fiber fex1(ex);
+    try {
+        fex1.join(true);
+        // joining will throw
+        assert(false);
+    } catch(std::exception &e) {
+        assert(std::string(e.what())=="exception from child fiber");
+    }
+    
+    // join without rethrow
+    fiber fex2(ex);
+    try {
+        // joining will not throw
+        fex2.join();
+    } catch(...) {
+        // No exception should be thrown
+        assert(false);
+    }
     
     fibers.join_all();
     

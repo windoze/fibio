@@ -88,6 +88,7 @@ namespace fibio { namespace fibers { namespace detail {
         // Following functions can only be called inside coroutine
         void yield();
         void join(fiber_ptr_t f);
+        void join_and_rethrow(fiber_ptr_t f);
         void sleep_usec(uint64_t usec);
         
         // Implementations
@@ -130,6 +131,7 @@ namespace fibio { namespace fibers { namespace detail {
         fss_map_t fss_;
         fiber_ptr_t this_ref_;
         std::string name_;
+        std::nested_exception uncaught_exception_;
         
         static __thread fiber_object *current_fiber_;
     };

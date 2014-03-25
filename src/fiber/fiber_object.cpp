@@ -50,7 +50,25 @@ namespace fibio { namespace fibers { namespace detail {
         
         // Now we're out of constructor
         caller_=&c;
-        entry_();
+        try {
+            entry_();
+        } catch(const boost::coroutines::detail::forced_unwind&) {
+            // Boost.Coroutine requirement
+            throw;
+        } catch(std::exception &e) {
+            // This exception can be propagated to joiner
+            // HACK: Why there is no way to just create a nested_exception?
+            try {
+                std::throw_with_nested(e);
+            } catch (std::nested_exception &ne) {
+                std::lock_guard<std::mutex> guard(fiber_mutex_);
+                uncaught_exception_=ne;
+            }
+        } catch(...) {
+            // TODO: Uncaught unknown exception
+            // Is there any way to do stack trace?
+            assert(false);
+        }
         // Fiber function exits, set state to STOPPED
         c([this](){
             state_=STOPPED;
@@ -184,6 +202,53 @@ namespace fibio { namespace fibers { namespace detail {
         throw_on_error();
     }
     
+    void fiber_object::join_and_rethrow(fiber_ptr_t f) {
+        CHECK_CALLER(this);
+        std::nested_exception e;
+        if (caller_) {
+            fiber_ptr_t pthis(shared_from_this());
+            (*caller_)([pthis, f, &e](){
+                std::lock_guard<std::mutex> lock(f->fiber_mutex_);
+                if (f==pthis) {
+                    // The fiber is joining itself
+                    pthis->last_error_=std::make_error_code(std::errc::resource_deadlock_would_occur) ;
+                } else if (f->state_==STOPPED) {
+                    // f is already stopped
+                    if (f->uncaught_exception_.nested_ptr()) {
+                        // Propagate uncaught exception in f to this fiber
+                        e=f->uncaught_exception_;
+                        // Clean uncaught exception in f
+                        f->uncaught_exception_=std::nested_exception();
+                    }
+                    pthis->state_=RUNNING;
+                } else {
+                    // std::cout << "fiber(pthis) blocked" << std::endl;
+                    pthis->state_=BLOCKED;
+                    f->cleanup_queue_.push_back([pthis, f, &e](){
+                        if (f->uncaught_exception_.nested_ptr()) {
+                            // Propagate uncaught exception in f to this fiber
+                            e=f->uncaught_exception_;
+                            // Clean uncaught exception in f
+                            f->uncaught_exception_=std::nested_exception();
+                        }
+                        // std::cout << "fiber(pthis) resumed" << std::endl;
+                        pthis->state_=READY;
+                        pthis->one_step();
+                    });
+                }
+            });
+        } else {
+            // TODO: Error
+        }
+        
+        // throw propagated exception
+        if (e.nested_ptr()) {
+            e.rethrow_nested();
+        }
+        
+        throw_on_error();
+    }
+    
     void fiber_object::sleep_usec(uint64_t usec) {
         // Shortcut
         if (usec==0) {
@@ -296,7 +361,7 @@ namespace fibio { namespace fibers {
         return reinterpret_cast<fiber::id>(m_.get());
     }
     
-    void fiber::join() {
+    void fiber::join(bool propagate_exception) {
         if (!m_) {
             throw std::make_error_code(std::errc::no_such_process);
         }
@@ -304,7 +369,11 @@ namespace fibio { namespace fibers {
             throw std::make_error_code(std::errc::resource_deadlock_would_occur);
         }
         if (detail::fiber_object::current_fiber_) {
-            detail::fiber_object::current_fiber_->join(m_);
+            if (propagate_exception) {
+                detail::fiber_object::current_fiber_->join_and_rethrow(m_);
+            } else {
+                detail::fiber_object::current_fiber_->join(m_);
+            }
         }
     }
     
