@@ -15,7 +15,8 @@
 
 namespace fibio { namespace io {
     template<typename Protocol, typename StreamSocketService>
-    struct fiberized<asio::basic_stream_socket<Protocol, StreamSocketService>> : public asio::basic_stream_socket<Protocol, StreamSocketService>
+    struct fiberized<asio::basic_stream_socket<Protocol, StreamSocketService>>
+    : public asio::basic_stream_socket<Protocol, StreamSocketService>
     {
         typedef asio::basic_stream_socket<Protocol, StreamSocketService> base_type;
 
@@ -33,6 +34,10 @@ namespace fibio { namespace io {
         fiberized(const typename base_type::protocol_type & protocol,
                   const typename base_type::native_handle_type & native_socket)
         : base_type(fibers::this_fiber::detail::get_io_service(), protocol, native_socket)
+        {}
+        
+        fiberized(asio::io_service &s)
+        : base_type(s)
         {}
         
         FIBIO_IMPLEMENT_EXTENDED_CONNECT;

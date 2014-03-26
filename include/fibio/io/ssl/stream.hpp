@@ -18,7 +18,11 @@ namespace fibio { namespace io {
     struct fiberized<asio::ssl::stream<Stream>> : public asio::ssl::stream<fiberized<Stream>>
     {
         typedef asio::ssl::stream<fiberized<Stream>> base_type;
-        using base_type::base_type;
+        
+        template<typename Context>
+        fiberized(Context &ctx)
+        : base_type(fibers::this_fiber::detail::get_io_service(), ctx)
+        {}
         
         FIBIO_IMPLEMENT_FIBERIZED_READ_SOME;
         FIBIO_IMPLEMENT_FIBERIZED_WRITE_SOME;
