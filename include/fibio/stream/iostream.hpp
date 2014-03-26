@@ -164,13 +164,13 @@ namespace fibio { namespace stream {
         
         Stream accept() {
             socket_type s;
-            acc_.accept(s.sbuf_);
+            acc_.accept(s);
             return Stream(std::move(s));
         }
         
         Stream accept(std::error_code &ec) {
             socket_type s;
-            acc_.accept(s.sbuf_, ec);
+            acc_.accept(s, ec);
             return Stream(std::move(s));
         }
         
