@@ -55,8 +55,8 @@ namespace fibio { namespace io {
     { \
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &peer_endpoint](){ \
-            async_handler.start_timer_with_cancelation(connect_timeout_, [this](){ base_type::cancel(); }); \
-            base_type::async_connect(peer_endpoint, async_handler.get_async_op_handler()); \
+            async_handler.start_timer_with_cancelation(connect_timeout_, [this](){ this->cancel(); }); \
+            this->async_connect(peer_endpoint, async_handler.get_async_op_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return ec; \
@@ -83,8 +83,8 @@ namespace fibio { namespace io {
     { \
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &buffers](){ \
-            async_handler.start_timer_with_cancelation(read_timeout_, [this](){ base_type::cancel(); }); \
-            base_type::async_read_some(buffers, async_handler.get_io_handler()); \
+            async_handler.start_timer_with_cancelation(read_timeout_, [this](){ this->cancel(); }); \
+            this->async_read_some(buffers, async_handler.get_io_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return async_handler.io_result(); \
@@ -111,8 +111,8 @@ namespace fibio { namespace io {
     { \
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &buffers](){ \
-            async_handler.start_timer_with_cancelation(write_timeout_, [this](){ base_type::cancel(); }); \
-            base_type::async_write_some(buffers, async_handler.get_io_handler()); \
+            async_handler.start_timer_with_cancelation(write_timeout_, [this](){ this->cancel(); }); \
+            this->async_write_some(buffers, async_handler.get_io_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return async_handler.io_result(); \
@@ -139,8 +139,8 @@ namespace fibio { namespace io {
     { \
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &buffers](){ \
-            async_handler.start_timer_with_cancelation(send_timeout_, [this](){ base_type::cancel(); }); \
-            base_type::async_send(buffers, async_handler.get_io_handler()); \
+            async_handler.start_timer_with_cancelation(send_timeout_, [this](){ this->cancel(); }); \
+            this->async_send(buffers, async_handler.get_io_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return async_handler.io_result(); \
@@ -165,8 +165,8 @@ namespace fibio { namespace io {
     { \
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &buffers, &flags](){ \
-            async_handler.start_timer_with_cancelation(send_timeout_, [this](){ base_type::cancel(); });\
-            base_type::async_send(buffers, flags, async_handler.get_io_handler()); \
+            async_handler.start_timer_with_cancelation(send_timeout_, [this](){ this->cancel(); });\
+            this->async_send(buffers, flags, async_handler.get_io_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return async_handler.io_result(); \
@@ -193,8 +193,8 @@ namespace fibio { namespace io {
     { \
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &buffers](){ \
-            async_handler.start_timer_with_cancelation(receive_timeout_, [this](){ base_type::cancel(); }); \
-            base_type::async_receive(buffers, async_handler.get_io_handler()); \
+            async_handler.start_timer_with_cancelation(receive_timeout_, [this](){ this->cancel(); }); \
+            this->async_receive(buffers, async_handler.get_io_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return async_handler.io_result(); \
@@ -219,8 +219,8 @@ namespace fibio { namespace io {
     { \
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &buffers, &flags](){ \
-            async_handler.start_timer_with_cancelation(receive_timeout_, [this](){ base_type::cancel(); }); \
-            base_type::async_receive(buffers, flags, async_handler.get_io_handler()); \
+            async_handler.start_timer_with_cancelation(receive_timeout_, [this](){ this->cancel(); }); \
+            this->async_receive(buffers, flags, async_handler.get_io_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return async_handler.io_result(); \
@@ -251,8 +251,8 @@ namespace fibio { namespace io {
     {\
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &buffers, &destination](){ \
-            async_handler.start_timer_with_cancelation(send_timeout_, [this](){ base_type::cancel(); }); \
-            base_type::async_send_to(buffers, destination, async_handler.get_io_handler()); \
+            async_handler.start_timer_with_cancelation(send_timeout_, [this](){ this->cancel(); }); \
+            this->async_send_to(buffers, destination, async_handler.get_io_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return async_handler.io_result(); \
@@ -280,8 +280,8 @@ namespace fibio { namespace io {
     { \
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &buffers, &destination, &flags](){ \
-            async_handler.start_timer_with_cancelation(send_timeout_, [this](){ base_type::cancel(); }); \
-            base_type::async_send_to(buffers, destination, flags, async_handler.get_io_handler()); \
+            async_handler.start_timer_with_cancelation(send_timeout_, [this](){ this->cancel(); }); \
+            this->async_send_to(buffers, destination, flags, async_handler.get_io_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return async_handler.io_result(); \
@@ -312,8 +312,8 @@ namespace fibio { namespace io {
     { \
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &buffers, &sender_endpoint](){ \
-            async_handler.start_timer_with_cancelation(receive_timeout_, [this](){ base_type::cancel(); }); \
-            base_type::async_receive_from(buffers, sender_endpoint, async_handler.get_io_handler()); \
+            async_handler.start_timer_with_cancelation(receive_timeout_, [this](){ this->cancel(); }); \
+            this->async_receive_from(buffers, sender_endpoint, async_handler.get_io_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return async_handler.io_result(); \
@@ -341,8 +341,8 @@ namespace fibio { namespace io {
     { \
         detail::fiber_async_handler async_handler; \
         async_handler.run_in_scheduler_context([this, &async_handler, &buffers, &sender_endpoint, &flags](){ \
-            async_handler.start_timer_with_cancelation(receive_timeout_, [this](){ base_type::cancel(); }); \
-            base_type::async_receive_from(buffers, sender_endpoint, flags, async_handler.get_io_handler()); \
+            async_handler.start_timer_with_cancelation(receive_timeout_, [this](){ this->cancel(); }); \
+            this->async_receive_from(buffers, sender_endpoint, flags, async_handler.get_io_handler()); \
         }); \
         async_handler.throw_or_return(throw_error, ec); \
         return async_handler.io_result(); \
