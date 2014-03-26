@@ -37,6 +37,7 @@ namespace fibio { namespace stream {
         typedef detail::iostream_base<Stream...> streambase_t;
     public:
         typedef typename streambuf_t::stream_type stream_type;
+        typedef typename stream_type::protocol_type protocol_type;
 
         fiberized_iostream()
         : streambase_t()
@@ -122,43 +123,37 @@ namespace fibio { namespace stream {
         is.set_duplex_mode(dm);
         return is;
     }
-    
-    typedef fiberized_iostream<tcp_socket> tcp_stream;
-    typedef fiberized_iostream<posix_stream_descriptor> posix_stream;
 
     template<typename Stream>
-    struct acceptor;
-    
-    template<>
-    struct acceptor<tcp_stream> {
-        typedef tcp_stream socket_type;
-        typedef io::tcp_acceptor acceptor_type;
-        typedef typename asio::ip::tcp::endpoint endpoint_type;
+    struct stream_acceptor {
+        typedef typename Stream::stream_type socket_type;
+        typedef typename io::fiberized<typename Stream::protocol_type::acceptor> acceptor_type;
+        typedef typename Stream::protocol_type::endpoint endpoint_type;
 
-        acceptor(const std::string &s, unsigned short port_num)
+        stream_acceptor(const std::string &s, unsigned short port_num)
         : acc_(endpoint_type(asio::ip::address::from_string(s.c_str()), port_num))
         {}
         
-        acceptor(unsigned short port_num)
+        stream_acceptor(unsigned short port_num)
         : acc_(endpoint_type(asio::ip::address(), port_num))
         {}
         
         template<typename Rep, typename Period>
-        acceptor(const std::string &s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
+        stream_acceptor(const std::string &s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
         : acc_(endpoint_type(asio::ip::address::from_string(s.c_str()), port_num))
         { acc_.set_accept_timeout(timeout_duration); }
 
         template<typename Rep, typename Period>
-        acceptor(unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
+        stream_acceptor(unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
         : acc_(endpoint_type(asio::ip::address(), port_num))
         { acc_.set_accept_timeout(timeout_duration); }
         
-        acceptor(acceptor &&other)
+        stream_acceptor(stream_acceptor &&other)
         : acc_(std::move(other.acc_))
         {}
         
-        acceptor(const acceptor &other)=delete;
-        acceptor &operator=(const acceptor &other)=delete;
+        stream_acceptor(const stream_acceptor &other)=delete;
+        stream_acceptor &operator=(const stream_acceptor &other)=delete;
         
         void close()
         { acc_.close(); }
@@ -167,46 +162,48 @@ namespace fibio { namespace stream {
         void set_accept_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
         { acc_.set_accept_timeout(timeout_duration); }
         
-        tcp_stream accept() {
+        Stream accept() {
             socket_type s;
             acc_.accept(s.sbuf_);
-            return tcp_stream(std::move(s));
+            return Stream(std::move(s));
         }
         
-        tcp_stream accept(std::error_code &ec) {
+        Stream accept(std::error_code &ec) {
             socket_type s;
             acc_.accept(s.sbuf_, ec);
-            return tcp_stream(std::move(s));
+            return Stream(std::move(s));
         }
         
-        void accept(tcp_stream &s)
+        void accept(Stream &s)
         { acc_.accept(s.sbuf_); }
         
-        void accept(tcp_stream &s, std::error_code &ec)
+        void accept(Stream &s, std::error_code &ec)
         { acc_.accept(s.sbuf_, ec); }
         
-        tcp_stream operator()()
+        Stream operator()()
         { return accept(); }
         
-        tcp_stream operator()(std::error_code &ec)
+        Stream operator()(std::error_code &ec)
         { return accept(ec); }
         
-        void operator()(tcp_stream &s)
+        void operator()(Stream &s)
         { accept(s); }
         
-        void operator()(tcp_stream &s, std::error_code &ec)
+        void operator()(Stream &s, std::error_code &ec)
         { accept(s, ec); }
         
         acceptor_type acc_;
     };
-
-    typedef acceptor<tcp_stream> tcp_acceptor;
+    
+    typedef fiberized_iostream<tcp_socket> tcp_stream;
+    typedef fiberized_iostream<posix_stream_descriptor> posix_stream;
+    typedef stream_acceptor<tcp_stream> tcp_stream_acceptor;
 }}  // End of namespace fibio::stream
 
 namespace fibio {
     using stream::tcp_stream;
     using stream::posix_stream;
-    using stream::tcp_acceptor;
+    using stream::tcp_stream_acceptor;
 }
 
 #endif

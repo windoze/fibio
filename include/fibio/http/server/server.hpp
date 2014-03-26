@@ -59,7 +59,7 @@ namespace fibio { namespace http { namespace server {
         { return accept(sc, std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count()); }
 
         std::string host_;
-        tcp_acceptor acceptor_;
+        tcp_stream_acceptor acceptor_;
     };
 }}} // End of namespace fibio::http::server
 
