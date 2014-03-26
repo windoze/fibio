@@ -72,6 +72,8 @@ namespace fibio { namespace stream {
         {
             // Only seeking in input buffer from current pos is allowed
             if (which!=std::ios_base::in || dir!=std::ios_base::cur) return pos_type(off_type(-1));
+            // Do nothing when off=0
+            if (off==0) return pos_type(off_type(0));
             char_type* newg=gptr()+off;
             // Cannot seek back into put back area
             if (newg <eback()+putback_max) return pos_type(off_type(-1));
