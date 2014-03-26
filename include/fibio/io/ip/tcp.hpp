@@ -20,6 +20,7 @@ namespace fibio {
         typedef io::fiberized<asio::ip::tcp::socket> tcp_socket;
         typedef io::fiberized<asio::ip::tcp::resolver> tcp_resolver;
     }
+    using io::tcp_acceptor;
     using io::tcp_socket;
     using io::tcp_resolver;
 }   // End of namespace fibio
