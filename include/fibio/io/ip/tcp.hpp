@@ -1,0 +1,27 @@
+//
+//  tcp.hpp
+//  fibio
+//
+//  Created by Chen Xu on 14-3-26.
+//  Copyright (c) 2014 0d0a.com. All rights reserved.
+//
+
+#ifndef fibio_tcp_hpp
+#define fibio_tcp_hpp
+
+#include <asio/ip/tcp.hpp>
+#include <fibio/io/basic_stream_socket.hpp>
+#include <fibio/io/basic_socket_acceptor.hpp>
+#include <fibio/io/ip/basic_resolver.hpp>
+
+namespace fibio {
+    namespace io {
+        typedef io::fiberized<asio::ip::tcp::acceptor> tcp_acceptor;
+        typedef io::fiberized<asio::ip::tcp::socket> tcp_socket;
+        typedef io::fiberized<asio::ip::tcp::resolver> tcp_resolver;
+    }
+    using io::tcp_socket;
+    using io::tcp_resolver;
+}   // End of namespace fibio
+
+#endif

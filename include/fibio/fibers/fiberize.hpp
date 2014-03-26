@@ -11,12 +11,13 @@
 
 #include <type_traits>
 #include <fibio/fibers/fiber.hpp>
-#include <fibio/stream/basic_streambuf.hpp>
+#include <fibio/io/posix/stream_descriptor.hpp>
+#include <fibio/stream/streambuf.hpp>
 
 namespace fibio { namespace fibers {
     namespace detail {
         struct fiberized_std_stream_guard {
-            typedef stream::basic_fibio_streambuf<io::posix::stream_descriptor> sbuf_t;
+            typedef stream::fiberized_streambuf<posix_stream_descriptor> sbuf_t;
             typedef sbuf_t *sbuf_ptr_t;
             
             fiberized_std_stream_guard(asio::io_service &iosvc);

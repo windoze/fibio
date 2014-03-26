@@ -14,106 +14,48 @@
 #include <chrono>
 #include <vector>
 #include <fibio/fibers/fiber.hpp>
-#include <fibio/io/io.hpp>
+#include <fibio/io/basic_stream_socket.hpp>
+#include <fibio/io/posix/stream_descriptor.hpp>
 
 namespace fibio { namespace stream {
     enum duplex_mode {
         full_duplex,
         half_duplex,
     };
-    
-    template<typename StreamDescriptor>
-    class basic_fibio_streambuf : public std::streambuf {
+
+    template<typename... Stream>
+    class fiberized_streambuf;
+
+    template<typename... Stream>
+    class fiberized_streambuf<io::fiberized<Stream...>>
+    : public std::streambuf
+    , public io::fiberized<Stream...>
+    {
+        typedef io::fiberized<Stream...> base_type;
     public:
-        basic_fibio_streambuf()
-        : sd_(fibio::fibers::this_fiber::detail::get_io_service())
+        typedef io::fiberized<Stream...> stream_type;
+
+        fiberized_streambuf()
+        : base_type()
         { init_buffers(); }
         
-        basic_fibio_streambuf(basic_fibio_streambuf &&other)
-        : sd_(std::move(other.sd_))
+        fiberized_streambuf(fiberized_streambuf &&other)
+        : base_type(std::move(other))
         , get_buffer_(std::move(other.get_buffer_))
         , put_buffer_(std::move(other.put_buffer_))
-        , connect_timeout_(other.connect_timeout_)
-        , read_timeout_(other.read_timeout_)
-        , write_timeout_(other.write_timeout_)
         , unbuffered_(other.unbuffered_)
         , duplex_mode_(other.duplex_mode_)
         {}
         
-        basic_fibio_streambuf(StreamDescriptor &&sd)
-        : sd_(std::move(sd))
+        fiberized_streambuf(base_type &&sd)
+        : base_type(std::move(sd))
         { init_buffers(); }
-        
-        basic_fibio_streambuf(asio::io_service &iosvc)
-        : sd_(iosvc)
-        { init_buffers(); }
-        
+
         /// Destructor flushes buffered data.
-        ~basic_fibio_streambuf() {
+        ~fiberized_streambuf() {
             if (pptr() != pbase())
                 overflow(traits_type::eof());
         }
-        
-        template <typename... T>
-        std::error_code open(T... x) {
-            return fibio::io::open(sd_, x...);
-        }
-        
-        template <typename... T>
-        std::error_code connect(T... x) {
-            sd_.close();
-            typename StreamDescriptor::protocol_type::resolver::query q(x...);
-            typename StreamDescriptor::protocol_type::endpoint ep=fibio::io::resolve(q);
-            typedef typename StreamDescriptor::protocol_type::endpoint endpoint_t;
-            return fibio::io::connect(sd_, ep, endpoint_t(), connect_timeout_);
-        }
-        
-        void swap(basic_fibio_streambuf &other) {
-            StreamDescriptor temp(sd_.get_io_service());
-            temp=std::move(other.sd_);
-            other.sd_=std::move(sd_);
-            sd_=std::move(temp);
-            //std::swap(sd_, other.sd_);
-            std::swap(get_buffer_, other.get_buffer_);
-            std::swap(put_buffer_, other.put_buffer_);
-            std::swap(connect_timeout_, other.connect_timeout_);
-            std::swap(read_timeout_, other.read_timeout_);
-            std::swap(write_timeout_, other.write_timeout_);
-            std::swap(unbuffered_, other.unbuffered_);
-            std::swap(duplex_mode_, other.duplex_mode_);
-        }
-        
-        inline bool is_open() const
-        { return sd_.is_open(); }
-        
-        inline void close() {
-            if(sd_.is_open()) {
-                std::error_code ec;
-                sd_.close(ec);
-            }
-        }
-        
-        template<typename ShutdownType>
-        std::error_code shutdown(ShutdownType s)
-        { return io::shutdown(sd_, s); }
-        
-        typename StreamDescriptor::native_handle_type release()
-        { return sd_.release(); }
-        
-        inline StreamDescriptor &stream_descriptor()
-        { return sd_; }
-        
-        template<typename Rep, typename Period>
-        void set_connect_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { connect_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
-        
-        template<typename Rep, typename Period>
-        void set_read_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { read_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
-        
-        template<typename Rep, typename Period>
-        void set_write_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { write_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
         
         void set_duplex_mode(duplex_mode dm) {
             duplex_mode_=dm;
@@ -150,11 +92,8 @@ namespace fibio { namespace stream {
             if (duplex_mode_==half_duplex) sync();
             if (gptr() == egptr()) {
                 std::error_code ec;
-                size_t bytes_transferred=io::read_some(sd_,
-                                                        &get_buffer_[0]+ putback_max,
-                                                        buffer_size-putback_max,
-                                                        read_timeout_,
-                                                        ec);
+                size_t bytes_transferred=base_type::read_some(asio::buffer(&get_buffer_[0]+ putback_max, buffer_size-putback_max),
+                                                              ec);
                 if (ec || bytes_transferred==0) {
                     return traits_type::eof();
                 }
@@ -175,7 +114,8 @@ namespace fibio { namespace stream {
                     return traits_type::not_eof(c);
                 } else {
                     char c_=c;
-                    fibio::io::write_some(sd_, &c_, 1, write_timeout_, ec);
+                    base_type::write_some(asio::buffer(&c_, 1),
+                                          ec);
                     if (ec)
                         return traits_type::eof();
                     return c;
@@ -185,10 +125,7 @@ namespace fibio { namespace stream {
                 size_t size=pptr() - pbase();
                 while (size > 0)
                 {
-                    size_t bytes_transferred=fibio::io::write_some(sd_,
-                                                                   ptr,
-                                                                   size,
-                                                                   write_timeout_,
+                    size_t bytes_transferred=base_type::write_some(asio::buffer(ptr, size),
                                                                    ec);
                     ptr+=bytes_transferred;
                     size-=bytes_transferred;
@@ -242,20 +179,17 @@ namespace fibio { namespace stream {
         // A practical MTU size
         enum { buffer_size = 1500 };
         
-        StreamDescriptor sd_;
         std::vector<char> get_buffer_;
         std::vector<char> put_buffer_;
-        int connect_timeout_=0;
-        int read_timeout_=0;
-        int write_timeout_=0;
         bool unbuffered_=false;
         duplex_mode duplex_mode_=half_duplex;
     };
 }}  // End of namespace fibio::stream
 
 namespace std {
-    template<typename StreamDescriptor>
-    void swap(fibio::stream::basic_fibio_streambuf<StreamDescriptor> &lhs, fibio::stream::basic_fibio_streambuf<StreamDescriptor> &rhs) {
+    template<typename... Stream>
+    void swap(fibio::stream::fiberized_streambuf<Stream...> &lhs,
+              fibio::stream::fiberized_streambuf<Stream...> &rhs) {
         lhs.swap(rhs);
     }
 }

@@ -19,9 +19,7 @@ using namespace fibio;
 void child() {
     this_fiber::sleep_for(std::chrono::seconds(1));
     stream::tcp_stream str;
-    stream::tcp_stream str1;
-    str1.connect("127.0.0.1", "23456");
-    std::swap(str, str1);
+    str.connect(asio::ip::tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 23456));
     str << "hello" << std::endl;
     for(int i=0; i<100; i++) {
         // Receive a random number from server and send it back
@@ -37,13 +35,10 @@ void parent() {
     fiber f(child);
     boost::random::mt19937 rng;
     boost::random::uniform_int_distribution<> rand(1,1000);
-    
-    //io::tcp::acceptor acc=io::listen(io::tcp::endpoint(asio::ip::tcp::v4(), 23456), true);
+
     tcp_acceptor acc(23456);
     std::error_code ec;
-    stream::tcp_stream str1=acc(ec);
-    stream::tcp_stream str;
-    str.swap(str1);
+    stream::tcp_stream str=acc(ec);
     assert(!ec);
     std::string line;
     std::getline(str, line);
@@ -71,5 +66,5 @@ int main_fiber(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-    return fiberize(4, main_fiber, argc, argv);
+    return fiberize(1, main_fiber, argc, argv);
 }

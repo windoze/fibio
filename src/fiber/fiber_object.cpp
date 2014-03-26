@@ -319,6 +319,157 @@ namespace fibio { namespace fibers { namespace detail {
         }
         return 0;
     }
+    
+    fiber_async_handler::fiber_async_handler()
+    : this_fiber(fibers::detail::fiber_object::current_fiber_->shared_from_this())
+    , sleep_timer(this_fiber->io_service_)
+    {}
+    
+    void fiber_async_handler::start_timer_with_cancelation(uint64_t timeout, std::function<void()> &&c) {
+        timeout_=timeout;
+        cancelation_=std::move(c);
+        if(timeout_>0) {
+            sleep_timer.expires_from_now(std::chrono::microseconds(timeout_));
+            sleep_timer.async_wait(this_fiber->fiber_strand_.wrap([this](std::error_code ec){
+                on_timeout(ec);
+            }));
+        }
+    }
+    
+    std::function<void(std::error_code ec, size_t sz)> fiber_async_handler::get_io_handler()
+    { return this_fiber->fiber_strand_.wrap([this](std::error_code ec, size_t sz){ on_io_complete(ec, sz); }); }
+    
+    std::function<void(std::error_code ec)> fiber_async_handler::get_async_op_handler()
+    { return this_fiber->fiber_strand_.wrap([this](std::error_code ec){ on_async_op_complete(ec); }); }
+    
+    std::function<void(std::error_code, asio::ip::tcp::resolver::iterator)> fiber_async_handler::get_resolve_handler(asio::ip::tcp *)
+    {
+        return this_fiber->fiber_strand_.wrap([this](std::error_code ec, asio::ip::tcp::resolver::iterator it){
+            on_tcp_resolve_complete(ec, it);
+        });
+    }
+    
+    std::function<void(std::error_code, asio::ip::udp::resolver::iterator)> fiber_async_handler::get_resolve_handler(asio::ip::udp *)
+    {
+        return this_fiber->fiber_strand_.wrap([this](std::error_code ec, asio::ip::udp::resolver::iterator it){
+            on_udp_resolve_complete(ec, it);
+        });
+    }
+    
+    std::function<void(std::error_code, asio::ip::icmp::resolver::iterator)> fiber_async_handler::get_resolve_handler(asio::ip::icmp *)
+    {
+        return this_fiber->fiber_strand_.wrap([this](std::error_code ec, asio::ip::icmp::resolver::iterator it){
+            on_icmp_resolve_complete(ec, it);
+        });
+    }
+    
+
+    void fiber_async_handler::on_timeout(std::error_code ec) {
+        timer_triggered=true;
+        if(async_op_triggered) {
+            // Both callback are called, resume fiber
+            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
+            this_fiber->one_step();
+        } else {
+            if(cancelation_) cancelation_();
+        }
+    }
+    
+    void fiber_async_handler::on_async_op_complete(std::error_code ec) {
+        async_op_triggered=true;
+        // Operation completed, cancel timer
+        sleep_timer.cancel();
+        if(ec==asio::error::operation_aborted)
+            ec=asio::error::timed_out;
+        this_fiber->last_error_=ec;
+        if(timeout_==0 || timer_triggered) {
+            // Both callback are called, resume fiber
+            // this_fiber->schedule();
+            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
+            this_fiber->one_step();
+        }
+    }
+    
+    void fiber_async_handler::on_io_complete(std::error_code ec, size_t sz) {
+        async_op_triggered=true;
+        // Operation completed, cancel timer
+        sleep_timer.cancel();
+        if(ec==asio::error::operation_aborted)
+            ec=asio::error::timed_out;
+        this_fiber->last_error_=ec;
+        io_ret_=sz;
+        if(timeout_==0 || timer_triggered) {
+            // Both callback are called, resume fiber
+            // this_fiber->schedule();
+            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
+            this_fiber->one_step();
+        }
+    }
+    
+    void fiber_async_handler::on_tcp_resolve_complete(std::error_code ec, asio::ip::tcp::resolver::iterator iterator) {
+        async_op_triggered=true;
+        // Operation completed, cancel timer
+        sleep_timer.cancel();
+        if(ec==asio::error::operation_aborted)
+            ec=asio::error::timed_out;
+        this_fiber->last_error_=ec;
+        tcp_resolve_ret_=iterator;
+        if(timeout_==0 || timer_triggered) {
+            // Both callback are called, resume fiber
+            // this_fiber->schedule();
+            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
+            this_fiber->one_step();
+        }
+    }
+    
+    void fiber_async_handler::on_udp_resolve_complete(std::error_code ec, asio::ip::udp::resolver::iterator iterator) {
+        async_op_triggered=true;
+        // Operation completed, cancel timer
+        sleep_timer.cancel();
+        if(ec==asio::error::operation_aborted)
+            ec=asio::error::timed_out;
+        this_fiber->last_error_=ec;
+        udp_resolve_ret_=iterator;
+        if(timeout_==0 || timer_triggered) {
+            // Both callback are called, resume fiber
+            // this_fiber->schedule();
+            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
+            this_fiber->one_step();
+        }
+    }
+    
+    void fiber_async_handler::on_icmp_resolve_complete(std::error_code ec, asio::ip::icmp::resolver::iterator iterator) {
+        async_op_triggered=true;
+        // Operation completed, cancel timer
+        sleep_timer.cancel();
+        if(ec==asio::error::operation_aborted)
+            ec=asio::error::timed_out;
+        this_fiber->last_error_=ec;
+        icmp_resolve_ret_=iterator;
+        if(timeout_==0 || timer_triggered) {
+            // Both callback are called, resume fiber
+            // this_fiber->schedule();
+            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
+            this_fiber->one_step();
+        }
+    }
+    
+    void fiber_async_handler::run_in_scheduler_context(std::function<void()> f) {
+        CHECK_CALLER(this_fiber);
+        (*(this_fiber->caller_))([this, &f](){
+            this_fiber->state_=fibers::detail::fiber_object::BLOCKED;
+            f();
+        });
+    }
+    
+    void fiber_async_handler::throw_or_return(bool throw_error, std::error_code &ec) {
+        if (throw_error) {
+            this_fiber->throw_on_error();
+        } else {
+            ec=std::make_error_code(static_cast<std::errc>(this_fiber->last_error_.value()));
+            this_fiber->last_error_.clear();
+        }
+    }
 }}}   // End of namespace fibio::fibers::detail
 
 namespace fibio { namespace fibers {
@@ -351,7 +502,7 @@ namespace fibio { namespace fibers {
     std::string fiber::get_name() {
         return m_->get_name();
     }
-
+    
     bool fiber::joinable() const {
         // Return true iff this is a fiber and not the current calling fiber
         return (m_ && detail::fiber_object::current_fiber_!=m_.get());

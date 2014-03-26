@@ -10,38 +10,33 @@
 #define fibio_socket_stream_hpp
 
 #include <fibio/io/io.hpp>
-#include <fibio/stream/basic_streambuf.hpp>
+#include <fibio/stream/streambuf.hpp>
 
 namespace fibio { namespace stream {
-    template<typename StreamDescriptor>
-    struct iostream_base {
-        typedef basic_fibio_streambuf<StreamDescriptor> streambuf_t;
-        
-        iostream_base()=default;
-        
-        iostream_base(StreamDescriptor &&s)
-        : sbuf_(std::move(s))
-        {}
-        
-        iostream_base(iostream_base<StreamDescriptor> &&other)
-        : sbuf_(std::move(other.sbuf_))
-        {}
-        
-        streambuf_t sbuf_;
-    };
+    namespace detail {
+        template<typename... Stream>
+        struct iostream_base {
+            typedef fiberized_streambuf<Stream...> streambuf_t;
+            streambuf_t sbuf_;
+        };
+    }
     
-    template<typename StreamDescriptor>
-    class basic_fibio_iostream : private iostream_base<StreamDescriptor>, public std::iostream {
+    template<typename... Stream>
+    class fiberized_iostream
+    : public detail::iostream_base<Stream...>
+    , public std::iostream
+    {
+        typedef fiberized_streambuf<Stream...> streambuf_t;
+        typedef detail::iostream_base<Stream...> streambase_t;
     public:
-        typedef basic_fibio_streambuf<StreamDescriptor> streambuf_t;
-        typedef iostream_base<StreamDescriptor> streambase_t;
-        
-        basic_fibio_iostream()
+        typedef typename streambuf_t::stream_type stream_type;
+
+        fiberized_iostream()
         : streambase_t()
         , std::iostream(&(this->sbuf_))
         {}
         
-        ~basic_fibio_iostream()
+        ~fiberized_iostream()
         {}
         
         /**
@@ -49,28 +44,30 @@ namespace fibio { namespace stream {
          *
          * @param s underlying stream device, such as socket or pipe
          */
-        basic_fibio_iostream(StreamDescriptor &&s)
-        : streambase_t(std::move(s))
+        fiberized_iostream(stream_type &&s)
+        : streambase_t({std::move(s)})
         , std::iostream(&(this->sbuf_))
         {}
         
         // Movable
-        basic_fibio_iostream(basic_fibio_iostream &&src)
-        : streambase_t(std::move(src))
+        fiberized_iostream(fiberized_iostream &&src)
+        : streambase_t({std::move(src)})
         , std::iostream(&(this->sbuf_))
         {}
         
         // Non-copyable
-        basic_fibio_iostream(const basic_fibio_iostream&) = delete;
-        basic_fibio_iostream& operator=(const basic_fibio_iostream&) = delete;
+        fiberized_iostream(const fiberized_iostream&) = delete;
+        fiberized_iostream& operator=(const fiberized_iostream&) = delete;
         
-        void swap(basic_fibio_iostream &other) {
+        /*
+        void swap(fiberized_iostream &other) {
             this->sbuf_.swap(other.sbuf_);
         }
         
-        void assign(basic_fibio_iostream &&other) {
+        void assign(fiberized_iostream &&other) {
             this->sbuf_.swap(other.sbuf_);
         }
+         */
         
         template <typename... T>
         std::error_code open(T... x) {
@@ -78,7 +75,7 @@ namespace fibio { namespace stream {
         }
         
         template <typename... T>
-        std::error_code connect(T... x) {
+        auto connect(T... x) -> decltype(this->sbuf_.connect(x...)) {
             return this->sbuf_.connect(x...);
         }
         
@@ -101,8 +98,8 @@ namespace fibio { namespace stream {
         inline const streambuf_t &streambuf() const
         { return this->sbuf_; }
         
-        inline StreamDescriptor &stream_descriptor()
-        { return streambuf().stream_descriptor(); }
+        inline stream_type &stream_descriptor()
+        { return streambuf(); }
         
         template<typename Rep, typename Period>
         void set_connect_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
@@ -123,42 +120,41 @@ namespace fibio { namespace stream {
         { return this->sbuf_.get_duplex_mode(); }
     };
     
-    template<typename StreamDescriptor>
-    basic_fibio_iostream<StreamDescriptor> &operator<<(basic_fibio_iostream<StreamDescriptor> &is, duplex_mode dm) {
+    template<typename... Stream>
+    fiberized_iostream<Stream...> &operator<<(fiberized_iostream<Stream...> &is, duplex_mode dm) {
         is.set_duplex_mode(dm);
         return is;
     }
     
-    typedef basic_fibio_iostream<fibio::io::tcp::socket> tcp_stream;
-    typedef basic_fibio_iostream<fibio::io::posix::stream_descriptor> posix_stream;
+    typedef fiberized_iostream<tcp_socket> tcp_stream;
+    typedef fiberized_iostream<posix_stream_descriptor> posix_stream;
 
     template<typename Stream>
     struct acceptor;
     
     template<>
     struct acceptor<tcp_stream> {
-        typedef typename asio::ip::tcp::acceptor acceptor_type;
+        typedef tcp_stream socket_type;
+        typedef io::tcp_acceptor acceptor_type;
         typedef typename asio::ip::tcp::endpoint endpoint_type;
 
         acceptor(const std::string &s, unsigned short port_num)
-        : acc_(io::listen(s.c_str(), port_num))
+        : acc_(endpoint_type(asio::ip::address::from_string(s.c_str()), port_num))
         {}
         
         acceptor(unsigned short port_num)
-        : acc_(io::listen(port_num))
+        : acc_(endpoint_type(asio::ip::address(), port_num))
         {}
         
         template<typename Rep, typename Period>
         acceptor(const std::string &s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(io::listen(s.c_str(), port_num))
-        , accept_timeout_(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count())
-        {}
+        : acc_(endpoint_type(asio::ip::address::from_string(s.c_str()), port_num))
+        { acc_.set_accept_timeout(timeout_duration); }
 
         template<typename Rep, typename Period>
         acceptor(unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(io::listen(port_num))
-        , accept_timeout_(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count())
-        {}
+        : acc_(endpoint_type(asio::ip::address(), port_num))
+        { acc_.set_accept_timeout(timeout_duration); }
         
         acceptor(acceptor &&other)
         : acc_(std::move(other.acc_))
@@ -172,13 +168,25 @@ namespace fibio { namespace stream {
         
         template<typename Rep, typename Period>
         void set_accept_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { accept_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
+        { acc_.set_accept_timeout(timeout_duration); }
         
-        tcp_stream accept()
-        { return tcp_stream(io::accept(acc_, accept_timeout_)); }
+        tcp_stream accept() {
+            socket_type s;
+            acc_.accept(s.sbuf_);
+            return tcp_stream(std::move(s));
+        }
         
-        tcp_stream accept(std::error_code &ec)
-        { return tcp_stream(io::accept(acc_, accept_timeout_, ec)); }
+        tcp_stream accept(std::error_code &ec) {
+            socket_type s;
+            acc_.accept(s.sbuf_, ec);
+            return tcp_stream(std::move(s));
+        }
+        
+        void accept(tcp_stream &s)
+        { acc_.accept(s.sbuf_); }
+        
+        void accept(tcp_stream &s, std::error_code &ec)
+        { acc_.accept(s.sbuf_, ec); }
         
         tcp_stream operator()()
         { return accept(); }
@@ -186,19 +194,17 @@ namespace fibio { namespace stream {
         tcp_stream operator()(std::error_code &ec)
         { return accept(ec); }
         
-        uint64_t accept_timeout_=0;
+        void operator()(tcp_stream &s)
+        { accept(s); }
+        
+        void operator()(tcp_stream &s, std::error_code &ec)
+        { accept(s, ec); }
+        
         acceptor_type acc_;
     };
 
     typedef acceptor<tcp_stream> tcp_acceptor;
 }}  // End of namespace fibio::stream
-
-namespace std {
-    template<typename StreamDescriptor>
-    void swap(fibio::stream::basic_fibio_iostream<StreamDescriptor> &lhs, fibio::stream::basic_fibio_iostream<StreamDescriptor> &rhs) {
-        lhs.swap(rhs);
-    }
-}
 
 namespace fibio {
     using stream::tcp_stream;

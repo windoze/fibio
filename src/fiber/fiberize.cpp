@@ -14,16 +14,16 @@ namespace fibio { namespace fibers { namespace detail {
     : old_cin_buf_(0)
     , old_cout_buf_(0)
     , old_cerr_buf_(0)
-    , cin_buf_(new sbuf_t(iosvc))
-    , cout_buf_(new sbuf_t(iosvc))
-    , cerr_buf_(new sbuf_t(iosvc))
+    , cin_buf_(new sbuf_t())
+    , cout_buf_(new sbuf_t())
+    , cerr_buf_(new sbuf_t())
     {
         old_cin_buf_=std::cin.rdbuf(cin_buf_);
         old_cout_buf_=std::cout.rdbuf(cout_buf_);
         old_cerr_buf_=std::cerr.rdbuf(cerr_buf_);
-        cin_buf_->open(0);
-        cout_buf_->open(1);
-        cerr_buf_->open(2);
+        cin_buf_->assign(0);
+        cout_buf_->assign(1);
+        cerr_buf_->assign(2);
         // Set cerr to unbuffered
         std::cerr.rdbuf()->pubsetbuf(0, 0);
     }
@@ -46,9 +46,9 @@ namespace fibio { namespace fibers { namespace detail {
         if (cin_buf_->is_open()) {
             return;
         }
-        cin_buf_->open(0);
-        cout_buf_->open(1);
-        cerr_buf_->open(2);
+        cin_buf_->assign(0);
+        cout_buf_->assign(1);
+        cerr_buf_->assign(2);
         // Set cerr to unbuffered
         std::cerr.rdbuf()->pubsetbuf(0, 0);
     }

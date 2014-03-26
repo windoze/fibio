@@ -9,10 +9,11 @@
 #ifndef __fibio__io__
 #define __fibio__io__
 
-#include <fibio/io/tcp.hpp>
-#include <fibio/io/udp.hpp>
-#include <fibio/io/local_stream.hpp>
-#include <fibio/io/local_datagram.hpp>
-#include <fibio/io/posix.hpp>
+#include <fibio/io/ip/tcp.hpp>
+#include <fibio/io/ip/udp.hpp>
+#include <fibio/io/ip/icmp.hpp>
+#include <fibio/io/local/stream_protocol.hpp>
+#include <fibio/io/local/datagram_protocol.hpp>
+#include <fibio/io/posix/stream_descriptor.hpp>
 
 #endif /* defined(__fibio__socket__) */

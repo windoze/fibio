@@ -152,7 +152,7 @@ namespace fibio { namespace http { namespace server {
     std::error_code server::accept(server::connection &sc, uint64_t timeout) {
         acceptor_.set_accept_timeout(std::chrono::microseconds(timeout));
         std::error_code ec;
-        sc.stream_.assign(acceptor_(ec));
+        acceptor_(sc.stream_, ec);
         if (!ec) {
             sc.host_=host_;
         }
