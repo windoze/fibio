@@ -3,11 +3,11 @@
 //  fibio
 //
 //  Created by Chen Xu on 14-3-26.
-//  Copyright (c) 2014年 0d0a.com. All rights reserved.
+//  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_udp_hpp
-#define fibio_udp_hpp
+#ifndef fibio_io_ip_udp_hpp
+#define fibio_io_ip_udp_hpp
 
 #include <asio/ip/udp.hpp>
 #include <fibio/io/basic_datagram_socket.hpp>

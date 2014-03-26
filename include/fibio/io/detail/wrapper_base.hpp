@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_wrapper_base_hpp
-#define fibio_wrapper_base_hpp
+#ifndef fibio_io_detail_wrapper_base_hpp
+#define fibio_io_detail_wrapper_base_hpp
 
 #include <fibio/fibers/detail/forward.hpp>
 

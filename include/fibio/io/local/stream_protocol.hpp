@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_stream_protocol_hpp
-#define fibio_stream_protocol_hpp
+#ifndef fibio_io_local_stream_protocol_hpp
+#define fibio_io_local_stream_protocol_hpp
 
 #include <asio/local/stream_protocol.hpp>
 #include <fibio/io/basic_stream_socket.hpp>

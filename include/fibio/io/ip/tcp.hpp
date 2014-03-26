@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_tcp_hpp
-#define fibio_tcp_hpp
+#ifndef fibio_io_ip_tcp_hpp
+#define fibio_io_ip_tcp_hpp
 
 #include <asio/ip/tcp.hpp>
 #include <fibio/io/basic_stream_socket.hpp>

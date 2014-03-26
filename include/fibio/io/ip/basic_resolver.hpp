@@ -1,13 +1,13 @@
 //
-//  resolver.hpp
+//  basic_resolver.hpp
 //  fibio
 //
 //  Created by Chen Xu on 14-3-26.
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_resolver_hpp
-#define fibio_resolver_hpp
+#ifndef fibio_io_ip_basic_resolver_hpp
+#define fibio_io_ip_basic_resolver_hpp
 
 #include <asio/ip/basic_resolver.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>

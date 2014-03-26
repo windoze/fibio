@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_socket_stream_hpp
-#define fibio_socket_stream_hpp
+#ifndef fibio_stream_iostream_hpp
+#define fibio_stream_iostream_hpp
 
 #include <fibio/io/io.hpp>
 #include <fibio/stream/streambuf.hpp>

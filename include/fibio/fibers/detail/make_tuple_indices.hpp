@@ -3,11 +3,11 @@
 //  fibio
 //
 //  Created by Chen Xu on 14-3-21.
-//  Copyright (c) 2014年 0d0a.com. All rights reserved.
+//  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_make_tuple_indices_hpp
-#define fibio_make_tuple_indices_hpp
+#ifndef fibio_fibers_detail_make_tuple_indices_hpp
+#define fibio_fibers_detail_make_tuple_indices_hpp
 
 #include <functional>
 #include <tuple>

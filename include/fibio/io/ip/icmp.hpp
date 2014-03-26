@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_icmp_hpp
-#define fibio_icmp_hpp
+#ifndef fibio_io_ip_icmp_hpp
+#define fibio_io_ip_icmp_hpp
 
 #include <asio/ip/icmp.hpp>
 #include <fibio/io/basic_raw_socket.hpp>

@@ -1,13 +1,13 @@
 //
-//  stream_socket.hpp
+//  basic_stream_socket.hpp
 //  fibio
 //
 //  Created by Chen Xu on 14-3-26.
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_stream_socket_hpp
-#define fibio_stream_socket_hpp
+#ifndef fibio_io_basic_stream_socket_hpp
+#define fibio_io_basic_stream_socket_hpp
 
 #include <asio/basic_stream_socket.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>

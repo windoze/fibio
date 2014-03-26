@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef __fibio__io__
-#define __fibio__io__
+#ifndef fibio_io_io_hpp
+#define fibio_io_io_hpp
 
 #include <fibio/io/ip/tcp.hpp>
 #include <fibio/io/ip/udp.hpp>
@@ -16,4 +16,4 @@
 #include <fibio/io/local/datagram_protocol.hpp>
 #include <fibio/io/posix/stream_descriptor.hpp>
 
-#endif /* defined(__fibio__socket__) */
+#endif /* defined(fibio_io_io_hpp) */

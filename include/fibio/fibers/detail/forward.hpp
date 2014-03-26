@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_forward_hpp
-#define fibio_forward_hpp
+#ifndef fibio_fibers_detail_forward_hpp
+#define fibio_fibers_detail_forward_hpp
 
 #include <functional>
 #include <chrono>

@@ -1,13 +1,13 @@
 //
-//  basic_iostream.hpp
+//  streambuf.hpp
 //  fibio
 //
 //  Created by Chen Xu on 14-3-8.
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_basic_iostream_hpp
-#define fibio_basic_iostream_hpp
+#ifndef fibio_stream_streambuf_hpp
+#define fibio_stream_streambuf_hpp
 
 #include <streambuf>
 #include <iostream>

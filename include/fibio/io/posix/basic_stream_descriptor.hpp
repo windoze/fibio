@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_basic_stream_descriptor_hpp
-#define fibio_basic_stream_descriptor_hpp
+#ifndef fibio_io_posix_basic_stream_descriptor_hpp
+#define fibio_io_posix_basic_stream_descriptor_hpp
 
 #include <asio/posix/basic_stream_descriptor.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>

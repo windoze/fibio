@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_datagram_protocol_hpp
-#define fibio_datagram_protocol_hpp
+#ifndef fibio_io_local_datagram_protocol_hpp
+#define fibio_io_local_datagram_protocol_hpp
 
 #include <asio/local/datagram_protocol.hpp>
 #include <fibio/io/basic_datagram_socket.hpp>

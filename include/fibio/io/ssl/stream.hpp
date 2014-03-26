@@ -1,13 +1,13 @@
 //
-//  ssl_stream.hpp
+//  stream.hpp
 //  fibio
 //
 //  Created by Chen Xu on 14-3-26.
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_ssl_stream_hpp
-#define fibio_ssl_stream_hpp
+#ifndef fibio_io_ssl_stream_hpp
+#define fibio_io_ssl_stream_hpp
 
 #include <asio/ssl/stream.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>

@@ -1,13 +1,13 @@
 //
-//  acceptor.hpp
+//  basic_socket_acceptor.hpp
 //  fibio
 //
 //  Created by Chen Xu on 14-3-26.
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_acceptor_hpp
-#define fibio_acceptor_hpp
+#ifndef fibio_io_basic_socket_acceptor_hpp
+#define fibio_io_basic_socket_acceptor_hpp
 
 #include <asio/basic_socket_acceptor.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>

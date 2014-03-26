@@ -1,13 +1,13 @@
 //
-//  socket.hpp
+//  basic_socket.hpp
 //  fibio
 //
 //  Created by Chen Xu on 14-3-26.
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_socket_hpp
-#define fibio_socket_hpp
+#ifndef fibio_io_basic_socket_hpp
+#define fibio_io_basic_socket_hpp
 
 #include <asio/basic_socket.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>
