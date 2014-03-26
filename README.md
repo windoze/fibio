@@ -17,7 +17,7 @@ The echo server example
 using namespace fibio;
 
 int main_fiber(int argc, char *argv[]) {
-    tcp_acceptor acc(atoi(argv[1]));
+    tcp_stream_acceptor acc(atoi(argv[1]));
     while(1) {
         fiber([](tcp_stream s){
             s &lt;&lt; s.rdbuf();
