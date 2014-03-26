@@ -66,16 +66,6 @@ namespace fibio { namespace stream {
         fiberized_iostream(const fiberized_iostream&) = delete;
         fiberized_iostream& operator=(const fiberized_iostream&) = delete;
         
-        /*
-        void swap(fiberized_iostream &other) {
-            this->sbuf_.swap(other.sbuf_);
-        }
-        
-        void assign(fiberized_iostream &&other) {
-            this->sbuf_.swap(other.sbuf_);
-        }
-         */
-        
         template <typename... T>
         std::error_code open(T... x) {
             return this->sbuf_.open(x...);
