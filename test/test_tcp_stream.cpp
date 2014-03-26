@@ -36,7 +36,7 @@ void parent() {
     boost::random::mt19937 rng;
     boost::random::uniform_int_distribution<> rand(1,1000);
 
-    tcp_acceptor acc(23456);
+    tcp_stream_acceptor acc(23456);
     std::error_code ec;
     stream::tcp_stream str=acc(ec);
     assert(!ec);
