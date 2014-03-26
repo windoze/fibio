@@ -17,6 +17,13 @@ namespace fibio { namespace stream {
         template<typename... Stream>
         struct iostream_base {
             typedef fiberized_streambuf<Stream...> streambuf_t;
+            iostream_base()=default;
+            iostream_base(iostream_base &&other)
+            : sbuf_(std::move(other.sbuf_))
+            {}
+            iostream_base(streambuf_t &&other_buf)
+            : sbuf_(std::move(other_buf))
+            {}
             streambuf_t sbuf_;
         };
     }
@@ -45,13 +52,13 @@ namespace fibio { namespace stream {
          * @param s underlying stream device, such as socket or pipe
          */
         fiberized_iostream(stream_type &&s)
-        : streambase_t({std::move(s)})
+        : streambase_t(std::move(s))
         , std::iostream(&(this->sbuf_))
         {}
         
         // Movable
         fiberized_iostream(fiberized_iostream &&src)
-        : streambase_t({std::move(src)})
+        : streambase_t(std::move(src))
         , std::iostream(&(this->sbuf_))
         {}
         
