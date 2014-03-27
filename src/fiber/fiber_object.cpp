@@ -378,7 +378,7 @@ namespace fibio { namespace fibers { namespace detail {
     void fiber_async_handler::on_async_op_complete(std::error_code ec) {
         async_op_triggered=true;
         // Operation completed, cancel timer
-        sleep_timer.cancel();
+        if(timeout_>0 && !timer_triggered) sleep_timer.cancel();
         if(ec==asio::error::operation_aborted)
             ec=asio::error::timed_out;
         this_fiber->last_error_=ec;
