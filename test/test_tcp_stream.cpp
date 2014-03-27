@@ -67,7 +67,9 @@ typedef stream::fiberized_iostream<io::fiberized<asio::ssl::stream<asio::ip::tcp
 void ssl_child() {
     this_fiber::sleep_for(std::chrono::seconds(1));
     asio::ssl::context ctx(asio::ssl::context::sslv23);
-    ctx.load_verify_file("/tmp/ca.pem");
+    std::error_code ec;
+    ctx.load_verify_file("/tmp/ca.pem", ec);
+    assert(!ec);
     ssl_tcp_stream str(ctx);
     str.stream_descriptor().set_verify_callback([](bool preverified, asio::ssl::verify_context&ctx){
         char subject_name[256];
@@ -76,7 +78,6 @@ void ssl_child() {
         std::cout << "Verifying " << subject_name << "\n";
         return preverified;
     });
-    std::error_code ec;
     ec=str.connect("127.0.0.1", "23457");
     assert(!ec);
     str.stream_descriptor().handshake(asio::ssl::stream_base::client, ec);
@@ -96,6 +97,8 @@ void ssl_parent() {
     fiber f(ssl_child);
     boost::random::mt19937 rng;
     boost::random::uniform_int_distribution<> rand(1,1000);
+
+    std::error_code ec;
     
     asio::ssl::context ctx(asio::ssl::context::sslv23);
     ctx.set_options(
@@ -103,14 +106,16 @@ void ssl_parent() {
                     | asio::ssl::context::no_sslv2
                     | asio::ssl::context::single_dh_use);
     ctx.set_password_callback([](std::size_t, asio::ssl::context::password_purpose)->std::string{ return "test"; });
-    ctx.use_certificate_chain_file("/tmp/server.pem");
-    ctx.use_private_key_file("/tmp/server.pem", asio::ssl::context::pem);
-    ctx.use_tmp_dh_file("/tmp/dh512.pem");
+    ctx.use_certificate_chain_file("/tmp/server.pem", ec);
+    assert(!ec);
+    ctx.use_private_key_file("/tmp/server.pem", asio::ssl::context::pem, ec);
+    assert(!ec);
+    ctx.use_tmp_dh_file("/tmp/dh512.pem", ec);
+    assert(!ec);
 
     ssl_tcp_stream str(ctx);
     
     tcp_acceptor acc(asio::ip::tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 23457));
-    std::error_code ec;
     acc.accept(str.stream_descriptor().next_layer(), ec);
     assert(!ec);
     str.stream_descriptor().handshake(asio::ssl::stream_base::server, ec);
