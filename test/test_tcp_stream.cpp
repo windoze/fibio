@@ -60,9 +60,6 @@ void parent() {
     f.join();
 }
 
-typedef io::fiberized<asio::ip::tcp::socket> socket_type;
-typedef stream::fiberized_iostream<io::fiberized<asio::ssl::stream<asio::ip::tcp::socket>>> ssl_tcp_stream;
-
 // Certificates are copied from ASIO SSL example
 void ssl_child() {
     this_fiber::sleep_for(std::chrono::seconds(1));
@@ -70,7 +67,7 @@ void ssl_child() {
     std::error_code ec;
     ctx.load_verify_file("/tmp/ca.pem", ec);
     assert(!ec);
-    ssl_tcp_stream str(ctx);
+    stream::ssl_tcp_stream str(ctx);
     str.stream_descriptor().set_verify_callback([](bool preverified, asio::ssl::verify_context&ctx){
         char subject_name[256];
         X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
@@ -113,10 +110,10 @@ void ssl_parent() {
     ctx.use_tmp_dh_file("/tmp/dh512.pem", ec);
     assert(!ec);
 
-    ssl_tcp_stream str(ctx);
+    stream::ssl_tcp_stream str(ctx);
     
-    tcp_acceptor acc(asio::ip::tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), 23457));
-    acc.accept(str.stream_descriptor().next_layer(), ec);
+    stream::ssl_tcp_stream_acceptor acc("127.0.0.1", 23457);
+    acc.accept(str, ec);
     assert(!ec);
     str.stream_descriptor().handshake(asio::ssl::stream_base::server, ec);
     assert(!ec);
