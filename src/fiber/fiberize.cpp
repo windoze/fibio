@@ -7,7 +7,6 @@
 //
 
 #include <fibio/fibers/fiberize.hpp>
-//#include "std_stream_guard.hpp"
 
 namespace fibio { namespace fibers { namespace detail {
     fiberized_std_stream_guard::fiberized_std_stream_guard(asio::io_service &iosvc)
