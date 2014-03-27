@@ -10,6 +10,7 @@
 #define fibio_fiberize_hpp
 
 #include <type_traits>
+#include <iostream>
 #include <fibio/fibers/fiber.hpp>
 #include <fibio/io/posix/stream_descriptor.hpp>
 #include <fibio/stream/streambuf.hpp>
