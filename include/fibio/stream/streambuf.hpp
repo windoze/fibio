@@ -10,12 +10,9 @@
 #define fibio_stream_streambuf_hpp
 
 #include <streambuf>
-#include <iostream>
 #include <chrono>
 #include <vector>
-#include <fibio/fibers/fiber.hpp>
-#include <fibio/io/basic_stream_socket.hpp>
-#include <fibio/io/posix/stream_descriptor.hpp>
+#include <fibio/io/detail/wrapper_base.hpp>
 
 namespace fibio { namespace stream {
     enum duplex_mode {
@@ -197,13 +194,5 @@ namespace fibio { namespace stream {
         duplex_mode duplex_mode_=half_duplex;
     };
 }}  // End of namespace fibio::stream
-
-namespace std {
-    template<typename... Stream>
-    void swap(fibio::stream::fiberized_streambuf<Stream...> &lhs,
-              fibio::stream::fiberized_streambuf<Stream...> &rhs) {
-        lhs.swap(rhs);
-    }
-}
 
 #endif

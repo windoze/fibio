@@ -13,7 +13,7 @@
 #include <fibio/fiber.hpp>
 #include <fibio/stream/iostream.hpp>
 #include <boost/lexical_cast.hpp>
-#include <fibio/io/ssl/stream.hpp>
+#include <fibio/stream/ssl.hpp>
 
 using namespace fibio;
 
@@ -63,12 +63,12 @@ void parent() {
 // Certificates are copied from ASIO SSL example
 void ssl_child() {
     this_fiber::sleep_for(std::chrono::seconds(1));
-    asio::ssl::context ctx(asio::ssl::context::sslv23);
+    ssl::context ctx(ssl::context::sslv23);
     std::error_code ec;
     ctx.load_verify_file("/tmp/ca.pem", ec);
     assert(!ec);
-    stream::ssl_tcp_stream str(ctx);
-    str.stream_descriptor().set_verify_callback([](bool preverified, asio::ssl::verify_context&ctx){
+    ssl::tcp_stream str(ctx);
+    str.stream_descriptor().set_verify_callback([](bool preverified, ssl::verify_context&ctx){
         char subject_name[256];
         X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
         X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
@@ -77,7 +77,7 @@ void ssl_child() {
     });
     ec=str.connect("127.0.0.1", "23457");
     assert(!ec);
-    str.stream_descriptor().handshake(asio::ssl::stream_base::client, ec);
+    str.stream_descriptor().handshake(ssl::handshake_type::client, ec);
     assert(!ec);
     str << "hello" << std::endl;
     for(int i=0; i<100; i++) {
@@ -97,25 +97,24 @@ void ssl_parent() {
 
     std::error_code ec;
     
-    asio::ssl::context ctx(asio::ssl::context::sslv23);
-    ctx.set_options(
-                    asio::ssl::context::default_workarounds
-                    | asio::ssl::context::no_sslv2
-                    | asio::ssl::context::single_dh_use);
-    ctx.set_password_callback([](std::size_t, asio::ssl::context::password_purpose)->std::string{ return "test"; });
+    ssl::context ctx(ssl::context::sslv23);
+    ctx.set_options(ssl::context::default_workarounds
+                    | ssl::context::no_sslv2
+                    | ssl::context::single_dh_use);
+    ctx.set_password_callback([](std::size_t, ssl::context::password_purpose)->std::string{ return "test"; });
     ctx.use_certificate_chain_file("/tmp/server.pem", ec);
     assert(!ec);
-    ctx.use_private_key_file("/tmp/server.pem", asio::ssl::context::pem, ec);
+    ctx.use_private_key_file("/tmp/server.pem", ssl::context::pem, ec);
     assert(!ec);
     ctx.use_tmp_dh_file("/tmp/dh512.pem", ec);
     assert(!ec);
 
-    stream::ssl_tcp_stream str(ctx);
+    ssl::tcp_stream str(ctx);
     
-    stream::ssl_tcp_stream_acceptor acc("127.0.0.1", 23457);
+    ssl::tcp_stream_acceptor acc("127.0.0.1", 23457);
     acc.accept(str, ec);
     assert(!ec);
-    str.stream_descriptor().handshake(asio::ssl::stream_base::server, ec);
+    str.stream_descriptor().handshake(ssl::handshake_type::server, ec);
     assert(!ec);
     std::string line;
     std::getline(str, line);

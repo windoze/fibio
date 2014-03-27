@@ -9,7 +9,7 @@
 #ifndef fibio_io_ssl_stream_hpp
 #define fibio_io_ssl_stream_hpp
 
-#include <asio/ssl/stream.hpp>
+#include <asio/ssl.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>
 
 namespace fibio { namespace io {

@@ -15,7 +15,7 @@
 
 namespace fibio {
     typedef io::fiberized<asio::local::stream_protocol::socket> local_stream_socket;
-    typedef io::fiberized<asio::local::stream_protocol::acceptor> local_stream_acceptor;
+    typedef io::fiberized<asio::local::stream_protocol::acceptor> local_stream_socket_acceptor;
 }   // End of namespace fibio
 
 #endif

@@ -11,11 +11,10 @@
 
 #include <fibio/io/io.hpp>
 #include <fibio/stream/streambuf.hpp>
+#include <fibio/io/basic_stream_socket.hpp>
+#include <fibio/io/posix/stream_descriptor.hpp>
+#include <fibio/io/local/stream_protocol.hpp>
 
-namespace asio { namespace ssl {
-    template<typename Stream>
-    class stream;
-}}
 namespace fibio { namespace stream {
     namespace detail {
         template<typename... Stream>
@@ -198,90 +197,22 @@ namespace fibio { namespace stream {
         acceptor_type acc_;
     };
     
-    template<typename Stream>
-    struct stream_acceptor<fiberized_iostream<io::fiberized<asio::ssl::stream<Stream>>>> {
-        typedef fiberized_iostream<io::fiberized<asio::ssl::stream<Stream>>> stream_type;
-        typedef typename io::fiberized<Stream> socket_type;
-        typedef typename io::fiberized<typename socket_type::protocol_type::acceptor> acceptor_type;
-        typedef typename Stream::protocol_type::endpoint endpoint_type;
-        
-        stream_acceptor(const std::string &s, unsigned short port_num)
-        : acc_(endpoint_type(asio::ip::address::from_string(s.c_str()), port_num))
-        {}
-        
-        stream_acceptor(unsigned short port_num)
-        : acc_(endpoint_type(asio::ip::address(), port_num))
-        {}
-        
-        template<typename Rep, typename Period>
-        stream_acceptor(const std::string &s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(asio::ip::address::from_string(s.c_str()), port_num))
-        { acc_.set_accept_timeout(timeout_duration); }
-        
-        template<typename Rep, typename Period>
-        stream_acceptor(unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(asio::ip::address(), port_num))
-        { acc_.set_accept_timeout(timeout_duration); }
-        
-        stream_acceptor(stream_acceptor &&other)
-        : acc_(std::move(other.acc_))
-        {}
-        
-        stream_acceptor(const stream_acceptor &other)=delete;
-        stream_acceptor &operator=(const stream_acceptor &other)=delete;
-        
-        void close()
-        { acc_.close(); }
-        
-        template<typename Rep, typename Period>
-        void set_accept_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { acc_.set_accept_timeout(timeout_duration); }
-        
-        stream_type accept() {
-            stream_type s;
-            acc_.accept(s.streambuf().next_layer());
-            return s;
-        }
-        
-        stream_type accept(std::error_code &ec) {
-            stream_type s;
-            acc_.accept(s.streambuf().next_layer(), ec);
-            return s;
-        }
-        
-        void accept(stream_type &s)
-        { acc_.accept(s.streambuf().next_layer()); }
-        
-        void accept(stream_type &s, std::error_code &ec)
-        { acc_.accept(s.streambuf().next_layer(), ec); }
-        
-        stream_type operator()()
-        { return accept(); }
-        
-        stream_type operator()(std::error_code &ec)
-        { return accept(ec); }
-        
-        void operator()(stream_type &s)
-        { accept(s); }
-        
-        void operator()(stream_type &s, std::error_code &ec)
-        { accept(s, ec); }
-        
-        acceptor_type acc_;
-    };
-    
+    // streams
     typedef fiberized_iostream<tcp_socket> tcp_stream;
     typedef fiberized_iostream<posix_stream_descriptor> posix_stream;
-    typedef fiberized_iostream<io::fiberized<asio::ssl::stream<asio::ip::tcp::socket>>> ssl_tcp_stream;
+    typedef fiberized_iostream<local_stream_socket> local_stream;
 
+    // acceptors
     typedef stream_acceptor<tcp_stream> tcp_stream_acceptor;
-    typedef stream_acceptor<ssl_tcp_stream> ssl_tcp_stream_acceptor;
+    typedef stream_acceptor<local_stream> local_stream_acceptor;
 }}  // End of namespace fibio::stream
 
 namespace fibio {
     using stream::tcp_stream;
     using stream::posix_stream;
+    using stream::local_stream;
     using stream::tcp_stream_acceptor;
+    using stream::local_stream_acceptor;
 }
 
 #endif
