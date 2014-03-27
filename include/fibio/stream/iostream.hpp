@@ -24,6 +24,11 @@ namespace fibio { namespace stream {
             iostream_base(streambuf_t &&other_buf)
             : sbuf_(std::move(other_buf))
             {}
+            // For SSL stream, construct with ssl::context
+            template<typename Arg>
+            iostream_base(Arg &arg)
+            : sbuf_(arg)
+            {}
             streambuf_t sbuf_;
         };
     }
@@ -37,28 +42,22 @@ namespace fibio { namespace stream {
         typedef detail::iostream_base<Stream...> streambase_t;
     public:
         typedef typename streambuf_t::stream_type stream_type;
-        typedef typename stream_type::protocol_type protocol_type;
+        typedef typename stream_type::lowest_layer_type::protocol_type protocol_type;
 
         fiberized_iostream()
         : streambase_t()
         , std::iostream(&(this->sbuf_))
         {}
         
-        ~fiberized_iostream()
-        {}
-        
-        /**
-         * Constructor
-         *
-         * @param s underlying stream device, such as socket or pipe
-         */
-        fiberized_iostream(stream_type &&s)
-        : streambase_t(std::move(s))
+        // For SSL stream, construct with ssl::context
+        template<typename Arg>
+        fiberized_iostream(Arg &arg)
+        : streambase_t(arg)
         , std::iostream(&(this->sbuf_))
         {}
         
         // Movable
-        fiberized_iostream(fiberized_iostream &&src)
+        fiberized_iostream(fiberized_iostream &&src)//=default;
         : streambase_t(std::move(src))
         , std::iostream(&(this->sbuf_))
         {}
@@ -69,7 +68,7 @@ namespace fibio { namespace stream {
         
         template <typename... T>
         std::error_code open(T... x) {
-            return this->sbuf_.open(x...);
+            return this->sbuf_.lowest_layer().open(x...);
         }
         
         template <typename... T>
@@ -81,14 +80,14 @@ namespace fibio { namespace stream {
          * Close underlying stream device, flushing if necessary
          */
         inline void close() {
-            if(streambuf().is_open()) {
+            if(streambuf().lowest_layer().is_open()) {
                 flush();
             }
-            streambuf().close();
+            streambuf().lowest_layer().close();
         }
         
         inline bool is_open() const
-        { return this->sbuf_.is_open(); }
+        { return this->sbuf_.lowest_layer().is_open(); }
         
         inline streambuf_t &streambuf()
         { return this->sbuf_; }
@@ -163,15 +162,15 @@ namespace fibio { namespace stream {
         { acc_.set_accept_timeout(timeout_duration); }
         
         Stream accept() {
-            socket_type s;
-            acc_.accept(s);
-            return Stream(std::move(s));
+            Stream s;
+            acc_.accept(s.stream_descriptor());
+            return s;
         }
         
         Stream accept(std::error_code &ec) {
-            socket_type s;
-            acc_.accept(s, ec);
-            return Stream(std::move(s));
+            Stream s;
+            acc_.accept(s.stream_descriptor(), ec);
+            return s;
         }
         
         void accept(Stream &s)

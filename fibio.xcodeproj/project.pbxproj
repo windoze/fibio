@@ -37,6 +37,8 @@
 		2D15CFD518E312A600E64B99 /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD3B6F018CE0EF7009E1F3E /* common.cpp */; };
 		2D15CFD618E312A600E64B99 /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD3B6EB18CDFFA8009E1F3E /* client.cpp */; };
 		2D15CFD718E312A600E64B99 /* server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D131A1D18D1F91A0086156F /* server.cpp */; };
+		2D15CFD918E4375200E64B99 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFD818E4375200E64B99 /* libssl.dylib */; };
+		2D15CFDB18E4376E00E64B99 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFDA18E4376E00E64B99 /* libcrypto.dylib */; };
 		2DD5663D18D870D9002A259D /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DD5663C18D870D9002A259D /* libz.dylib */; };
 		2DD5663F18D870E8002A259D /* libboost_iostreams-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DD5663E18D870E8002A259D /* libboost_iostreams-mt.a */; };
 		2DD5665018DA1BC6002A259D /* test_fibers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5664E18DA1BC6002A259D /* test_fibers.cpp */; };
@@ -170,6 +172,8 @@
 		2D15CFD118E2E68600E64B99 /* datagram_protocol.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = datagram_protocol.hpp; sourceTree = "<group>"; };
 		2D15CFD318E2E70F00E64B99 /* stream_descriptor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = stream_descriptor.hpp; sourceTree = "<group>"; };
 		2D15CFD418E2F26100E64B99 /* basic_stream_descriptor.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = basic_stream_descriptor.hpp; sourceTree = "<group>"; };
+		2D15CFD818E4375200E64B99 /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = usr/lib/libssl.dylib; sourceTree = SDKROOT; };
+		2D15CFDA18E4376E00E64B99 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
 		2D57F62718E2ACFB00B53733 /* wrapper_base.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = wrapper_base.hpp; sourceTree = "<group>"; };
 		2D6A7BF318E05C5500AC89EC /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		2D7E685F18CCCD5D00B7C4E5 /* concurrent_queue.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = concurrent_queue.hpp; sourceTree = "<group>"; };
@@ -1143,6 +1147,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D15CFDB18E4376E00E64B99 /* libcrypto.dylib in Frameworks */,
+				2D15CFD918E4375200E64B99 /* libssl.dylib in Frameworks */,
 				2D131A0018D0B4620086156F /* fibio.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1285,6 +1291,8 @@
 		2D7E684718CCCD2D00B7C4E5 = {
 			isa = PBXGroup;
 			children = (
+				2D15CFDA18E4376E00E64B99 /* libcrypto.dylib */,
+				2D15CFD818E4375200E64B99 /* libssl.dylib */,
 				2DD5663C18D870D9002A259D /* libz.dylib */,
 				2DD5663E18D870E8002A259D /* libboost_iostreams-mt.a */,
 				2D7E6C5C18CCCEA200B7C4E5 /* libboost_context-mt.a */,
@@ -3516,6 +3524,7 @@
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -3527,6 +3536,7 @@
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_ENABLE_MODULES = YES;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;

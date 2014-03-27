@@ -14,16 +14,20 @@
 
 namespace fibio { namespace io {
     // To initialize: fiberized<asio::ssl::stream<asio::ip::tcp::socket>>
+    // which actually constructs a fiberized ssl stream with a embedded fiberized socket
+    // fiberized ssl stream makes handshake/shutdown/read_some/write_some work with fibers
+    // embedded fiberized socket is required to make streambuf/iostream work
     template<typename Stream>
     struct fiberized<asio::ssl::stream<Stream>> : public asio::ssl::stream<fiberized<Stream>>
     {
         typedef asio::ssl::stream<fiberized<Stream>> base_type;
         
-        template<typename Context>
-        fiberized(Context &ctx)
+        fiberized(asio::ssl::context &ctx)
         : base_type(fibers::this_fiber::detail::get_io_service(), ctx)
         {}
         
+        FIBIO_IMPLEMENT_EXTENDED_CONNECT;
+        FIBIO_IMPLEMENT_FIBERIZED_CONNECT;
         FIBIO_IMPLEMENT_FIBERIZED_READ_SOME;
         FIBIO_IMPLEMENT_FIBERIZED_WRITE_SOME;
         
@@ -43,7 +47,7 @@ namespace fibio { namespace io {
             detail::fiber_async_handler async_handler;
             
             async_handler.run_in_scheduler_context([this, &async_handler, &type](){
-                async_handler.start_timer_with_cancelation(handshake_timeout_, [this](){ base_type::cancel(); });
+                async_handler.start_timer_with_cancelation(handshake_timeout_, [this](){ this->lowest_layer().cancel(); });
                 base_type::async_handshake(type, async_handler.get_async_op_handler());
             });
             
@@ -74,8 +78,8 @@ namespace fibio { namespace io {
             detail::fiber_async_handler async_handler;
             
             async_handler.run_in_scheduler_context([this, &async_handler, &type, &buffers](){
-                async_handler.start_timer_with_cancelation(handshake_timeout_, [this](){ base_type::cancel(); });
-                base_type::async_connect(type, buffers, async_handler.get_async_op_handler());
+                async_handler.start_timer_with_cancelation(handshake_timeout_, [this](){ this->lowest_layer().cancel(); });
+                base_type::async_handshake(type, buffers, async_handler.get_async_op_handler());
             });
             
             async_handler.throw_or_return(throw_error, ec);
@@ -102,7 +106,7 @@ namespace fibio { namespace io {
             detail::fiber_async_handler async_handler;
             
             async_handler.run_in_scheduler_context([this, &async_handler](){
-                async_handler.start_timer_with_cancelation(shutdown_timeout_, [this](){ base_type::cancel(); });
+                async_handler.start_timer_with_cancelation(shutdown_timeout_, [this](){ this->lowest_layer().cancel(); });
                 base_type::async_shutdown(async_handler.get_async_op_handler());
             });
             

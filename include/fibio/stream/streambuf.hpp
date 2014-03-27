@@ -39,18 +39,28 @@ namespace fibio { namespace stream {
         : base_type()
         { init_buffers(); }
         
-        fiberized_streambuf(fiberized_streambuf &&other)
-        : base_type(std::move(other))
-        , get_buffer_(std::move(other.get_buffer_))
-        , put_buffer_(std::move(other.put_buffer_))
-        , unbuffered_(other.unbuffered_)
-        , duplex_mode_(other.duplex_mode_)
-        {}
-        
-        fiberized_streambuf(base_type &&sd)
-        : base_type(std::move(sd))
+        // For SSL stream, construct with ssl::context
+        template<typename Arg>
+        fiberized_streambuf(Arg &arg)
+        : std::streambuf()
+        , base_type(arg)
         { init_buffers(); }
 
+        fiberized_streambuf(fiberized_streambuf &&other)
+        // FIXME: GCC 4.8.1 on Ubuntu, std::streambuf doesn't have move constructor
+        // and have copy constructor declared as private, that prevents the generation
+        // of default move constructor, and makes only untouched(newly-created)
+        // streambuf can be safely moved, as get/put pointers may not be set correctly
+        // Seems Clang 3.4 doesn't have the issue
+        : /*std::streambuf(std::move(other)),*/
+        base_type(std::move(other))
+        // we can only move newly create streambuf, anyway
+        //, get_buffer_(std::move(other.get_buffer_))
+        //, put_buffer_(std::move(other.put_buffer_))
+        , unbuffered_(other.unbuffered_)
+        , duplex_mode_(other.duplex_mode_)
+        { init_buffers(); }
+        
         /// Destructor flushes buffered data.
         ~fiberized_streambuf() {
             if (pptr() != pbase())
