@@ -11,7 +11,7 @@ Core
 
 * Add signal handler to scheduler to handle Ctrl-C/Ctrl-D/...
 * Refine `FIBERIZED_MAIN` macro if we have to determin thread number before starting scheduler
-* Complete `fibio::io::{udp, local_stream, local_datagram}`
+* <del>Complete `fibio::io::{udp, local_stream, local_datagram}`</del>
 * Make `concurrent_queue` fully work between `fiber` and `not-a-fiber`
     * c_q<fibers::mutex, fiber::c_v> can transfer data from outside to fiber, as long as there is no size limit(push won't block)
     * c_q<std::mutex, std::c_v> can transfer data from a fiber to outside, as long as there is no size limit(push won't block)
@@ -43,7 +43,8 @@ Protocol
     * RESTful service
 * HTTP request router for HTTP server
 * Connection pool
-* SSL/HTTPS support
+* HTTPS support
+* <del>SSL support</del>
 
 Utilities
 ---------
