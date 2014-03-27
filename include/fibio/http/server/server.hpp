@@ -26,11 +26,8 @@ namespace fibio { namespace http { namespace server {
             typedef fibio::http::server::response response;
             
             connection()=default;
+            connection(connection &&other)=default;
             connection(const connection &)=delete;
-            connection(connection &&other)
-            : host_(std::move(other.host_))
-            , stream_(std::move(other.stream_))
-            {}
             
             bool recv(request &req, uint64_t timeout=0);
             bool send(response &resp, uint64_t timeout=0);
