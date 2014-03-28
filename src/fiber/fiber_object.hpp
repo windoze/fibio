@@ -88,6 +88,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::string get_name();
         
         // Following functions can only be called inside coroutine
+        void pause();
         void yield();
         void join(fiber_ptr_t f);
         void join_and_rethrow(fiber_ptr_t f);

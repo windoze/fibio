@@ -108,9 +108,12 @@ namespace fibio { namespace fibers { namespace detail {
             state_=RUNNING;
         }
         while (state_==RUNNING) {
-            tls_guard guard(this);
             if (runner_) {
-                after_step_handler_t h=runner_().get();
+                after_step_handler_t h;
+                {
+                    tls_guard guard(this);
+                    h=runner_().get();
+                }
                 // Change state to READY, schedule for next round unless after_step_handler explicitly change it back
                 state_=READY;
                 h();
@@ -156,6 +159,15 @@ namespace fibio { namespace fibers { namespace detail {
             //last_error_=make_error_code(static_cast<boost::system::errc>(last_error_.value()));
             throw boost::system::system_error(last_error_);
         }
+    }
+    
+    // Switch out of fiber context
+    void fiber_object::pause() {
+        CHECK_CALLER(this);
+        fiber_ptr_t pthis(shared_from_this());
+        (*caller_)([pthis](){
+            pthis->state_=BLOCKED;
+        });
     }
     
     // Following functions can only be called inside coroutine

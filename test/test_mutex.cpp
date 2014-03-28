@@ -28,7 +28,7 @@ void f(int n) {
 void f1(int n) {
     boost::random::mt19937 rng;
     boost::random::uniform_int_distribution<> three(1,3);
-    for (int i=0; i<100; i++) {
+    for (int i=0; i<10; i++) {
         unique_lock<recursive_mutex> lock(m1);
         {
             unique_lock<recursive_mutex> lock(m1);
@@ -38,12 +38,30 @@ void f1(int n) {
     }
 }
 
+timed_mutex tm;
+
+void child() {
+    bool ret=tm.try_lock_for(std::chrono::seconds(1));
+    assert(!ret);
+    ret=tm.try_lock_for(std::chrono::seconds(3));
+    assert(ret);
+}
+
+void parent() {
+    fiber f(child);
+    tm.lock();
+    this_fiber::sleep_for(std::chrono::seconds(3));
+    tm.unlock();
+    f.join();
+}
+
 int main_fiber(int argc, char *argv[]) {
     fiber_group fibers;
-    for (int i=0; i<100; i++) {
+    fibers.create_fiber(parent);
+    for (int i=0; i<10; i++) {
         fibers.create_fiber(f, i);
     }
-    for (int i=0; i<100; i++) {
+    for (int i=0; i<10; i++) {
         fibers.create_fiber(f1, i);
     }
     fibers.join_all();
