@@ -153,8 +153,8 @@ namespace fibio { namespace fibers { namespace detail {
     void fiber_object::throw_on_error() {
         if (last_error_) {
             // FIXME: ASIO uses more than one error categories
-            last_error_=std::make_error_code(static_cast<std::errc>(last_error_.value()));
-            throw std::system_error(last_error_);
+            //last_error_=make_error_code(static_cast<boost::system::errc>(last_error_.value()));
+            throw boost::system::system_error(last_error_);
         }
     }
     
@@ -181,7 +181,7 @@ namespace fibio { namespace fibers { namespace detail {
                 std::lock_guard<std::mutex> lock(f->fiber_mutex_);
                 if (f==pthis) {
                     // The fiber is joining itself
-                    pthis->last_error_=std::make_error_code(std::errc::resource_deadlock_would_occur) ;
+                    pthis->last_error_=make_error_code(boost::system::errc::resource_deadlock_would_occur) ;
                 } else if (f->state_==STOPPED) {
                     // f is already stopped
                     pthis->state_=RUNNING;
@@ -211,7 +211,7 @@ namespace fibio { namespace fibers { namespace detail {
                 std::lock_guard<std::mutex> lock(f->fiber_mutex_);
                 if (f==pthis) {
                     // The fiber is joining itself
-                    pthis->last_error_=std::make_error_code(std::errc::resource_deadlock_would_occur) ;
+                    pthis->last_error_=make_error_code(boost::system::errc::resource_deadlock_would_occur) ;
                 } else if (f->state_==STOPPED) {
                     // f is already stopped
                     if (f->uncaught_exception_.nested_ptr()) {
@@ -261,7 +261,7 @@ namespace fibio { namespace fibers { namespace detail {
                 pthis->state_=BLOCKED;
                 timer_ptr_t sleep_timer(std::make_shared<timer_t>(pthis->io_service_));
                 sleep_timer->expires_from_now(std::chrono::microseconds(usec));
-                sleep_timer->async_wait(pthis->fiber_strand_.wrap([pthis, sleep_timer](std::error_code ec){
+                sleep_timer->async_wait(pthis->fiber_strand_.wrap([pthis, sleep_timer](boost::system::error_code ec){
                     if (ec) {
                         pthis->last_error_=ec;
                     }
@@ -330,41 +330,41 @@ namespace fibio { namespace fibers { namespace detail {
         cancelation_=std::move(c);
         if(timeout_>0) {
             sleep_timer.expires_from_now(std::chrono::microseconds(timeout_));
-            sleep_timer.async_wait(this_fiber->fiber_strand_.wrap([this](std::error_code ec){
+            sleep_timer.async_wait(this_fiber->fiber_strand_.wrap([this](boost::system::error_code ec){
                 on_timeout(ec);
             }));
         }
     }
     
-    std::function<void(std::error_code ec, size_t sz)> fiber_async_handler::get_io_handler()
-    { return this_fiber->fiber_strand_.wrap([this](std::error_code ec, size_t sz){ on_io_complete(ec, sz); }); }
+    std::function<void(boost::system::error_code ec, size_t sz)> fiber_async_handler::get_io_handler()
+    { return this_fiber->fiber_strand_.wrap([this](boost::system::error_code ec, size_t sz){ on_io_complete(ec, sz); }); }
     
-    std::function<void(std::error_code ec)> fiber_async_handler::get_async_op_handler()
-    { return this_fiber->fiber_strand_.wrap([this](std::error_code ec){ on_async_op_complete(ec); }); }
+    std::function<void(boost::system::error_code ec)> fiber_async_handler::get_async_op_handler()
+    { return this_fiber->fiber_strand_.wrap([this](boost::system::error_code ec){ on_async_op_complete(ec); }); }
     
-    std::function<void(std::error_code, asio::ip::tcp::resolver::iterator)> fiber_async_handler::get_resolve_handler(asio::ip::tcp *)
+    std::function<void(boost::system::error_code, boost::asio::ip::tcp::resolver::iterator)> fiber_async_handler::get_resolve_handler(boost::asio::ip::tcp *)
     {
-        return this_fiber->fiber_strand_.wrap([this](std::error_code ec, asio::ip::tcp::resolver::iterator it){
+        return this_fiber->fiber_strand_.wrap([this](boost::system::error_code ec, boost::asio::ip::tcp::resolver::iterator it){
             on_tcp_resolve_complete(ec, it);
         });
     }
     
-    std::function<void(std::error_code, asio::ip::udp::resolver::iterator)> fiber_async_handler::get_resolve_handler(asio::ip::udp *)
+    std::function<void(boost::system::error_code, boost::asio::ip::udp::resolver::iterator)> fiber_async_handler::get_resolve_handler(boost::asio::ip::udp *)
     {
-        return this_fiber->fiber_strand_.wrap([this](std::error_code ec, asio::ip::udp::resolver::iterator it){
+        return this_fiber->fiber_strand_.wrap([this](boost::system::error_code ec, boost::asio::ip::udp::resolver::iterator it){
             on_udp_resolve_complete(ec, it);
         });
     }
     
-    std::function<void(std::error_code, asio::ip::icmp::resolver::iterator)> fiber_async_handler::get_resolve_handler(asio::ip::icmp *)
+    std::function<void(boost::system::error_code, boost::asio::ip::icmp::resolver::iterator)> fiber_async_handler::get_resolve_handler(boost::asio::ip::icmp *)
     {
-        return this_fiber->fiber_strand_.wrap([this](std::error_code ec, asio::ip::icmp::resolver::iterator it){
+        return this_fiber->fiber_strand_.wrap([this](boost::system::error_code ec, boost::asio::ip::icmp::resolver::iterator it){
             on_icmp_resolve_complete(ec, it);
         });
     }
     
 
-    void fiber_async_handler::on_timeout(std::error_code ec) {
+    void fiber_async_handler::on_timeout(boost::system::error_code ec) {
         timer_triggered=true;
         if(async_op_triggered) {
             // Both callback are called, resume fiber
@@ -375,12 +375,12 @@ namespace fibio { namespace fibers { namespace detail {
         }
     }
     
-    void fiber_async_handler::on_async_op_complete(std::error_code ec) {
+    void fiber_async_handler::on_async_op_complete(boost::system::error_code ec) {
         async_op_triggered=true;
         // Operation completed, cancel timer
         if(timeout_>0 && !timer_triggered) sleep_timer.cancel();
-        if(ec==asio::error::operation_aborted)
-            ec=asio::error::timed_out;
+        if(ec==boost::asio::error::operation_aborted)
+            ec=boost::asio::error::timed_out;
         this_fiber->last_error_=ec;
         if(timeout_==0 || timer_triggered) {
             // Both callback are called, resume fiber
@@ -390,12 +390,12 @@ namespace fibio { namespace fibers { namespace detail {
         }
     }
     
-    void fiber_async_handler::on_io_complete(std::error_code ec, size_t sz) {
+    void fiber_async_handler::on_io_complete(boost::system::error_code ec, size_t sz) {
         async_op_triggered=true;
         // Operation completed, cancel timer
         sleep_timer.cancel();
-        if(ec==asio::error::operation_aborted)
-            ec=asio::error::timed_out;
+        if(ec==boost::asio::error::operation_aborted)
+            ec=boost::asio::error::timed_out;
         this_fiber->last_error_=ec;
         io_ret_=sz;
         if(timeout_==0 || timer_triggered) {
@@ -406,12 +406,12 @@ namespace fibio { namespace fibers { namespace detail {
         }
     }
     
-    void fiber_async_handler::on_tcp_resolve_complete(std::error_code ec, asio::ip::tcp::resolver::iterator iterator) {
+    void fiber_async_handler::on_tcp_resolve_complete(boost::system::error_code ec, boost::asio::ip::tcp::resolver::iterator iterator) {
         async_op_triggered=true;
         // Operation completed, cancel timer
         sleep_timer.cancel();
-        if(ec==asio::error::operation_aborted)
-            ec=asio::error::timed_out;
+        if(ec==boost::asio::error::operation_aborted)
+            ec=boost::asio::error::timed_out;
         this_fiber->last_error_=ec;
         tcp_resolve_ret_=iterator;
         if(timeout_==0 || timer_triggered) {
@@ -422,12 +422,12 @@ namespace fibio { namespace fibers { namespace detail {
         }
     }
     
-    void fiber_async_handler::on_udp_resolve_complete(std::error_code ec, asio::ip::udp::resolver::iterator iterator) {
+    void fiber_async_handler::on_udp_resolve_complete(boost::system::error_code ec, boost::asio::ip::udp::resolver::iterator iterator) {
         async_op_triggered=true;
         // Operation completed, cancel timer
         sleep_timer.cancel();
-        if(ec==asio::error::operation_aborted)
-            ec=asio::error::timed_out;
+        if(ec==boost::asio::error::operation_aborted)
+            ec=boost::asio::error::timed_out;
         this_fiber->last_error_=ec;
         udp_resolve_ret_=iterator;
         if(timeout_==0 || timer_triggered) {
@@ -438,12 +438,12 @@ namespace fibio { namespace fibers { namespace detail {
         }
     }
     
-    void fiber_async_handler::on_icmp_resolve_complete(std::error_code ec, asio::ip::icmp::resolver::iterator iterator) {
+    void fiber_async_handler::on_icmp_resolve_complete(boost::system::error_code ec, boost::asio::ip::icmp::resolver::iterator iterator) {
         async_op_triggered=true;
         // Operation completed, cancel timer
         sleep_timer.cancel();
-        if(ec==asio::error::operation_aborted)
-            ec=asio::error::timed_out;
+        if(ec==boost::asio::error::operation_aborted)
+            ec=boost::asio::error::timed_out;
         this_fiber->last_error_=ec;
         icmp_resolve_ret_=iterator;
         if(timeout_==0 || timer_triggered) {
@@ -462,11 +462,11 @@ namespace fibio { namespace fibers { namespace detail {
         });
     }
     
-    void fiber_async_handler::throw_or_return(bool throw_error, std::error_code &ec) {
+    void fiber_async_handler::throw_or_return(bool throw_error, boost::system::error_code &ec) {
         if (throw_error) {
             this_fiber->throw_on_error();
         } else {
-            ec=std::make_error_code(static_cast<std::errc>(this_fiber->last_error_.value()));
+            ec=this_fiber->last_error_;
             this_fiber->last_error_.clear();
         }
     }
@@ -514,10 +514,10 @@ namespace fibio { namespace fibers {
     
     void fiber::join(bool propagate_exception) {
         if (!m_) {
-            throw std::make_error_code(std::errc::no_such_process);
+            throw make_error_code(boost::system::errc::no_such_process);
         }
         if (m_.get()==detail::fiber_object::current_fiber_) {
-            throw std::make_error_code(std::errc::resource_deadlock_would_occur);
+            throw make_error_code(boost::system::errc::resource_deadlock_would_occur);
         }
         if (detail::fiber_object::current_fiber_) {
             if (propagate_exception) {
@@ -549,7 +549,7 @@ namespace fibio { namespace fibers {
             if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                 ::fibio::fibers::detail::fiber_object::current_fiber_->yield();
             } else {
-                throw std::system_error(std::make_error_code(std::errc::no_such_process));
+                throw boost::system::system_error(make_error_code(boost::system::errc::no_such_process));
             }
         }
         
@@ -566,15 +566,15 @@ namespace fibio { namespace fibers {
                 if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                     ::fibio::fibers::detail::fiber_object::current_fiber_->sleep_usec(usec);
                 } else {
-                    throw std::system_error(std::make_error_code(std::errc::no_such_process));
+                    throw boost::system::system_error(make_error_code(boost::system::errc::no_such_process));
                 }
             }
             
-            asio::io_service &get_io_service() {
+            boost::asio::io_service &get_io_service() {
                 if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                     return ::fibio::fibers::detail::fiber_object::current_fiber_->io_service_;
                 }
-                throw std::system_error(std::make_error_code(std::errc::no_such_process));
+                throw boost::system::system_error(make_error_code(boost::system::errc::no_such_process));
             }
         }   // End of namespace detail
     }   // End of namespace this_fiber

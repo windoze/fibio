@@ -9,14 +9,14 @@
 #ifndef fibio_io_basic_seq_packet_socket_hpp
 #define fibio_io_basic_seq_packet_socket_hpp
 
-#include <asio/basic_seq_packet_socket.hpp>
+#include <boost/asio/basic_seq_packet_socket.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>
 
 namespace fibio { namespace io {
     template<typename Protocol, typename StreamSocketService>
-    struct fiberized<asio::basic_seq_packet_socket<Protocol, StreamSocketService>> : public asio::basic_seq_packet_socket<Protocol, StreamSocketService>
+    struct fiberized<boost::asio::basic_seq_packet_socket<Protocol, StreamSocketService>> : public boost::asio::basic_seq_packet_socket<Protocol, StreamSocketService>
     {
-        typedef asio::basic_seq_packet_socket<Protocol, StreamSocketService> base_type;
+        typedef boost::asio::basic_seq_packet_socket<Protocol, StreamSocketService> base_type;
         
         fiberized() : base_type(fibers::this_fiber::detail::get_io_service()) {}
         fiberized(fiberized &&other)=default;
@@ -39,22 +39,22 @@ namespace fibio { namespace io {
         // send, only send with flag version is available
         template<typename ConstBufferSequence>
         std::size_t send(const ConstBufferSequence & buffers,
-                         asio::socket_base::message_flags flags)
+                         boost::asio::socket_base::message_flags flags)
         {
-            std::error_code ec;
+            boost::system::error_code ec;
             return do_send(buffers, flags, ec, true);
         }
         
         template<typename ConstBufferSequence>
         std::size_t send(const ConstBufferSequence & buffers,
-                         asio::socket_base::message_flags flags,
-                         std::error_code &ec)
+                         boost::asio::socket_base::message_flags flags,
+                         boost::system::error_code &ec)
         { return do_send(buffers, flags, ec, false); }
         
         template<typename ConstBufferSequence>
         std::size_t do_send(const ConstBufferSequence & buffers,
-                            asio::socket_base::message_flags flags,
-                            std::error_code &ec,
+                            boost::asio::socket_base::message_flags flags,
+                            boost::system::error_code &ec,
                             bool throw_error)
         {
             detail::fiber_async_handler async_handler;
@@ -77,22 +77,22 @@ namespace fibio { namespace io {
         // receive, only receive with flag version is available
         template<typename MutableBufferSequence>
         std::size_t receive(const MutableBufferSequence & buffers,
-                            asio::socket_base::message_flags flags)
+                            boost::asio::socket_base::message_flags flags)
         {
-            std::error_code ec;
+            boost::system::error_code ec;
             return do_receive(buffers, flags, ec, true);
         }
         
         template<typename MutableBufferSequence>
         std::size_t receive(const MutableBufferSequence & buffers,
-                            asio::socket_base::message_flags flags,
-                            std::error_code &ec)
+                            boost::asio::socket_base::message_flags flags,
+                            boost::system::error_code &ec)
         { return do_receive(buffers, flags, ec, false); }
         
         template<typename MutableBufferSequence>
         std::size_t do_receive(const MutableBufferSequence & buffers,
-                               asio::socket_base::message_flags flags,
-                               std::error_code &ec,
+                               boost::asio::socket_base::message_flags flags,
+                               boost::system::error_code &ec,
                                bool throw_error)
         {
             detail::fiber_async_handler async_handler;

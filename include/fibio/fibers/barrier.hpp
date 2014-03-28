@@ -63,7 +63,7 @@ namespace fibio { namespace fibers {
     class barrier {
         static inline unsigned int check_counter(unsigned int count) {
             if (count == 0)
-                throw std::system_error(std::make_error_code(std::errc::invalid_argument),
+                throw boost::system::system_error(make_error_code(boost::system::errc::invalid_argument),
                                         "barrier constructor: count cannot be zero.");
             return count;
         }

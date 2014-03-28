@@ -14,7 +14,7 @@
 #include <chrono>
 #include <utility>
 #include <type_traits>
-#include <asio/io_service.hpp>
+#include <boost/asio/io_service.hpp>
 #include <fibio/fibers/detail/forward.hpp>
 #include <fibio/fibers/detail/make_tuple_indices.hpp>
 
@@ -79,7 +79,7 @@ namespace fibio { namespace fibers {
     namespace this_fiber {
         namespace detail {
             void sleep_usec(uint64_t usec);
-            asio::io_service &get_io_service();
+            boost::asio::io_service &get_io_service();
         }
         
         void yield();

@@ -107,20 +107,20 @@ namespace fibio { namespace http { namespace client {
     //////////////////////////////////////////////////////////////////////////////////////////
     
     client::client(const std::string &server, const std::string &port) {
-        std::error_code ec=connect(server, port);
+        boost::system::error_code ec=connect(server, port);
         if (ec) {
-            throw std::system_error(ec, "HTTP client connect");
+            throw boost::system::system_error(ec, "HTTP client connect");
         }
     }
     
     client::client(const std::string &server, int port) {
-        std::error_code ec=connect(server, port);
+        boost::system::error_code ec=connect(server, port);
         if (ec) {
-            throw std::system_error(ec, "HTTP client connect");
+            throw boost::system::system_error(ec, "HTTP client connect");
         }
     }
 
-    std::error_code client::connect(const std::string &server, const std::string &port) {
+    boost::system::error_code client::connect(const std::string &server, const std::string &port) {
         stream_.set_connect_timeout(std::chrono::seconds(10));
         stream_.set_write_timeout(std::chrono::seconds(10));
         stream_.set_read_timeout(std::chrono::seconds(10));
@@ -129,7 +129,7 @@ namespace fibio { namespace http { namespace client {
         return stream_.connect(server, port);
     }
     
-    std::error_code client::connect(const std::string &server, int port) {
+    boost::system::error_code client::connect(const std::string &server, int port) {
         return connect(server, boost::lexical_cast<std::string>(port));
     }
     

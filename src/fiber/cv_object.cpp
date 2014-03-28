@@ -7,6 +7,7 @@
 //
 
 #include "cv_object.hpp"
+#include <boost/system/error_code.hpp>
 
 namespace fibio { namespace fibers { namespace detail {
     void condition_variable_object::wait(mutex_ptr_t m, fiber_ptr_t this_fiber) {
@@ -34,7 +35,7 @@ namespace fibio { namespace fibers { namespace detail {
                         }
                     } else {
                         // ERROR: This fiber doesn't own the mutex
-                        this_fiber->last_error_=std::make_error_code(std::errc::operation_not_permitted);
+                        this_fiber->last_error_=make_error_code(boost::system::errc::operation_not_permitted);
                     }
                 }
 
@@ -52,7 +53,7 @@ namespace fibio { namespace fibers { namespace detail {
                 timer_ptr_t t(std::make_shared<timer_t>(this_fiber->io_service_));
                 this_cv->suspended_.push_back(suspended_item({m, this_fiber, t}));
                 t->expires_from_now(std::chrono::microseconds(usec));
-                t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_cv, t, &ret](std::error_code ec){
+                t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_cv, t, &ret](boost::system::error_code ec){
                     if(ec) {
                         // Timer canceled, wait successful
                         return;
@@ -109,7 +110,7 @@ namespace fibio { namespace fibers { namespace detail {
                         }
                     } else {
                         // ERROR: This fiber doesn't own the mutex
-                        this_fiber->last_error_=std::make_error_code(std::errc::operation_not_permitted);
+                        this_fiber->last_error_=make_error_code(boost::system::errc::operation_not_permitted);
                     }
                 }
             });

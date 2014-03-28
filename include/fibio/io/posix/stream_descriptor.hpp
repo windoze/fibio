@@ -9,11 +9,11 @@
 #ifndef fibio_io_posix_stream_descriptor_hpp
 #define fibio_io_posix_stream_descriptor_hpp
 
-#include <asio/posix/stream_descriptor.hpp>
+#include <boost/asio/posix/stream_descriptor.hpp>
 #include <fibio/io/posix/basic_stream_descriptor.hpp>
 
 namespace fibio {
-    typedef io::fiberized<asio::posix::stream_descriptor> posix_stream_descriptor;
+    typedef io::fiberized<boost::asio::posix::stream_descriptor> posix_stream_descriptor;
 }   // End of namespace fibio
 
 #endif

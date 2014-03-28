@@ -16,10 +16,12 @@
 #include <atomic>
 #include <mutex>
 #include <map>
-#include <asio/basic_waitable_timer.hpp>
-#include <asio/io_service.hpp>
-#include <asio/strand.hpp>
+#include <boost/asio/basic_waitable_timer.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/system/error_code.hpp>
 #include <boost/coroutine/coroutine.hpp>
+#include <fibio/fibers/exceptions.hpp>
 
 #if defined(DEBUG) && !defined(NDEBUG)
 #   define CHECK_CALLER(f) do { if (!f->caller_) assert(false); } while(0)
@@ -33,14 +35,14 @@
 /*
 #   define CHECK_CURRENT_FIBER \
     do if(!::fibio::fibers::detail::fiber_object::current_fiber_) \
-        throw std::make_error_code(std::errc::no_such_process) \
+        throw make_error_code(boost::system::errc::no_such_process) \
     while(0)
  */
 #   define CHECK_CURRENT_FIBER
 #endif
 
 namespace fibio { namespace fibers { namespace detail {
-    typedef asio::basic_waitable_timer<std::chrono::steady_clock> timer_t;
+    typedef boost::asio::basic_waitable_timer<std::chrono::steady_clock> timer_t;
     typedef std::shared_ptr<timer_t> timer_ptr_t;
     
     struct scheduler_object;
@@ -109,7 +111,7 @@ namespace fibio { namespace fibers { namespace detail {
                 this_fiber->state_=BLOCKED;
             }
             
-            void operator()(std::error_code ec) {
+            void operator()(boost::system::error_code ec) {
                 this_fiber->last_error_=ec;
                 this_fiber->state_=fibers::detail::fiber_object::RUNNING;
                 this_fiber->one_step();
@@ -119,14 +121,14 @@ namespace fibio { namespace fibers { namespace detail {
         };
         
         scheduler_ptr_t sched_;
-        asio::io_service &io_service_;
-        asio::io_service::strand fiber_strand_;
+        boost::asio::io_service &io_service_;
+        boost::asio::io_service::strand fiber_strand_;
         std::mutex fiber_mutex_;
         std::atomic<state_t> state_;
         entry_t entry_;
         runner_t runner_;
         caller_t *caller_;
-        std::error_code last_error_;
+        boost::system::error_code last_error_;
         cleanup_queue_t cleanup_queue_;
         fss_map_t fss_;
         fiber_ptr_t this_ref_;

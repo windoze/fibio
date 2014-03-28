@@ -22,7 +22,7 @@ namespace fibio { namespace fibers { namespace detail {
                     this_mutex->owner_=this_fiber;
                 } else if (this_mutex->owner_==this_fiber) {
                     // ERROR: Deadlock, already own the lock
-                    this_fiber->last_error_=std::make_error_code(std::errc::resource_deadlock_would_occur);
+                    this_fiber->last_error_=make_error_code(boost::system::errc::resource_deadlock_would_occur);
                 } else {
                     // The mutex is locked, add the fiber to the waiting queue
                     this_fiber->state_=fiber_object::BLOCKED;
@@ -86,7 +86,7 @@ namespace fibio { namespace fibers { namespace detail {
                     this_fiber->state_=fiber_object::READY;
                 } else {
                     // ERROR: This fiber doesn't own the mutex
-                    this_fiber->last_error_=std::make_error_code(std::errc::operation_not_permitted);
+                    this_fiber->last_error_=make_error_code(boost::system::errc::operation_not_permitted);
                 }
 #if defined(DEBUG) && !defined(NDEBUG)
                 // Invariant check
@@ -222,7 +222,7 @@ namespace fibio { namespace fibers { namespace detail {
                     this_fiber->state_=fiber_object::READY;
                 } else {
                     // ERROR: This fiber doesn't own the mutex
-                    this_fiber->last_error_=std::make_error_code(std::errc::operation_not_permitted);
+                    this_fiber->last_error_=make_error_code(boost::system::errc::operation_not_permitted);
                 }
             });
         }
@@ -241,7 +241,7 @@ namespace fibio { namespace fibers { namespace detail {
                     this_fiber->state_=fiber_object::RUNNING;
                 } else if (this_mutex->owner_.get()==this_fiber.get()) {
                     // ERROR: Deadlock, already own the lock
-                    this_fiber->last_error_=std::make_error_code(std::errc::resource_deadlock_would_occur);
+                    this_fiber->last_error_=make_error_code(boost::system::errc::resource_deadlock_would_occur);
                 } else {
                     // The mutex is locked, add the fiber to the waiting queue
                     this_mutex->suspended_.push_back(suspended_item({this_fiber, timer_ptr_t()}));
@@ -300,7 +300,7 @@ namespace fibio { namespace fibers { namespace detail {
                 timer_ptr_t t(std::make_shared<timer_t>(this_fiber->io_service_));
                 this_mutex->suspended_.push_back(suspended_item({this_fiber, t}));
                 t->expires_from_now(std::chrono::microseconds(usec));
-                t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_mutex, t, &ret](std::error_code ec){
+                t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_mutex, t, &ret](boost::system::error_code ec){
                     if(ec) {
                         this_fiber->last_error_=ec;
                         return;
@@ -355,7 +355,7 @@ namespace fibio { namespace fibers { namespace detail {
                     this_fiber->state_=fiber_object::READY;
                 } else {
                     // ERROR: This fiber doesn't own the mutex
-                    this_fiber->last_error_=std::make_error_code(std::errc::operation_not_permitted);
+                    this_fiber->last_error_=make_error_code(boost::system::errc::operation_not_permitted);
                 }
             });
         }
@@ -438,7 +438,7 @@ namespace fibio { namespace fibers { namespace detail {
                 timer_ptr_t t(std::make_shared<timer_t>(this_fiber->io_service_));
                 this_mutex->suspended_.push_back(suspended_item({this_fiber, t}));
                 t->expires_from_now(std::chrono::microseconds(usec));
-                t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_mutex, t, &ret](std::error_code ec){
+                t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_mutex, t, &ret](boost::system::error_code ec){
                     if(ec) {
                         this_fiber->last_error_=ec;
                         return;
@@ -494,7 +494,7 @@ namespace fibio { namespace fibers { namespace detail {
                     this_fiber->state_=fiber_object::READY;
                 } else {
                     // ERROR: This fiber doesn't own the mutex
-                    this_fiber->last_error_=std::make_error_code(std::errc::operation_not_permitted);
+                    this_fiber->last_error_=make_error_code(boost::system::errc::operation_not_permitted);
                 }
             });
         }

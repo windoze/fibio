@@ -67,7 +67,7 @@ int main_fiber(int argc, char *argv[]) {
     fiber(console).detach();
     auto acc=tcp_stream_acceptor(address, listen_port, std::chrono::seconds(1));
     while(!should_exit) {
-        std::error_code ec;
+        boost::system::error_code ec;
         tcp_stream s=acc(ec);
         if(!ec) {
             fiber([](tcp_stream s){
@@ -80,7 +80,7 @@ int main_fiber(int argc, char *argv[]) {
                 hello(s);
                 s << s.rdbuf();
             }, std::move(s)).detach();
-        } else if (ec!=std::make_error_code(std::errc::timed_out)) {
+        } else if (ec!=make_error_code(boost::system::errc::timed_out)) {
             std::cerr << ec.message() << std::endl;
             return ec.value();
         }

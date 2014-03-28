@@ -70,7 +70,7 @@ namespace fibio { namespace stream {
         fiberized_iostream& operator=(const fiberized_iostream&) = delete;
         
         template <typename... T>
-        std::error_code open(T... x) {
+        boost::system::error_code open(T... x) {
             return this->sbuf_.lowest_layer().open(x...);
         }
         
@@ -133,21 +133,21 @@ namespace fibio { namespace stream {
         typedef typename Stream::protocol_type::endpoint endpoint_type;
 
         stream_acceptor(const std::string &s, unsigned short port_num)
-        : acc_(endpoint_type(asio::ip::address::from_string(s.c_str()), port_num))
+        : acc_(endpoint_type(boost::asio::ip::address::from_string(s.c_str()), port_num))
         {}
         
         stream_acceptor(unsigned short port_num)
-        : acc_(endpoint_type(asio::ip::address(), port_num))
+        : acc_(endpoint_type(boost::asio::ip::address(), port_num))
         {}
         
         template<typename Rep, typename Period>
         stream_acceptor(const std::string &s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(asio::ip::address::from_string(s.c_str()), port_num))
+        : acc_(endpoint_type(boost::asio::ip::address::from_string(s.c_str()), port_num))
         { acc_.set_accept_timeout(timeout_duration); }
 
         template<typename Rep, typename Period>
         stream_acceptor(unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(asio::ip::address(), port_num))
+        : acc_(endpoint_type(boost::asio::ip::address(), port_num))
         { acc_.set_accept_timeout(timeout_duration); }
         
         stream_acceptor(stream_acceptor &&other)
@@ -170,7 +170,7 @@ namespace fibio { namespace stream {
             return s;
         }
         
-        Stream accept(std::error_code &ec) {
+        Stream accept(boost::system::error_code &ec) {
             Stream s;
             acc_.accept(s.streambuf(), ec);
             return s;
@@ -179,19 +179,19 @@ namespace fibio { namespace stream {
         void accept(Stream &s)
         { acc_.accept(s.streambuf()); }
         
-        void accept(Stream &s, std::error_code &ec)
+        void accept(Stream &s, boost::system::error_code &ec)
         { acc_.accept(s.streambuf(), ec); }
         
         Stream operator()()
         { return accept(); }
         
-        Stream operator()(std::error_code &ec)
+        Stream operator()(boost::system::error_code &ec)
         { return accept(ec); }
         
         void operator()(Stream &s)
         { accept(s); }
         
-        void operator()(Stream &s, std::error_code &ec)
+        void operator()(Stream &s, boost::system::error_code &ec)
         { accept(s, ec); }
         
         acceptor_type acc_;

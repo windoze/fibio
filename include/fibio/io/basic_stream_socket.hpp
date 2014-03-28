@@ -9,16 +9,16 @@
 #ifndef fibio_io_basic_stream_socket_hpp
 #define fibio_io_basic_stream_socket_hpp
 
-#include <asio/basic_stream_socket.hpp>
+#include <boost/asio/basic_stream_socket.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>
 #include <fibio/io/ip/basic_resolver.hpp>
 
 namespace fibio { namespace io {
     template<typename Protocol, typename StreamSocketService>
-    struct fiberized<asio::basic_stream_socket<Protocol, StreamSocketService>>
-    : public asio::basic_stream_socket<Protocol, StreamSocketService>
+    struct fiberized<boost::asio::basic_stream_socket<Protocol, StreamSocketService>>
+    : public boost::asio::basic_stream_socket<Protocol, StreamSocketService>
     {
-        typedef asio::basic_stream_socket<Protocol, StreamSocketService> base_type;
+        typedef boost::asio::basic_stream_socket<Protocol, StreamSocketService> base_type;
 
         fiberized() : base_type(fibers::this_fiber::detail::get_io_service()) {}
         fiberized(fiberized &&other)=default;
@@ -36,7 +36,7 @@ namespace fibio { namespace io {
         : base_type(fibers::this_fiber::detail::get_io_service(), protocol, native_socket)
         {}
         
-        fiberized(asio::io_service &s)
+        fiberized(boost::asio::io_service &s)
         : base_type(s)
         {}
         

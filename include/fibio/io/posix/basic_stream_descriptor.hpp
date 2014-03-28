@@ -9,14 +9,14 @@
 #ifndef fibio_io_posix_basic_stream_descriptor_hpp
 #define fibio_io_posix_basic_stream_descriptor_hpp
 
-#include <asio/posix/basic_stream_descriptor.hpp>
+#include <boost/asio/posix/basic_stream_descriptor.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>
 
 namespace fibio { namespace io {
     template<>
-    struct fiberized<asio::posix::stream_descriptor> : public asio::posix::stream_descriptor
+    struct fiberized<boost::asio::posix::stream_descriptor> : public boost::asio::posix::stream_descriptor
     {
-        typedef asio::posix::stream_descriptor base_type;
+        typedef boost::asio::posix::stream_descriptor base_type;
         
         fiberized() : base_type(fibers::this_fiber::detail::get_io_service()) {}
         fiberized(fiberized &&other)=default;

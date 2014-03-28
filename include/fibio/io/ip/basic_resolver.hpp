@@ -9,32 +9,32 @@
 #ifndef fibio_io_ip_basic_resolver_hpp
 #define fibio_io_ip_basic_resolver_hpp
 
-#include <asio/ip/basic_resolver.hpp>
+#include <boost/asio/ip/basic_resolver.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>
 
 namespace fibio { namespace io {
     template<typename InternetProtocol, typename ResolverService>
-    struct fiberized<asio::ip::basic_resolver<InternetProtocol, ResolverService>> : public asio::ip::basic_resolver<InternetProtocol, ResolverService>
+    struct fiberized<boost::asio::ip::basic_resolver<InternetProtocol, ResolverService>> : public boost::asio::ip::basic_resolver<InternetProtocol, ResolverService>
     {
-        typedef asio::ip::basic_resolver<InternetProtocol, ResolverService> base_type;
+        typedef boost::asio::ip::basic_resolver<InternetProtocol, ResolverService> base_type;
         using base_type::base_type;
         
         fiberized() : base_type(fibers::this_fiber::detail::get_io_service()) {}
         
         typename base_type::iterator resolve(const typename base_type::query & q)
         {
-            std::error_code ec;
+            boost::system::error_code ec;
             return do_resolve(q, ec, true);
         }
         
         typename base_type::iterator resolve(const typename base_type::query & q,
-                                             std::error_code & ec)
+                                             boost::system::error_code & ec)
         {
             return do_resolve(q, ec, false);
         }
         
         typename base_type::iterator do_resolve(const typename base_type::query & q,
-                                                std::error_code & ec,
+                                                boost::system::error_code & ec,
                                                 bool throw_error)
         {
             detail::fiber_async_handler async_handler;
@@ -49,18 +49,18 @@ namespace fibio { namespace io {
         }
         
         typename base_type::iterator resolve(const typename base_type::endpoint_type & e) {
-            std::error_code ec;
+            boost::system::error_code ec;
             return do_resolve(e, ec, true);
         }
         
         typename base_type::iterator resolve(const typename base_type::endpoint_type & e,
-                                             std::error_code & ec)
+                                             boost::system::error_code & ec)
         {
             return do_resolve(e, ec, false);
         }
         
         typename base_type::iterator do_resolve(const typename base_type::endpoint_type & e,
-                                                std::error_code & ec,
+                                                boost::system::error_code & ec,
                                                 bool throw_error)
         {
             detail::fiber_async_handler async_handler;

@@ -20,7 +20,7 @@ using namespace fibio;
 void child() {
     this_fiber::sleep_for(std::chrono::seconds(1));
     stream::tcp_stream str;
-    std::error_code ec=str.connect("127.0.0.1", "23456");
+    boost::system::error_code ec=str.connect("127.0.0.1", "23456");
     assert(!ec);
     str << "hello" << std::endl;
     for(int i=0; i<100; i++) {
@@ -39,7 +39,7 @@ void parent() {
     boost::random::uniform_int_distribution<> rand(1,1000);
 
     tcp_stream_acceptor acc(23456);
-    std::error_code ec;
+    boost::system::error_code ec;
     stream::tcp_stream str;
     acc(str, ec);
     assert(!ec);
@@ -64,7 +64,7 @@ void parent() {
 void ssl_child() {
     this_fiber::sleep_for(std::chrono::seconds(1));
     ssl::context ctx(ssl::context::sslv23);
-    std::error_code ec;
+    boost::system::error_code ec;
     ctx.load_verify_file("/tmp/ca.pem", ec);
     assert(!ec);
     ssl::tcp_stream str(ctx);
@@ -95,7 +95,7 @@ void ssl_parent() {
     boost::random::mt19937 rng;
     boost::random::uniform_int_distribution<> rand(1,1000);
 
-    std::error_code ec;
+    boost::system::error_code ec;
     
     ssl::context ctx(ssl::context::sslv23);
     ctx.set_options(ssl::context::default_workarounds

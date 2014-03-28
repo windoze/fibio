@@ -44,7 +44,7 @@ namespace fibio { namespace fibers { namespace detail {
         }
         check_timer_->expires_from_now(std::chrono::seconds(1));
         scheduler_ptr_t pthis(shared_from_this());
-        check_timer_->async_wait([pthis](std::error_code ec){ pthis->on_check_timer(ec); });
+        check_timer_->async_wait([pthis](boost::system::error_code ec){ pthis->on_check_timer(ec); });
         for(size_t i=0; i<nthr; i++) {
             threads_.push_back(std::thread([pthis](){
                 pthis->io_service_.run();
@@ -80,13 +80,13 @@ namespace fibio { namespace fibers { namespace detail {
         p->this_ref_.reset();
     }
     
-    void scheduler_object::on_check_timer(std::error_code ec) {
+    void scheduler_object::on_check_timer(boost::system::error_code ec) {
         std::lock_guard<std::mutex> guard(m_);
         if (fiber_count_>0 || !started_) {
             //printf("Active fiber %lu", size_t(fiber_count_));
             check_timer_->expires_from_now(std::chrono::milliseconds(50));
             scheduler_ptr_t pthis(shared_from_this());
-            check_timer_->async_wait([pthis](std::error_code ec){ pthis->on_check_timer(ec); });
+            check_timer_->async_wait([pthis](boost::system::error_code ec){ pthis->on_check_timer(ec); });
         } else {
             io_service_.stop();
         }
