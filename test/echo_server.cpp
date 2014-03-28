@@ -80,7 +80,7 @@ int main_fiber(int argc, char *argv[]) {
                 hello(s);
                 s << s.rdbuf();
             }, std::move(s)).detach();
-        } else if (ec!=make_error_code(boost::system::errc::timed_out)) {
+        } else if (ec!=make_error_code(boost::asio::error::timed_out)) {
             std::cerr << ec.message() << std::endl;
             return ec.value();
         }
