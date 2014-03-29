@@ -14,6 +14,7 @@
 #ifndef fibio_shared_mutex_hpp
 #define fibio_shared_mutex_hpp
 
+#include <fibio/fibers/exceptions.hpp>
 #include <fibio/fibers/mutex.hpp>
 #include <fibio/fibers/condition_variable.hpp>
 
@@ -563,10 +564,10 @@ namespace fibio { namespace fibers {
         
         void lock() {
             if(m==0) {
-                throw boost::system::system_error(make_error_code(boost::system::errc::operation_not_permitted), "shared_lock has no mutex");
+                throw fiber_exception(boost::system::errc::operation_not_permitted, "shared_lock has no mutex");
             }
             if(owns_lock()) {
-                throw boost::system::system_error(make_error_code(boost::system::errc::resource_deadlock_would_occur), "shared_lock owns already the mutex");
+                throw fiber_exception(boost::system::errc::resource_deadlock_would_occur, "shared_lock owns already the mutex");
             }
             m->lock_shared();
             is_locked=true;
@@ -574,10 +575,10 @@ namespace fibio { namespace fibers {
         
         bool try_lock() {
             if(m==0) {
-                throw boost::system::system_error(make_error_code(boost::system::errc::operation_not_permitted), "shared_lock has no mutex");
+                throw fiber_exception(boost::system::errc::operation_not_permitted, "shared_lock has no mutex");
             }
             if(owns_lock()) {
-                throw boost::system::system_error(make_error_code(boost::system::errc::resource_deadlock_would_occur), "shared_lock owns already the mutex");
+                throw fiber_exception(boost::system::errc::resource_deadlock_would_occur, "shared_lock owns already the mutex");
             }
             is_locked=m->try_lock_shared();
             return is_locked;
@@ -586,10 +587,10 @@ namespace fibio { namespace fibers {
         template <class Rep, class Period>
         bool try_lock_for(const std::chrono::duration<Rep, Period>& rel_time) {
             if(m==0) {
-                throw boost::system::system_error(make_error_code(boost::system::errc::operation_not_permitted), "shared_lock has no mutex");
+                throw fiber_exception(boost::system::errc::operation_not_permitted, "shared_lock has no mutex");
             }
             if(owns_lock()) {
-                throw boost::system::system_error(make_error_code(boost::system::errc::resource_deadlock_would_occur), "shared_lock owns already the mutex");
+                throw fiber_exception(boost::system::errc::resource_deadlock_would_occur, "shared_lock owns already the mutex");
             }
             is_locked=m->try_lock_shared_for(rel_time);
             return is_locked;
@@ -598,10 +599,10 @@ namespace fibio { namespace fibers {
         template <class Clock, class Duration>
         bool try_lock_until(const std::chrono::time_point<Clock, Duration>& abs_time) {
             if(m==0) {
-                throw boost::system::system_error(make_error_code(boost::system::errc::operation_not_permitted), "shared_lock has no mutex");
+                throw fiber_exception(boost::system::errc::operation_not_permitted, "shared_lock has no mutex");
             }
             if(owns_lock()) {
-                throw boost::system::system_error(make_error_code(boost::system::errc::resource_deadlock_would_occur), "shared_lock owns already the mutex");
+                throw fiber_exception(boost::system::errc::resource_deadlock_would_occur, "shared_lock owns already the mutex");
             }
             is_locked=m->try_lock_shared_until(abs_time);
             return is_locked;
@@ -609,10 +610,10 @@ namespace fibio { namespace fibers {
 
         void unlock() {
             if(m==0) {
-                throw boost::system::system_error(make_error_code(boost::system::errc::operation_not_permitted), "shared_lock has no mutex");
+                throw fiber_exception(boost::system::errc::operation_not_permitted, "shared_lock has no mutex");
             }
             if(!owns_lock()) {
-                throw boost::system::system_error(make_error_code(boost::system::errc::resource_deadlock_would_occur), "shared_lock doesn't own the mutex");
+                throw fiber_exception(boost::system::errc::resource_deadlock_would_occur, "shared_lock doesn't own the mutex");
             }
             m->unlock_shared();
             is_locked=false;

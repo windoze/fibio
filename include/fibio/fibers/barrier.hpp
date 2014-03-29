@@ -15,6 +15,7 @@
 #define fibio_barrier_h
 
 #include <type_traits>
+#include <fibio/fibers/exceptions.hpp>
 #include <fibio/fibers/mutex.hpp>
 #include <fibio/fibers/condition_variable.hpp>
 
@@ -63,8 +64,8 @@ namespace fibio { namespace fibers {
     class barrier {
         static inline unsigned int check_counter(unsigned int count) {
             if (count == 0)
-                throw boost::system::system_error(make_error_code(boost::system::errc::invalid_argument),
-                                        "barrier constructor: count cannot be zero.");
+                throw fiber_exception(boost::system::errc::invalid_argument,
+                                      "barrier constructor: count cannot be zero.");
             return count;
         }
         
