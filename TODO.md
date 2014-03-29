@@ -17,7 +17,7 @@ Core
     * <del>c_q<std::mutex, std::c_v> can transfer data from a fiber to outside, as long as there is no size limit(push won't block)</del>
     * Extra work is still needed to make both directions work with size_limit set
 * Find a way to get stack track for uncaught exception in fiber
-* Future support
+* <del>Future support</del>
 * Logging
     * Async log (high throughput/low reliability)
     * Sync log (low throughput/high reliability)

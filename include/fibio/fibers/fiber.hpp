@@ -99,7 +99,7 @@ namespace fibio { namespace fibers {
         
         template< class Clock, class Duration >
         void sleep_until( const std::chrono::time_point<Clock,Duration>& sleep_time ) {
-            detail::sleep_usec(std::chrono::duration_cast<std::chrono::microseconds>(sleep_time - std::chrono::system_clock::now()).count());
+            detail::sleep_usec(std::chrono::duration_cast<std::chrono::microseconds>(sleep_time - std::chrono::steady_clock::now()).count());
         }
     }   // End of namespace this_fiber
 }}   // End of namespace fibio::fibers

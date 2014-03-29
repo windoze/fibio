@@ -14,7 +14,7 @@ namespace fibio { namespace fibers { namespace detail {
         CHECK_CALLER(this_fiber);
         if (this_fiber!=m->owner_) {
             // This fiber doesn't own the mutex
-            throw fiber_exception(boost::system::errc::operation_not_permitted);
+            throw condition_error(boost::system::errc::operation_not_permitted);
         }
         {
             std::lock_guard<std::mutex> lock(m_);
@@ -30,7 +30,7 @@ namespace fibio { namespace fibers { namespace detail {
         cv_status ret=cv_status::no_timeout;
         if (this_fiber!=m->owner_) {
             // This fiber doesn't own the mutex
-            throw fiber_exception(boost::system::errc::operation_not_permitted);
+            throw condition_error(boost::system::errc::operation_not_permitted);
         }
         {
             std::lock_guard<std::mutex> lock(m_);

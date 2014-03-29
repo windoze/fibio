@@ -464,7 +464,7 @@ namespace fibio { namespace fibers {
             throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
         }
         if (!joinable()) {
-            throw fiber_exception(boost::system::errc::invalid_argument);
+            throw invalid_argument();
         }
         if (detail::fiber_object::current_fiber_) {
             if (propagate_exception) {
