@@ -32,6 +32,10 @@ namespace fibio { namespace fibers { namespace detail {
     
     fiber_object::~fiber_object() {
         //printf("Destroy fiber 0x%lx \n", reinterpret_cast<unsigned long>(this));
+        if (state_!=STOPPED) {
+            // std::thread will call std::terminate if deleting a unstopped thread
+            std::terminate();
+        }
     }
     
     void fiber_object::set_name(const std::string &s) {
@@ -426,6 +430,15 @@ namespace fibio { namespace fibers {
     : m_(s.m_->make_fiber(std::move(f)))
     {}
     
+    fiber& fiber::operator=(fiber &&other) noexcept {
+        if (joinable()) {
+            // This fiber is still active, std::thread will call std::terminate in the case
+            std::terminate();
+        }
+        m_=std::move(other.m_);
+        return *this;
+    }
+    
     void fiber::set_name(const std::string &s) {
         m_->set_name(s);
     }
@@ -434,12 +447,12 @@ namespace fibio { namespace fibers {
         return m_->get_name();
     }
     
-    bool fiber::joinable() const {
+    bool fiber::joinable() const noexcept {
         // Return true iff this is a fiber and not the current calling fiber
         return (m_ && detail::fiber_object::current_fiber_!=m_.get());
     }
     
-    fiber::id fiber::get_id() const {
+    fiber::id fiber::get_id() const noexcept {
         return reinterpret_cast<fiber::id>(m_.get());
     }
     
@@ -449,6 +462,9 @@ namespace fibio { namespace fibers {
         }
         if (m_.get()==detail::fiber_object::current_fiber_) {
             throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
+        }
+        if (!joinable()) {
+            throw fiber_exception(boost::system::errc::invalid_argument);
         }
         if (detail::fiber_object::current_fiber_) {
             if (propagate_exception) {
@@ -460,6 +476,9 @@ namespace fibio { namespace fibers {
     }
     
     void fiber::detach() {
+        if (!joinable()) {
+            throw fiber_exception(boost::system::errc::no_such_process);
+        }
         detail::fiber_ptr_t this_fiber=m_;
         m_->fiber_strand_.post(std::bind(&detail::fiber_object::detach, m_));
         m_.reset();
@@ -469,7 +488,7 @@ namespace fibio { namespace fibers {
         std::swap(m_, other.m_);
     }
     
-    unsigned fiber::hardware_concurrency() {
+    unsigned fiber::hardware_concurrency() noexcept {
         return std::thread::hardware_concurrency();
     }
     

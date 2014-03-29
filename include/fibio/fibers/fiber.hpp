@@ -19,9 +19,11 @@
 #include <fibio/fibers/detail/make_tuple_indices.hpp>
 
 namespace fibio { namespace fibers {
+#ifndef NO_VARIADIC_TEMPLATE
     namespace detail {
         using fibio::detail::wrap;
     }
+#endif
     struct scheduler {
         scheduler();
         scheduler(std::shared_ptr<detail::scheduler_object>);
@@ -60,13 +62,15 @@ namespace fibio { namespace fibers {
         fiber() = default;
         fiber(const fiber&) = delete;
         
-        bool joinable() const;
-        id get_id() const;
+        fiber& operator=(fiber &&other) noexcept;
+        
+        bool joinable() const noexcept;
+        id get_id() const noexcept;
         void join(bool propagate_exception=false);
         void detach();
         void swap(fiber &other) noexcept(true);
         
-        static unsigned hardware_concurrency();
+        static unsigned hardware_concurrency() noexcept;
 
         void set_name(const std::string &s);
         std::string get_name();
