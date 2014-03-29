@@ -12,8 +12,8 @@
 #include <stdexcept>
 #include <string>
 #include <boost/config.hpp>
+#include <boost/type_traits.hpp>
 #include <boost/detail/scoped_enum_emulation.hpp>
-#include <boost/chrono/system_clocks.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
 
@@ -68,11 +68,11 @@ namespace fibio { namespace fibers {
     {
     public:
         lock_error() :
-        fiber_exception(0, "boost::lock_error")
+        fiber_exception(0, "fibio::lock_error")
         {}
         
         lock_error( int ev ) :
-        fiber_exception( ev, "boost::lock_error")
+        fiber_exception( ev, "fibio::lock_error")
         {}
         
         lock_error( int ev, const char * what_arg) :
