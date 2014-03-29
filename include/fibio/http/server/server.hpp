@@ -48,11 +48,11 @@ namespace fibio { namespace http { namespace server {
         
         server(const std::string &addr, unsigned short port, const std::string &host);
         server(unsigned short port, const std::string &host);
-        std::error_code accept(connection &sc, uint64_t timeout=0);
+        boost::system::error_code accept(connection &sc, uint64_t timeout=0);
         void close();
         
         template<typename Rep, typename Period>
-        std::error_code accept(connection &sc, const std::chrono::duration<Rep, Period>& timeout_duration)
+        boost::system::error_code accept(connection &sc, const std::chrono::duration<Rep, Period>& timeout_duration)
         { return accept(sc, std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count()); }
 
         std::string host_;

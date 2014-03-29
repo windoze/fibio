@@ -9,11 +9,11 @@
 #ifndef fibio_io_local_datagram_protocol_hpp
 #define fibio_io_local_datagram_protocol_hpp
 
-#include <asio/local/datagram_protocol.hpp>
+#include <boost/asio/local/datagram_protocol.hpp>
 #include <fibio/io/basic_datagram_socket.hpp>
 
 namespace fibio {
-    typedef io::fiberized<asio::local::datagram_protocol::socket> local_datagram_socket;
+    typedef io::fiberized<boost::asio::local::datagram_protocol::socket> local_datagram_socket;
 }   // End of namespace fibio
 
 #endif

@@ -100,13 +100,13 @@ void servant(http_server::connection sc) {
 
 void the_server() {
     http_server svr(23456, "localhost:23456");
-    std::error_code ec;
+    boost::system::error_code ec;
     // Check exit flag
     while (!should_exit) {
         http_server::connection sc;
         ec=svr.accept(sc, std::chrono::seconds(1));
         if(ec) {
-            if (ec!=std::make_error_code(std::errc::timed_out)) {
+            if (ec!=boost::asio::error::make_error_code(boost::asio::error::timed_out)) {
                 std::cout << ec << std::endl;
             }
         } else {

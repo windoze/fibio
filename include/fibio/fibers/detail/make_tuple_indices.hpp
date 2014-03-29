@@ -12,6 +12,7 @@
 #include <functional>
 #include <tuple>
 
+#ifndef NO_VARIADIC_TEMPLATE
 namespace fibio { namespace detail {
     template <std::size_t...>
     struct indices;
@@ -74,6 +75,7 @@ namespace fibio { namespace detail {
             return apply_tuple(std::get<0>(*fp), std::move(*p));
         };
     }
-}}  // End of namespace
+}}  // End of namespace fibio::detail
+#endif  // !defined(NO_VARIADIC_TEMPLATE)
 
 #endif

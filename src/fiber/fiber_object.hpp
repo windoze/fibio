@@ -16,10 +16,12 @@
 #include <atomic>
 #include <mutex>
 #include <map>
-#include <asio/basic_waitable_timer.hpp>
-#include <asio/io_service.hpp>
-#include <asio/strand.hpp>
+#include <boost/asio/basic_waitable_timer.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/system/error_code.hpp>
 #include <boost/coroutine/coroutine.hpp>
+#include <fibio/fibers/exceptions.hpp>
 
 #if defined(DEBUG) && !defined(NDEBUG)
 #   define CHECK_CALLER(f) do { if (!f->caller_) assert(false); } while(0)
@@ -33,14 +35,14 @@
 /*
 #   define CHECK_CURRENT_FIBER \
     do if(!::fibio::fibers::detail::fiber_object::current_fiber_) \
-        throw std::make_error_code(std::errc::no_such_process) \
+        throw make_error_code(boost::system::errc::no_such_process) \
     while(0)
  */
 #   define CHECK_CURRENT_FIBER
 #endif
 
 namespace fibio { namespace fibers { namespace detail {
-    typedef asio::basic_waitable_timer<std::chrono::steady_clock> timer_t;
+    typedef boost::asio::basic_waitable_timer<std::chrono::steady_clock> timer_t;
     typedef std::shared_ptr<timer_t> timer_ptr_t;
     
     struct scheduler_object;
@@ -67,11 +69,6 @@ namespace fibio { namespace fibers { namespace detail {
     typedef std::map<fss_key_t, fss_value_t> fss_map_t;
     
     struct fiber_object : std::enable_shared_from_this<fiber_object> {
-        typedef std::deque<std::function<void()>> cleanup_queue_t;
-        typedef std::function<void()> after_step_handler_t;
-        typedef std::function<void()> entry_t;
-        typedef boost::coroutines::coroutine<after_step_handler_t>::pull_type runner_t;
-        typedef boost::coroutines::coroutine<after_step_handler_t>::push_type caller_t;
         enum state_t {
             READY,
             RUNNING,
@@ -79,12 +76,34 @@ namespace fibio { namespace fibers { namespace detail {
             STOPPED,
         };
         
-        fiber_object(scheduler_ptr_t sched, std::function<void()> &&entry);
+        typedef std::deque<std::function<void()>> cleanup_queue_t;
+        typedef std::function<void()> entry_t;
+        typedef boost::coroutines::coroutine<state_t>::pull_type runner_t;
+        typedef boost::coroutines::coroutine<state_t>::push_type caller_t;
+        
+        fiber_object(scheduler_ptr_t sched, entry_t &&entry);
         ~fiber_object();
         
         void set_name(const std::string &s);
         std::string get_name();
         
+        void raw_set_state(state_t s)
+        { state_=s; }
+        
+        void set_state(state_t s) {
+            if (caller_) {
+                // We're in fiber context, switch to scheduler context to make state take effect
+                //(*caller_)(std::bind(&fiber_object::raw_set_state, shared_from_this(), s));
+                (*caller_)(s);
+            } else {
+                // We're in scheduler context
+                state_=s;
+            }
+        }
+
+        void pause();
+        void activate();
+
         // Following functions can only be called inside coroutine
         void yield();
         void join(fiber_ptr_t f);
@@ -109,7 +128,7 @@ namespace fibio { namespace fibers { namespace detail {
                 this_fiber->state_=BLOCKED;
             }
             
-            void operator()(std::error_code ec) {
+            void operator()(boost::system::error_code ec) {
                 this_fiber->last_error_=ec;
                 this_fiber->state_=fibers::detail::fiber_object::RUNNING;
                 this_fiber->one_step();
@@ -119,14 +138,14 @@ namespace fibio { namespace fibers { namespace detail {
         };
         
         scheduler_ptr_t sched_;
-        asio::io_service &io_service_;
-        asio::io_service::strand fiber_strand_;
+        boost::asio::io_service &io_service_;
+        boost::asio::io_service::strand fiber_strand_;
         std::mutex fiber_mutex_;
         std::atomic<state_t> state_;
         entry_t entry_;
         runner_t runner_;
         caller_t *caller_;
-        std::error_code last_error_;
+        boost::system::error_code last_error_;
         cleanup_queue_t cleanup_queue_;
         fss_map_t fss_;
         fiber_ptr_t this_ref_;

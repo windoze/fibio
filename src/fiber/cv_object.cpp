@@ -7,177 +7,105 @@
 //
 
 #include "cv_object.hpp"
+#include <boost/system/error_code.hpp>
 
 namespace fibio { namespace fibers { namespace detail {
     void condition_variable_object::wait(mutex_ptr_t m, fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        if (this_fiber->caller_) {
-            std::shared_ptr<condition_variable_object> this_cv(shared_from_this());
-            (*(this_fiber->caller_))([this_fiber, this_cv, m](){
-                assert(this_fiber==m->owner_);
-                std::lock_guard<std::mutex> lock(this_cv->m_);
-                this_fiber->state_=fiber_object::BLOCKED;
-                this_cv->suspended_.push_back(suspended_item({m, this_fiber, timer_ptr_t()}));
-                {
-                    // Release mutex
-                    std::lock_guard<std::mutex> lock(m->m_);
-                    if (m->owner_==this_fiber) {
-                        // This fiber owns the mutex
-                        if (m->suspended_.empty()) {
-                            // Nobody is waiting
-                            m->owner_.reset();
-                        } else {
-                            // There are fibers in the waiting queue, pop one to owner_ and enable its scheduling
-                            std::swap(m->owner_, m->suspended_.front());
-                            m->suspended_.pop_front();
-                            m->owner_->schedule();
-                        }
-                    } else {
-                        // ERROR: This fiber doesn't own the mutex
-                        this_fiber->last_error_=std::make_error_code(std::errc::operation_not_permitted);
-                    }
-                }
-
-            });
+        if (this_fiber!=m->owner_) {
+            // This fiber doesn't own the mutex
+            throw fiber_exception(boost::system::errc::operation_not_permitted);
         }
+        {
+            std::lock_guard<std::mutex> lock(m_);
+            suspended_.push_back(suspended_item({m, this_fiber, timer_ptr_t()}));
+            m->raw_unlock(this_fiber);
+        }
+        this_fiber->pause();
+        m->lock(this_fiber);
     }
     
     cv_status condition_variable_object::wait_usec(mutex_ptr_t m, fiber_ptr_t this_fiber, uint64_t usec) {
         //CHECK_CALLER(this_fiber);
         cv_status ret=cv_status::no_timeout;
-        if (this_fiber->caller_) {
+        if (this_fiber!=m->owner_) {
+            // This fiber doesn't own the mutex
+            throw fiber_exception(boost::system::errc::operation_not_permitted);
+        }
+        {
+            std::lock_guard<std::mutex> lock(m_);
+            timer_ptr_t t(std::make_shared<timer_t>(this_fiber->io_service_));
+            suspended_.push_back(suspended_item({m, this_fiber, t}));
             std::shared_ptr<condition_variable_object> this_cv(shared_from_this());
-            (*(this_fiber->caller_))([this_fiber, this_cv, m, usec, &ret](){
-                std::lock_guard<std::mutex> lock(this_cv->m_);
-                timer_ptr_t t(std::make_shared<timer_t>(this_fiber->io_service_));
-                this_cv->suspended_.push_back(suspended_item({m, this_fiber, t}));
-                t->expires_from_now(std::chrono::microseconds(usec));
-                t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_cv, t, &ret](std::error_code ec){
-                    if(ec) {
-                        // Timer canceled, wait successful
-                        return;
-                    }
+            t->expires_from_now(std::chrono::microseconds(usec));
+            t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_cv, t, &ret](boost::system::error_code ec){
+                if(!ec) {
                     // Timeout
                     // Timeout handler, find and remove this fiber from waiting queue
                     std::lock_guard<std::mutex> lock(this_cv->m_);
                     ret=cv_status::timeout;
-                    suspended_item p;
                     // Find and remove this fiber from waiting queue
-                    std::deque<suspended_item>::iterator i=std::find_if(this_cv->suspended_.begin(),
-                                                                        this_cv->suspended_.end(),
-                                                                        [this_fiber](const suspended_item &i)->bool{
-                                                                            return i.f_==this_fiber;
-                                                                        });
+                    auto i=std::find_if(this_cv->suspended_.begin(),
+                                        this_cv->suspended_.end(),
+                                        [this_fiber](const suspended_item &i)->bool{
+                                            return i.f_==this_fiber;
+                                        });
                     if (i!=this_cv->suspended_.end()) {
-                        std::swap(p, *i);
                         this_cv->suspended_.erase(i);
-                        // std::cout << "waiting queue size: " << this_cv->suspended_.size() << std::endl;
-                    }
-                    if (p.m_) {
-                        // Acquire lock for this fiber befor re-scheduling
-                        std::lock_guard<std::mutex> lock(p.m_->m_);
-                        if (p.m_->owner_) {
-                            if (p.m_->owner_==p.f_) {
-                                // ERROR: Shouldn't happen
-                            } else {
-                                // p.mutex is lock by someone else, add fiber to waiting queue
-                                p.m_->suspended_.push_back(p.f_);
-                                p.f_->state_=fiber_object::BLOCKED;
-                            }
-                        } else {
-                            // p.mutex is not locked, just lock it for p.fiber
-                            p.m_->owner_=p.f_;
-                            p.f_->schedule();
-                        }
-                    }
-                }));
-                this_fiber->state_=fiber_object::BLOCKED;
-                //m->unlock(this_fiber);
-                {
-                    mutex_ptr_t this_mutex=m;
-                    std::lock_guard<std::mutex> lock(this_mutex->m_);
-                    if (this_mutex->owner_==this_fiber) {
-                        // This fiber owns the mutex
-                        if (this_mutex->suspended_.empty()) {
-                            // Nobody is waiting
-                            this_mutex->owner_.reset();
-                        } else {
-                            // There are fibers in the waiting queue, pop one to owner_ and enable its scheduling
-                            std::swap(this_mutex->owner_, this_mutex->suspended_.front());
-                            this_mutex->suspended_.pop_front();
-                            this_mutex->owner_->schedule();
-                        }
-                    } else {
-                        // ERROR: This fiber doesn't own the mutex
-                        this_fiber->last_error_=std::make_error_code(std::errc::operation_not_permitted);
                     }
                 }
-            });
+                this_fiber->schedule();
+            }));
+            m->raw_unlock(this_fiber);
         }
+        this_fiber->pause();
+        m->lock(this_fiber);
         return ret;
     }
-    
+
     void condition_variable_object::notify_one() {
-        std::lock_guard<std::mutex> lock(m_);
-        if (suspended_.empty()) {
-            return;
-        }
-        suspended_item p(suspended_.front());
-        suspended_.pop_front();
-        if (p.t_) {
-            // Cancel attached timer if it's set
-            p.t_->cancel();
-            p.t_.reset();
-        }
-        p.f_->fiber_strand_.post([p](){
-            // Acquire lock for p.fiber
-            std::lock_guard<std::mutex> lock(p.m_->m_);
-            if (p.m_->owner_) {
-                if (p.m_->owner_==p.f_) {
-                    // ERROR: Shouldn't happen
-                } else {
-                    // p.mutex is lock by someone else, add fiber to waiting queue
-                    p.m_->suspended_.push_back(p.f_);
-                    p.f_->state_=fiber_object::BLOCKED;
-                }
+        {
+            std::lock_guard<std::mutex> lock(m_);
+            if (suspended_.empty()) {
+                return;
+            }
+            suspended_item p(suspended_.front());
+            suspended_.pop_front();
+            if (p.t_) {
+                // Cancel attached timer if it's set
+                // Timer handler will reschedule the waiting fiber
+                p.t_->cancel();
+                p.t_.reset();
             } else {
-                // p.mutex is not locked, just lock it for p.fiber
-                p.m_->owner_=p.f_;
+                // No timer attached to the waiting fiber, directly schedule it
                 p.f_->schedule();
             }
-        });
+        }
+        // Only yield if currently in a fiber
+        // CV can be used to notify a fiber from not-a-fiber, i.e. foreign thread
         if (fiber_object::current_fiber_) {
             fiber_object::current_fiber_->yield();
         }
     }
     
     void condition_variable_object::notify_all() {
-        std::lock_guard<std::mutex> lock(m_);
-        while (!suspended_.empty()) {
-            suspended_item p(suspended_.front());
-            suspended_.pop_front();
-            if (p.t_) {
-                // Cancel attached timer if it's set
-                p.t_->cancel();
-            }
-            p.f_->fiber_strand_.post([p](){
-                // Acquire lock p.first for p->second
-                std::lock_guard<std::mutex> lock(p.m_->m_);
-                if (p.m_->owner_) {
-                    if (p.m_->owner_==p.f_) {
-                        // ERROR: Shouldn't happen
-                    } else {
-                        // p.first is lock by someone else
-                        p.m_->suspended_.push_back(p.f_);
-                        p.f_->state_=fiber_object::BLOCKED;
-                    }
+        {
+            std::lock_guard<std::mutex> lock(m_);
+            while (!suspended_.empty()) {
+                suspended_item p(suspended_.front());
+                suspended_.pop_front();
+                if (p.t_) {
+                    // Cancel attached timer if it's set
+                    // Timer handler will reschedule the waiting fiber
+                    p.t_->cancel();
                 } else {
-                    // p.first is not locked, just lock it for p.second
-                    p.m_->owner_=p.f_;
+                    // No timer attached to the waiting fiber, directly schedule it
                     p.f_->schedule();
                 }
-            });
+            }
         }
+        // Only yield if currently in a fiber
+        // CV can be used to notify a fiber from not-a-fiber, i.e. foreign thread
         if (fiber_object::current_fiber_) {
             fiber_object::current_fiber_->yield();
         }

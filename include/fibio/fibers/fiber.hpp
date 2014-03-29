@@ -14,14 +14,16 @@
 #include <chrono>
 #include <utility>
 #include <type_traits>
-#include <asio/io_service.hpp>
+#include <boost/asio/io_service.hpp>
 #include <fibio/fibers/detail/forward.hpp>
 #include <fibio/fibers/detail/make_tuple_indices.hpp>
 
 namespace fibio { namespace fibers {
+#ifndef NO_VARIADIC_TEMPLATE
     namespace detail {
         using fibio::detail::wrap;
     }
+#endif
     struct scheduler {
         scheduler();
         scheduler(std::shared_ptr<detail::scheduler_object>);
@@ -30,7 +32,7 @@ namespace fibio { namespace fibers {
         void join();
         
         // FIXME: It doesn't work correctly
-        // void add_worker_thread(size_t nthr=1);
+        void add_worker_thread(size_t nthr=1);
         
         static scheduler get_instance();
         static void reset_instance();
@@ -60,13 +62,15 @@ namespace fibio { namespace fibers {
         fiber() = default;
         fiber(const fiber&) = delete;
         
-        bool joinable() const;
-        id get_id() const;
+        fiber& operator=(fiber &&other) noexcept;
+        
+        bool joinable() const noexcept;
+        id get_id() const noexcept;
         void join(bool propagate_exception=false);
         void detach();
         void swap(fiber &other) noexcept(true);
         
-        static unsigned hardware_concurrency();
+        static unsigned hardware_concurrency() noexcept;
 
         void set_name(const std::string &s);
         std::string get_name();
@@ -79,7 +83,7 @@ namespace fibio { namespace fibers {
     namespace this_fiber {
         namespace detail {
             void sleep_usec(uint64_t usec);
-            asio::io_service &get_io_service();
+            boost::asio::io_service &get_io_service();
         }
         
         void yield();

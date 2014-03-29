@@ -14,12 +14,12 @@
 
 namespace fibio { namespace ssl {
     // Introduce some useful types
-    using asio::ssl::context;
-    using asio::ssl::rfc2818_verification;
-    using asio::ssl::verify_context;
-    typedef asio::ssl::stream_base::handshake_type handshake_type;
+    using boost::asio::ssl::context;
+    using boost::asio::ssl::rfc2818_verification;
+    using boost::asio::ssl::verify_context;
+    typedef boost::asio::ssl::stream_base::handshake_type handshake_type;
     
-    typedef io::fiberized<asio::ssl::stream<asio::ip::tcp::socket>> tcp_socket;
+    typedef io::fiberized<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> tcp_socket;
 }}  // End of namespace fibio::ssl
 
 #endif

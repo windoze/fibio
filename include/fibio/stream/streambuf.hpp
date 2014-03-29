@@ -100,8 +100,8 @@ namespace fibio { namespace stream {
         int_type underflow() override {
             if (duplex_mode_==half_duplex) sync();
             if (gptr() == egptr()) {
-                std::error_code ec;
-                size_t bytes_transferred=base_type::read_some(asio::buffer(&get_buffer_[0]+ putback_max, buffer_size-putback_max),
+                boost::system::error_code ec;
+                size_t bytes_transferred=base_type::read_some(boost::asio::buffer(&get_buffer_[0]+ putback_max, buffer_size-putback_max),
                                                               ec);
                 if (ec || bytes_transferred==0) {
                     return traits_type::eof();
@@ -116,14 +116,14 @@ namespace fibio { namespace stream {
         }
         
         int_type overflow(int_type c) override {
-            std::error_code ec;
+            boost::system::error_code ec;
             if (unbuffered_) {
                 if (traits_type::eq_int_type(c, traits_type::eof())) {
                     // Nothing to do.
                     return traits_type::not_eof(c);
                 } else {
                     char c_=c;
-                    base_type::write_some(asio::buffer(&c_, 1),
+                    base_type::write_some(boost::asio::buffer(&c_, 1),
                                           ec);
                     if (ec)
                         return traits_type::eof();
@@ -134,7 +134,7 @@ namespace fibio { namespace stream {
                 size_t size=pptr() - pbase();
                 while (size > 0)
                 {
-                    size_t bytes_transferred=base_type::write_some(asio::buffer(ptr, size),
+                    size_t bytes_transferred=base_type::write_some(boost::asio::buffer(ptr, size),
                                                                    ec);
                     ptr+=bytes_transferred;
                     size-=bytes_transferred;

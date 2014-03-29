@@ -21,7 +21,7 @@ namespace fibio { namespace fibers {
             typedef stream::fiberized_streambuf<posix_stream_descriptor> sbuf_t;
             typedef sbuf_t *sbuf_ptr_t;
             
-            fiberized_std_stream_guard(asio::io_service &iosvc);
+            fiberized_std_stream_guard(boost::asio::io_service &iosvc);
             ~fiberized_std_stream_guard();
             
             void open();

@@ -149,9 +149,9 @@ namespace fibio { namespace http { namespace server {
     , acceptor_(port)
     {}
     
-    std::error_code server::accept(server::connection &sc, uint64_t timeout) {
+    boost::system::error_code server::accept(server::connection &sc, uint64_t timeout) {
         acceptor_.set_accept_timeout(std::chrono::microseconds(timeout));
-        std::error_code ec;
+        boost::system::error_code ec;
         acceptor_(sc.stream_, ec);
         if (!ec) {
             sc.host_=host_;

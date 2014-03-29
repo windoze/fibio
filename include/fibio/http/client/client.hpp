@@ -24,8 +24,8 @@ namespace fibio { namespace http { namespace client {
         client(const std::string &server, const std::string &port);
         client(const std::string &server, int port);
         
-        std::error_code connect(const std::string &server, const std::string &port);
-        std::error_code connect(const std::string &server, int port);
+        boost::system::error_code connect(const std::string &server, const std::string &port);
+        boost::system::error_code connect(const std::string &server, int port);
         void disconnect();
         
         void set_auto_decompress(bool c);

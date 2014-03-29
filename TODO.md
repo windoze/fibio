@@ -3,8 +3,8 @@ TODO List for Fiberized.IO
 
 BUGS
 ----
-* scheduler::add_thread caused problem, disabled
-* asio returns error_code with system_category, while std::make_error_code uses generic_category, which makes comparison fail
+* <del>scheduler::add_thread caused problem, disabled</del>
+* asio returns error_code with system_category, while make_error_code uses generic_category, which makes comparison fail
 
 Core
 ----
@@ -13,8 +13,8 @@ Core
 * Refine `FIBERIZED_MAIN` macro if we have to determin thread number before starting scheduler
 * <del>Complete `fibio::io::{udp, local_stream, local_datagram}`</del>
 * Make `concurrent_queue` fully work between `fiber` and `not-a-fiber`
-    * c_q<fibers::mutex, fiber::c_v> can transfer data from outside to fiber, as long as there is no size limit(push won't block)
-    * c_q<std::mutex, std::c_v> can transfer data from a fiber to outside, as long as there is no size limit(push won't block)
+    * <del>c_q<fibers::mutex, fiber::c_v> can transfer data from outside to fiber, as long as there is no size limit(push won't block)</del>
+    * <del>c_q<std::mutex, std::c_v> can transfer data from a fiber to outside, as long as there is no size limit(push won't block)</del>
     * Extra work is still needed to make both directions work with size_limit set
 * Find a way to get stack track for uncaught exception in fiber
 * Future support

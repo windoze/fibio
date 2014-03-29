@@ -9,14 +9,14 @@
 #ifndef fibio_io_basic_raw_socket_hpp
 #define fibio_io_basic_raw_socket_hpp
 
-#include <asio/basic_raw_socket.hpp>
+#include <boost/asio/basic_raw_socket.hpp>
 #include <fibio/io/detail/wrapper_base.hpp>
 
 namespace fibio { namespace io {
     template<typename Protocol, typename StreamSocketService>
-    struct fiberized<asio::basic_raw_socket<Protocol, StreamSocketService>> : public asio::basic_raw_socket<Protocol, StreamSocketService>
+    struct fiberized<boost::asio::basic_raw_socket<Protocol, StreamSocketService>> : public boost::asio::basic_raw_socket<Protocol, StreamSocketService>
     {
-        typedef asio::basic_raw_socket<Protocol, StreamSocketService> base_type;
+        typedef boost::asio::basic_raw_socket<Protocol, StreamSocketService> base_type;
 
         fiberized() : base_type(fibers::this_fiber::detail::get_io_service()) {}
         fiberized(fiberized &&other)=default;

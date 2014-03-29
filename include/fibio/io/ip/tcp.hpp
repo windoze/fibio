@@ -9,16 +9,16 @@
 #ifndef fibio_io_ip_tcp_hpp
 #define fibio_io_ip_tcp_hpp
 
-#include <asio/ip/tcp.hpp>
+#include <boost/asio/ip/tcp.hpp>
 #include <fibio/io/basic_stream_socket.hpp>
 #include <fibio/io/basic_socket_acceptor.hpp>
 #include <fibio/io/ip/basic_resolver.hpp>
 
 namespace fibio {
     namespace io {
-        typedef io::fiberized<asio::ip::tcp::acceptor> tcp_acceptor;
-        typedef io::fiberized<asio::ip::tcp::socket> tcp_socket;
-        typedef io::fiberized<asio::ip::tcp::resolver> tcp_resolver;
+        typedef io::fiberized<boost::asio::ip::tcp::acceptor> tcp_acceptor;
+        typedef io::fiberized<boost::asio::ip::tcp::socket> tcp_socket;
+        typedef io::fiberized<boost::asio::ip::tcp::resolver> tcp_resolver;
     }
     using io::tcp_acceptor;
     using io::tcp_socket;
