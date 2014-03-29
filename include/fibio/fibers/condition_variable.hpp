@@ -52,7 +52,7 @@ namespace fibio { namespace fibers {
         template< class Clock, class Duration >
         cv_status wait_until(std::unique_lock<mutex>& lock, const std::chrono::time_point<Clock,Duration>& timeout_time) {
             return wait_usec(lock,
-                             std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::system_clock::now()).count());
+                             std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::steady_clock::now()).count());
         }
         
         template< class Clock, class Duration, class Predicate >

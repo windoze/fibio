@@ -41,7 +41,7 @@ namespace fibio { namespace fibers {
         
         template< class Clock, class Duration >
         bool try_lock_until(const std::chrono::time_point<Clock,Duration>& timeout_time ) {
-            return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::system_clock::now()).count());
+            return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::steady_clock::now()).count());
         }
         
         bool try_lock_usec(uint64_t usec);
@@ -74,7 +74,7 @@ namespace fibio { namespace fibers {
         
         template<class Clock, class Duration>
         bool try_lock_until(const std::chrono::time_point<Clock,Duration>& timeout_time) {
-            return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::system_clock::now()).count());
+            return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::steady_clock::now()).count());
         }
         
         bool try_lock_usec(uint64_t usec);
