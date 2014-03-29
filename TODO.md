@@ -3,7 +3,7 @@ TODO List for Fiberized.IO
 
 BUGS
 ----
-* scheduler::add_thread caused problem, disabled
+* <del>scheduler::add_thread caused problem, disabled</del>
 * asio returns error_code with system_category, while make_error_code uses generic_category, which makes comparison fail
 
 Core

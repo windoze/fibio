@@ -64,10 +64,11 @@ void parent() {
 int main_fiber(int argc, char *argv[]) {
     fiber_group fibers;
     fibers.create_fiber(parent);
-    for (int i=0; i<10; i++) {
+    for (int i=0; i<100; i++) {
         fibers.create_fiber(f, i);
     }
-    for (int i=0; i<10; i++) {
+    scheduler::get_instance().add_worker_thread(3);
+    for (int i=0; i<100; i++) {
         fibers.create_fiber(f1, i);
     }
     fibers.join_all();
@@ -76,5 +77,5 @@ int main_fiber(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-    return fiberize(4, main_fiber, argc, argv);
+    return fiberize(1, main_fiber, argc, argv);
 }

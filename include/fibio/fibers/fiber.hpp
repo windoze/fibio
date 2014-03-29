@@ -30,7 +30,7 @@ namespace fibio { namespace fibers {
         void join();
         
         // FIXME: It doesn't work correctly
-        // void add_worker_thread(size_t nthr=1);
+        void add_worker_thread(size_t nthr=1);
         
         static scheduler get_instance();
         static void reset_instance();

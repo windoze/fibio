@@ -13,6 +13,7 @@
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <condition_variable>
 #include <boost/asio/io_service.hpp>
 #include "fiber_object.hpp"
 
@@ -24,7 +25,7 @@ namespace fibio { namespace fibers { namespace detail {
         void join();
         
         // FIXME: It doesn't work correctly
-        //void add_thread(size_t nthr);
+        void add_thread(size_t nthr);
         
         void on_fiber_exit(fiber_ptr_t p);
         void on_check_timer(boost::system::error_code ec);
@@ -32,6 +33,7 @@ namespace fibio { namespace fibers { namespace detail {
         static std::shared_ptr<scheduler_object> get_instance();
         
         std::mutex m_;
+        std::condition_variable cv_;
         typedef std::vector<std::thread> threads_t;
         threads_t threads_;
         boost::asio::io_service io_service_;

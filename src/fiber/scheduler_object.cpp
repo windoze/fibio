@@ -53,6 +53,15 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void scheduler_object::join() {
+        {
+            // Wait until there is no running fiber
+            std::unique_lock<std::mutex> lock(m_);
+            while (started_ && fiber_count_>0) {
+                cv_.wait(lock);
+            }
+        }
+        
+        // Join all worker threads
         for(std::thread &t : threads_) {
             t.join();
         }
@@ -61,7 +70,6 @@ namespace fibio { namespace fibers { namespace detail {
         io_service_.reset();
     }
     
-    /*
     void scheduler_object::add_thread(size_t nthr) {
         std::lock_guard<std::mutex> guard(m_);
         scheduler_ptr_t pthis(shared_from_this());
@@ -71,7 +79,6 @@ namespace fibio { namespace fibers { namespace detail {
             }));
         }
     }
-     */
     
     void scheduler_object::on_fiber_exit(fiber_ptr_t p) {
         std::lock_guard<std::mutex> guard(m_);
@@ -89,6 +96,7 @@ namespace fibio { namespace fibers { namespace detail {
             check_timer_->async_wait([pthis](boost::system::error_code ec){ pthis->on_check_timer(ec); });
         } else {
             io_service_.stop();
+            cv_.notify_one();
         }
     }
 
@@ -117,11 +125,9 @@ namespace fibio { namespace fibers {
         m_->join();
     }
     
-    /*
     void scheduler::add_worker_thread(size_t nthr) {
         m_->add_thread(nthr);
     }
-     */
     
     scheduler scheduler::get_instance() {
         return scheduler(detail::scheduler_object::get_instance());
