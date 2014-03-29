@@ -14,9 +14,9 @@
 
 using namespace fibio;
 
-typedef boost::asio::basic_waitable_timer<std::chrono::steady_clock> timer_t;
+typedef boost::asio::basic_waitable_timer<std::chrono::steady_clock> my_timer_t;
 
-void canceler(timer_t &timer) {
+void canceler(my_timer_t &timer) {
     this_fiber::sleep_for(std::chrono::seconds(1));
     timer.cancel();
     this_fiber::sleep_for(std::chrono::seconds(1));
@@ -24,7 +24,7 @@ void canceler(timer_t &timer) {
 }
 
 int main_fiber(int argc, char *argv[]) {
-    boost::asio::basic_waitable_timer<std::chrono::steady_clock> timer(asio::get_io_service());
+    my_timer_t timer(asio::get_io_service());
     timer.expires_from_now(std::chrono::seconds(3));
     
     fiber f(canceler, std::ref(timer));
