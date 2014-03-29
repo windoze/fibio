@@ -26,7 +26,7 @@ namespace fibio { namespace fibers { namespace detail {
     , fiber_strand_(io_service_)
     , state_(READY)
     , entry_(std::move(entry))
-    , runner_(([this](caller_t &c){ runner_wrapper(c); }))
+    , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1) )
     , caller_(0)
     {}
     
@@ -70,19 +70,12 @@ namespace fibio { namespace fibers { namespace detail {
             assert(false);
         }
         // Fiber function exits, set state to STOPPED
-        c([this](){
-            state_=STOPPED;
-        });
+        set_state(STOPPED);
         caller_=0;
     }
     
     void fiber_object::schedule() {
-        std::lock_guard<std::mutex> lock(fiber_mutex_);
-        fiber_ptr_t pthis(shared_from_this());
-        fiber_strand_.post([pthis](){
-            pthis->state_=READY;
-            pthis->one_step();
-        });
+        fiber_strand_.post(std::bind(&fiber_object::activate, shared_from_this()));
     }
     
     void fiber_object::detach() {
@@ -131,12 +124,16 @@ namespace fibio { namespace fibers { namespace detail {
             // Do nothing
             // Must make sure this fiber will be posted elsewhere later, otherwise it will hold forever
         } else if (s==STOPPED) {
-            std::lock_guard<std::mutex> lock(fiber_mutex_);
-            // Fiber ended, clean up join queue
-            for (std::function<void()> f: cleanup_queue_) {
+            cleanup_queue_t temp;
+            {
+                // Move joining queue content out
+                std::lock_guard<std::mutex> lock(fiber_mutex_);
+                temp.swap(cleanup_queue_);
+            }
+            // Fiber ended, clean up joining queue
+            for (std::function<void()> f: temp) {
                 f();
             }
-            cleanup_queue_.clear();
             // Clean up FSS
             for (auto &v: fss_) {
                 if (v.second.first && v.second.second) {
@@ -144,19 +141,12 @@ namespace fibio { namespace fibers { namespace detail {
                 }
             }
             // Post exit message to scheduler
-            scheduler_ptr_t s=sched_;
-            fiber_ptr_t this_fiber(shared_from_this());
-            fiber_strand_.post([s, this_fiber](){
-                s->on_fiber_exit(this_fiber);
-            });
-            //printf("fiber 0x%lx existed\n", reinterpret_cast<unsigned long>(this));
+            fiber_strand_.post(std::bind(&scheduler_object::on_fiber_exit, sched_, shared_from_this()));
         }
     }
     
     void fiber_object::throw_on_error() {
         if (last_error_) {
-            // FIXME: ASIO uses more than one error categories
-            //last_error_=make_error_code(static_cast<boost::system::errc>(last_error_.value()));
             throw boost::system::system_error(last_error_);
         }
     }
@@ -165,127 +155,85 @@ namespace fibio { namespace fibers { namespace detail {
     void fiber_object::pause() {
         CHECK_CALLER(this);
         fiber_ptr_t pthis(shared_from_this());
-        (*caller_)([pthis](){
-            pthis->state_=BLOCKED;
-        });
+        set_state(BLOCKED);
+    }
+    
+    void fiber_object::activate() {
+        state_=READY;
+        one_step();
     }
     
     // Following functions can only be called inside coroutine
     void fiber_object::yield() {
         CHECK_CALLER(this);
-        if (caller_) {
-            fiber_ptr_t pthis(shared_from_this());
-            (*caller_)([pthis](){
-                pthis->state_=READY;
-            });
-        } else {
-            // TODO: Error
-        }
-        
-        throw_on_error();
+        set_state(READY);
     }
-    
+
     void fiber_object::join(fiber_ptr_t f) {
         CHECK_CALLER(this);
-        if (caller_) {
-            fiber_ptr_t pthis(shared_from_this());
-            (*caller_)([pthis, f](){
-                std::lock_guard<std::mutex> lock(f->fiber_mutex_);
-                if (f==pthis) {
-                    // The fiber is joining itself
-                    pthis->last_error_=make_error_code(boost::system::errc::resource_deadlock_would_occur) ;
-                } else if (f->state_==STOPPED) {
-                    // f is already stopped
-                    pthis->state_=RUNNING;
-                } else {
-                    // std::cout << "fiber(pthis) blocked" << std::endl;
-                    pthis->state_=BLOCKED;
-                    f->cleanup_queue_.push_back([pthis](){
-                        // std::cout << "fiber(pthis) resumed" << std::endl;
-                        pthis->state_=READY;
-                        pthis->one_step();
-                    });
-                }
-            });
-        } else {
-            // TODO: Error
+        {
+            std::lock_guard<std::mutex> lock(f->fiber_mutex_);
+            if (this==f.get()) {
+                // The fiber is joining itself
+                throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
+            } else if (f->state_==STOPPED) {
+                // f is already stopped, do nothing
+                return;
+            } else {
+                f->cleanup_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
+            }
         }
-        
-        throw_on_error();
+        pause();
     }
     
-    void fiber_object::join_and_rethrow(fiber_ptr_t f) {
-        CHECK_CALLER(this);
+    void propagate_exception(fiber_ptr_t f) {
         std::nested_exception e;
-        if (caller_) {
-            fiber_ptr_t pthis(shared_from_this());
-            (*caller_)([pthis, f, &e](){
-                std::lock_guard<std::mutex> lock(f->fiber_mutex_);
-                if (f==pthis) {
-                    // The fiber is joining itself
-                    pthis->last_error_=make_error_code(boost::system::errc::resource_deadlock_would_occur) ;
-                } else if (f->state_==STOPPED) {
-                    // f is already stopped
-                    if (f->uncaught_exception_.nested_ptr()) {
-                        // Propagate uncaught exception in f to this fiber
-                        e=f->uncaught_exception_;
-                        // Clean uncaught exception in f
-                        f->uncaught_exception_=std::nested_exception();
-                    }
-                    pthis->state_=RUNNING;
-                } else {
-                    // std::cout << "fiber(pthis) blocked" << std::endl;
-                    pthis->state_=BLOCKED;
-                    f->cleanup_queue_.push_back([pthis, f, &e](){
-                        if (f->uncaught_exception_.nested_ptr()) {
-                            // Propagate uncaught exception in f to this fiber
-                            e=f->uncaught_exception_;
-                            // Clean uncaught exception in f
-                            f->uncaught_exception_=std::nested_exception();
-                        }
-                        // std::cout << "fiber(pthis) resumed" << std::endl;
-                        pthis->state_=READY;
-                        pthis->one_step();
-                    });
-                }
-            });
-        } else {
-            // TODO: Error
+        if (f->uncaught_exception_.nested_ptr()) {
+            // Propagate uncaught exception in f to this fiber
+            e=f->uncaught_exception_;
+            // Clean uncaught exception in f
+            f->uncaught_exception_=std::nested_exception();
         }
-        
         // throw propagated exception
         if (e.nested_ptr()) {
             e.rethrow_nested();
         }
-        
-        throw_on_error();
     }
     
+    void fiber_object::join_and_rethrow(fiber_ptr_t f) {
+        CHECK_CALLER(this);
+        {
+            std::lock_guard<std::mutex> lock(f->fiber_mutex_);
+            if (this==f.get()) {
+                // The fiber is joining itself
+                throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
+            } else if (f->state_==STOPPED) {
+                // f is already stopped
+                propagate_exception(f);
+                return;
+            } else {
+                // std::cout << "fiber(pthis) blocked" << std::endl;
+                f->cleanup_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
+            }
+        }
+        pause();
+
+        // Joining completed, propagate exception from joinee
+        std::lock_guard<std::mutex> lock(f->fiber_mutex_);
+        propagate_exception(f);
+    }
+
     void fiber_object::sleep_usec(uint64_t usec) {
         // Shortcut
         if (usec==0) {
             return;
         }
         CHECK_CALLER(this);
-        if (caller_) {
-            fiber_ptr_t pthis(shared_from_this());
-            (*caller_)([pthis, usec](){
-                pthis->state_=BLOCKED;
-                timer_ptr_t sleep_timer(std::make_shared<timer_t>(pthis->io_service_));
-                sleep_timer->expires_from_now(std::chrono::microseconds(usec));
-                sleep_timer->async_wait(pthis->fiber_strand_.wrap([pthis, sleep_timer](boost::system::error_code ec){
-                    if (ec) {
-                        pthis->last_error_=ec;
-                    }
-                    pthis->state_=RUNNING;
-                    pthis->one_step();
-                }));
-            });
-        } else {
-            // TODO: Error
-        }
-        
-        throw_on_error();
+        timer_t sleep_timer(io_service_);
+        sleep_timer.expires_from_now(std::chrono::microseconds(usec));
+        sleep_timer.async_wait(fiber_strand_.wrap(std::bind(&fiber_object::activate, shared_from_this())));
+
+        pause();
     }
     
     void fiber_object::add_cleanup_function(std::function<void()> &&f) {
@@ -380,8 +328,7 @@ namespace fibio { namespace fibers { namespace detail {
         timer_triggered=true;
         if(async_op_triggered) {
             // Both callback are called, resume fiber
-            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
-            this_fiber->one_step();
+            this_fiber->activate();
         } else {
             if(cancelation_) cancelation_();
         }
@@ -396,9 +343,7 @@ namespace fibio { namespace fibers { namespace detail {
         this_fiber->last_error_=ec;
         if(timeout_==0 || timer_triggered) {
             // Both callback are called, resume fiber
-            // this_fiber->schedule();
-            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
-            this_fiber->one_step();
+            this_fiber->activate();
         }
     }
     
@@ -412,9 +357,7 @@ namespace fibio { namespace fibers { namespace detail {
         io_ret_=sz;
         if(timeout_==0 || timer_triggered) {
             // Both callback are called, resume fiber
-            // this_fiber->schedule();
-            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
-            this_fiber->one_step();
+            this_fiber->activate();
         }
     }
     
@@ -428,9 +371,7 @@ namespace fibio { namespace fibers { namespace detail {
         tcp_resolve_ret_=iterator;
         if(timeout_==0 || timer_triggered) {
             // Both callback are called, resume fiber
-            // this_fiber->schedule();
-            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
-            this_fiber->one_step();
+            this_fiber->activate();
         }
     }
     
@@ -444,9 +385,7 @@ namespace fibio { namespace fibers { namespace detail {
         udp_resolve_ret_=iterator;
         if(timeout_==0 || timer_triggered) {
             // Both callback are called, resume fiber
-            // this_fiber->schedule();
-            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
-            this_fiber->one_step();
+            this_fiber->activate();
         }
     }
     
@@ -460,18 +399,12 @@ namespace fibio { namespace fibers { namespace detail {
         icmp_resolve_ret_=iterator;
         if(timeout_==0 || timer_triggered) {
             // Both callback are called, resume fiber
-            // this_fiber->schedule();
-            this_fiber->state_=fibers::detail::fiber_object::RUNNING;
-            this_fiber->one_step();
+            this_fiber->activate();
         }
     }
     
-    void fiber_async_handler::run_in_scheduler_context(std::function<void()> f) {
-        CHECK_CALLER(this_fiber);
-        (*(this_fiber->caller_))([this, &f](){
-            this_fiber->state_=fibers::detail::fiber_object::BLOCKED;
-            f();
-        });
+    void fiber_async_handler::pause_current_fiber() {
+        this_fiber->pause();
     }
     
     void fiber_async_handler::throw_or_return(bool throw_error, boost::system::error_code &ec) {
@@ -542,9 +475,7 @@ namespace fibio { namespace fibers {
     
     void fiber::detach() {
         detail::fiber_ptr_t this_fiber=m_;
-        m_->fiber_strand_.post([this_fiber](){
-            this_fiber->detach();
-        });
+        m_->fiber_strand_.post(std::bind(&detail::fiber_object::detach, m_));
         m_.reset();
     }
     

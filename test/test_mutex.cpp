@@ -22,7 +22,9 @@ void f(int n) {
     for (int i=0; i<100; i++) {
         unique_lock<mutex> lock(m);
         this_fiber::sleep_for(std::chrono::milliseconds(three(rng)));
+        //printf("f(%d)\n", n);
     }
+    //printf("f(%d) exiting\n", n);
 }
 
 void f1(int n) {
@@ -33,6 +35,7 @@ void f1(int n) {
         {
             unique_lock<recursive_mutex> lock(m1);
             this_fiber::sleep_for(std::chrono::milliseconds(three(rng)));
+            //printf("f1(%d)\n", n);
         }
         this_fiber::sleep_for(std::chrono::milliseconds(three(rng)));
     }
@@ -45,6 +48,7 @@ void child() {
     assert(!ret);
     ret=tm.try_lock_for(std::chrono::seconds(3));
     assert(ret);
+    //printf("child()\n");
 }
 
 void parent() {
@@ -52,7 +56,9 @@ void parent() {
     tm.lock();
     this_fiber::sleep_for(std::chrono::seconds(3));
     tm.unlock();
+    //printf("parent():1\n");
     f.join();
+    //printf("parent():2\n");
 }
 
 int main_fiber(int argc, char *argv[]) {

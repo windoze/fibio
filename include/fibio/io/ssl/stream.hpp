@@ -46,10 +46,9 @@ namespace fibio { namespace io {
         {
             detail::fiber_async_handler async_handler;
             
-            async_handler.run_in_scheduler_context([this, &async_handler, &type](){
-                async_handler.start_timer_with_cancelation(handshake_timeout_, [this](){ this->lowest_layer().cancel(); });
-                base_type::async_handshake(type, async_handler.get_async_op_handler());
-            });
+            async_handler.start_timer_with_cancelation(handshake_timeout_, [this](){ this->lowest_layer().cancel(); });
+            base_type::async_handshake(type, async_handler.get_async_op_handler());
+            async_handler.pause_current_fiber();
             
             async_handler.throw_or_return(throw_error, ec);
             return ec;
@@ -77,10 +76,9 @@ namespace fibio { namespace io {
         {
             detail::fiber_async_handler async_handler;
             
-            async_handler.run_in_scheduler_context([this, &async_handler, &type, &buffers](){
-                async_handler.start_timer_with_cancelation(handshake_timeout_, [this](){ this->lowest_layer().cancel(); });
-                base_type::async_handshake(type, buffers, async_handler.get_async_op_handler());
-            });
+            async_handler.start_timer_with_cancelation(handshake_timeout_, [this](){ this->lowest_layer().cancel(); });
+            base_type::async_handshake(type, buffers, async_handler.get_async_op_handler());
+            async_handler.pause_current_fiber();
             
             async_handler.throw_or_return(throw_error, ec);
             return ec;
@@ -105,10 +103,9 @@ namespace fibio { namespace io {
         {
             detail::fiber_async_handler async_handler;
             
-            async_handler.run_in_scheduler_context([this, &async_handler](){
-                async_handler.start_timer_with_cancelation(shutdown_timeout_, [this](){ this->lowest_layer().cancel(); });
-                base_type::async_shutdown(async_handler.get_async_op_handler());
-            });
+            async_handler.start_timer_with_cancelation(shutdown_timeout_, [this](){ this->lowest_layer().cancel(); });
+            base_type::async_shutdown(async_handler.get_async_op_handler());
+            async_handler.pause_current_fiber();
             
             async_handler.throw_or_return(throw_error, ec);
             return ec;

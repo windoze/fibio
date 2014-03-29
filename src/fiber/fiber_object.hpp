@@ -87,8 +87,21 @@ namespace fibio { namespace fibers { namespace detail {
         void set_name(const std::string &s);
         std::string get_name();
         
+        void raw_set_state(state_t s)
+        { state_=s; }
+        
         // Following functions can only be called inside coroutine
+        void set_state(state_t s) {
+            if (caller_) {
+                // We're in fiber context, switch to scheduler context to make state take effect
+                (*caller_)(std::bind(&fiber_object::raw_set_state, shared_from_this(), s));
+            } else {
+                // We're in scheduler context
+                state_=s;
+            }
+        }
         void pause();
+        void activate();
         void yield();
         void join(fiber_ptr_t f);
         void join_and_rethrow(fiber_ptr_t f);

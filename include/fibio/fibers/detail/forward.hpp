@@ -32,7 +32,7 @@ namespace fibio { namespace fibers { namespace detail {
     struct fiber_async_handler {
         fiber_async_handler();
         void start_timer_with_cancelation(uint64_t timeout, std::function<void()> &&c);
-        void run_in_scheduler_context(std::function<void()> f);
+        void pause_current_fiber();
         void throw_or_return(bool throw_error, boost::system::error_code &ec);
         std::function<void(boost::system::error_code, size_t)> get_io_handler();
         std::function<void(boost::system::error_code)> get_async_op_handler();

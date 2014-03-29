@@ -39,10 +39,9 @@ namespace fibio { namespace io {
         {
             detail::fiber_async_handler async_handler;
             
-            async_handler.run_in_scheduler_context([this, &async_handler, &q](){
-                async_handler.start_timer_with_cancelation(resolve_timeout_, [this, &q](){ base_type::cancel(); });
-                base_type::async_resolve(q, async_handler.get_resolve_handler((typename base_type::protocol_type*)(0)));
-            });
+            async_handler.start_timer_with_cancelation(resolve_timeout_, [this, &q](){ base_type::cancel(); });
+            base_type::async_resolve(q, async_handler.get_resolve_handler((typename base_type::protocol_type*)(0)));
+            async_handler.pause_current_fiber();
             
             async_handler.throw_or_return(throw_error, ec);
             return async_handler.resolve_result((typename base_type::protocol_type*)(0));
@@ -65,10 +64,9 @@ namespace fibio { namespace io {
         {
             detail::fiber_async_handler async_handler;
             
-            async_handler.run_in_scheduler_context([this, &async_handler, &e](){
-                async_handler.start_timer_with_cancelation(resolve_timeout_, [this, &e](){ base_type::cancel(); });
-                base_type::async_resolve(e, async_handler.get_resolve_handler((typename base_type::protocol_type*)(0)));
-            });
+            async_handler.start_timer_with_cancelation(resolve_timeout_, [this, &e](){ base_type::cancel(); });
+            base_type::async_resolve(e, async_handler.get_resolve_handler((typename base_type::protocol_type*)(0)));
+            async_handler.pause_current_fiber();
             
             async_handler.throw_or_return(throw_error, ec);
             return async_handler.resolve_result((typename base_type::protocol_type*)(0));

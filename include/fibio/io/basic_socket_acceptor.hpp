@@ -72,10 +72,9 @@ namespace fibio { namespace io {
         {
             detail::fiber_async_handler async_handler;
             
-            async_handler.run_in_scheduler_context([this, &async_handler, &peer, &peer_endpoint](){
-                async_handler.start_timer_with_cancelation(accept_timeout_, [this, &peer, &peer_endpoint](){ base_type::cancel(); });
-                base_type::async_accept(peer, peer_endpoint, async_handler.get_async_op_handler());
-            });
+            async_handler.start_timer_with_cancelation(accept_timeout_, [this, &peer, &peer_endpoint](){ base_type::cancel(); });
+            base_type::async_accept(peer, peer_endpoint, async_handler.get_async_op_handler());
+            async_handler.pause_current_fiber();
             
             async_handler.throw_or_return(throw_error, ec);
             return ec;
