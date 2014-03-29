@@ -104,6 +104,7 @@ namespace fibio { namespace fibers { namespace detail {
 
         virtual void pause() override;
         virtual void activate() override;
+        virtual boost::asio::strand &get_fiber_strand() override;
 
         // Following functions can only be called inside coroutine
         void yield();

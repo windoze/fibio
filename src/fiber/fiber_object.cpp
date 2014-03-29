@@ -144,6 +144,10 @@ namespace fibio { namespace fibers { namespace detail {
         }
     }
     
+    boost::asio::strand &fiber_object::get_fiber_strand() {
+        return fiber_strand_;
+    }
+    
     // Switch out of fiber context
     void fiber_object::pause() {
         set_state(BLOCKED);
