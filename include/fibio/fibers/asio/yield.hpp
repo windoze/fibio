@@ -31,6 +31,14 @@ namespace fibio { namespace fibers { namespace asio {
             return tmp;
         }
         
+        yield_t operator()(boost::system::error_code &ec, uint64_t timeout, std::function<void()> &&fn) const {
+            yield_t tmp;
+            tmp.ec_ = &ec;
+            tmp.timeout_ = timeout;
+            tmp.cancelation_ = std::move(fn);
+            return tmp;
+        }
+        
         yield_t operator[](boost::system::error_code &ec) const {
             yield_t tmp;
             tmp.ec_ = &ec;
