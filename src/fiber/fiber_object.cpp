@@ -270,6 +270,14 @@ namespace fibio { namespace fibers { namespace detail {
         return 0;
     }
     
+    fiber_base::ptr_t get_current_fiber_ptr() {
+        if(!fiber_object::current_fiber_) {
+            // Not a fiber
+            throw fiber_exception(boost::system::errc::no_such_process);
+        }
+        return std::static_pointer_cast<fiber_base>(fiber_object::current_fiber_->shared_from_this());
+    }
+    
     fiber_async_handler::fiber_async_handler()
     : this_fiber(fibers::detail::fiber_object::current_fiber_->shared_from_this())
     , sleep_timer(this_fiber->io_service_)
