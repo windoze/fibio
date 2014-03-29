@@ -69,11 +69,6 @@ namespace fibio { namespace fibers { namespace detail {
     typedef std::map<fss_key_t, fss_value_t> fss_map_t;
     
     struct fiber_object : std::enable_shared_from_this<fiber_object> {
-        typedef std::deque<std::function<void()>> cleanup_queue_t;
-        typedef std::function<void()> after_step_handler_t;
-        typedef std::function<void()> entry_t;
-        typedef boost::coroutines::coroutine<after_step_handler_t>::pull_type runner_t;
-        typedef boost::coroutines::coroutine<after_step_handler_t>::push_type caller_t;
         enum state_t {
             READY,
             RUNNING,
@@ -81,7 +76,12 @@ namespace fibio { namespace fibers { namespace detail {
             STOPPED,
         };
         
-        fiber_object(scheduler_ptr_t sched, std::function<void()> &&entry);
+        typedef std::deque<std::function<void()>> cleanup_queue_t;
+        typedef std::function<void()> entry_t;
+        typedef boost::coroutines::coroutine<state_t>::pull_type runner_t;
+        typedef boost::coroutines::coroutine<state_t>::push_type caller_t;
+        
+        fiber_object(scheduler_ptr_t sched, entry_t &&entry);
         ~fiber_object();
         
         void set_name(const std::string &s);
@@ -90,18 +90,21 @@ namespace fibio { namespace fibers { namespace detail {
         void raw_set_state(state_t s)
         { state_=s; }
         
-        // Following functions can only be called inside coroutine
         void set_state(state_t s) {
             if (caller_) {
                 // We're in fiber context, switch to scheduler context to make state take effect
-                (*caller_)(std::bind(&fiber_object::raw_set_state, shared_from_this(), s));
+                //(*caller_)(std::bind(&fiber_object::raw_set_state, shared_from_this(), s));
+                (*caller_)(s);
             } else {
                 // We're in scheduler context
                 state_=s;
             }
         }
+
         void pause();
         void activate();
+
+        // Following functions can only be called inside coroutine
         void yield();
         void join(fiber_ptr_t f);
         void join_and_rethrow(fiber_ptr_t f);

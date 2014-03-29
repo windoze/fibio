@@ -46,7 +46,7 @@ namespace fibio { namespace fibers { namespace detail {
     
     void fiber_object::runner_wrapper(caller_t &c) {
         // Need this to complete constructor without running entry_
-        c([](){});
+        c(READY);
         
         // Now we're out of constructor
         caller_=&c;
@@ -66,11 +66,12 @@ namespace fibio { namespace fibers { namespace detail {
             }
         } catch(...) {
             // TODO: Uncaught unknown exception
+            // This is standard action for threads, is this appropriate for fibers?
             // Is there any way to do stack trace?
-            assert(false);
+            std::terminate();
         }
         // Fiber function exits, set state to STOPPED
-        set_state(STOPPED);
+        c(STOPPED);
         caller_=0;
     }
     
@@ -96,25 +97,13 @@ namespace fibio { namespace fibers { namespace detail {
                 fiber_object::current_fiber_=0;
             }
         };
-        //assert(state_!=BLOCKED);
         if (state_==READY) {
             state_=RUNNING;
         }
+        // Keep running if necessary
         while (state_==RUNNING) {
-            if (runner_) {
-                after_step_handler_t h;
-                {
-                    tls_guard guard(this);
-                    h=runner_().get();
-                }
-                // Change state to READY, schedule for next round unless after_step_handler explicitly change it back
-                state_=READY;
-                h();
-            } else {
-                // ERROR: Should not happen
-                state_=STOPPED;
-            }
-            // Keep running if the state remains RUNNING
+            tls_guard guard(this);
+            state_=runner_().get();
         }
         state_t s= state_;
         if (s==READY) {
@@ -153,8 +142,6 @@ namespace fibio { namespace fibers { namespace detail {
     
     // Switch out of fiber context
     void fiber_object::pause() {
-        CHECK_CALLER(this);
-        fiber_ptr_t pthis(shared_from_this());
         set_state(BLOCKED);
     }
     
@@ -165,7 +152,6 @@ namespace fibio { namespace fibers { namespace detail {
     
     // Following functions can only be called inside coroutine
     void fiber_object::yield() {
-        CHECK_CALLER(this);
         set_state(READY);
     }
 
@@ -459,10 +445,10 @@ namespace fibio { namespace fibers {
     
     void fiber::join(bool propagate_exception) {
         if (!m_) {
-            throw make_error_code(boost::system::errc::no_such_process);
+            throw fiber_exception(boost::system::errc::no_such_process);
         }
         if (m_.get()==detail::fiber_object::current_fiber_) {
-            throw make_error_code(boost::system::errc::resource_deadlock_would_occur);
+            throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
         }
         if (detail::fiber_object::current_fiber_) {
             if (propagate_exception) {
@@ -492,7 +478,7 @@ namespace fibio { namespace fibers {
             if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                 ::fibio::fibers::detail::fiber_object::current_fiber_->yield();
             } else {
-                throw boost::system::system_error(make_error_code(boost::system::errc::no_such_process));
+                throw fiber_exception(boost::system::errc::no_such_process);
             }
         }
         
@@ -509,7 +495,7 @@ namespace fibio { namespace fibers {
                 if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                     ::fibio::fibers::detail::fiber_object::current_fiber_->sleep_usec(usec);
                 } else {
-                    throw boost::system::system_error(make_error_code(boost::system::errc::no_such_process));
+                    throw fiber_exception(boost::system::errc::no_such_process);
                 }
             }
             
@@ -517,7 +503,7 @@ namespace fibio { namespace fibers {
                 if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                     return ::fibio::fibers::detail::fiber_object::current_fiber_->io_service_;
                 }
-                throw boost::system::system_error(make_error_code(boost::system::errc::no_such_process));
+                throw fiber_exception(boost::system::errc::no_such_process);
             }
         }   // End of namespace detail
     }   // End of namespace this_fiber
