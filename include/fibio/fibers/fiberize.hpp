@@ -11,14 +11,14 @@
 
 #include <type_traits>
 #include <iostream>
+#include <boost/asio/posix/stream_descriptor.hpp>
 #include <fibio/fibers/fiber.hpp>
-#include <fibio/io/posix/stream_descriptor.hpp>
 #include <fibio/stream/streambuf.hpp>
 
 namespace fibio { namespace fibers {
     namespace detail {
         struct fiberized_std_stream_guard {
-            typedef stream::fiberized_streambuf<posix_stream_descriptor> sbuf_t;
+            typedef stream::fiberized_streambuf<boost::asio::posix::stream_descriptor> sbuf_t;
             typedef sbuf_t *sbuf_ptr_t;
             
             fiberized_std_stream_guard(boost::asio::io_service &iosvc);
@@ -33,8 +33,6 @@ namespace fibio { namespace fibers {
             sbuf_ptr_t cout_buf_;
             sbuf_ptr_t cerr_buf_;
         };
-        
-        typedef std::shared_ptr<fiberized_std_stream_guard> fiberized_std_stream_guard_ptr_t;
     }   // End of namespace fibio::fibers::detail
     
 #ifdef __clang__

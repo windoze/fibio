@@ -25,17 +25,26 @@ void canceler(my_timer_t &timer) {
 
 int main_fiber(int argc, char *argv[]) {
     my_timer_t timer(asio::get_io_service());
-    timer.expires_from_now(std::chrono::seconds(3));
-    
-    fiber f(canceler, std::ref(timer));
-    
     boost::system::error_code ec;
-    printf("parent waiting...\n");
-    timer.async_wait(asio::yield[ec]);
-    assert(ec.value()==boost::system::errc::operation_canceled);
-    printf("timer canceled\n");
+    {
+        timer.expires_from_now(std::chrono::seconds(3));
+        
+        fiber f(canceler, std::ref(timer));
+        
+        printf("parent waiting...\n");
+        timer.async_wait(asio::yield[ec]);
+        assert(ec.value()==boost::system::errc::operation_canceled);
+        printf("timer canceled\n");
 
-    f.join();
+        f.join();
+    }
+    {
+        timer.expires_from_now(std::chrono::seconds(3));
+        printf("parent waiting again...\n");
+        timer.async_wait(asio::yield(ec, std::chrono::seconds(1), timer));
+        printf("timer canceled again\n");
+        assert(ec.value()==boost::system::errc::operation_canceled);
+    }
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }

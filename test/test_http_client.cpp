@@ -62,7 +62,7 @@ void the_client() {
 
 int main_fiber(int argc, char *argv[]) {
     fiber_group fibers;
-    for (int i=0; i<1; i++) {
+    for (int i=0; i<10; i++) {
         fibers.create_fiber(the_client);
     }
     fibers.join_all();
