@@ -105,7 +105,7 @@ namespace fibio { namespace fibers { namespace detail {
         virtual void pause() override;
         virtual void activate() override;
         virtual boost::asio::strand &get_fiber_strand() override;
-
+        
         // Following functions can only be called inside coroutine
         void yield();
         void join(fiber_ptr_t f);
@@ -121,24 +121,20 @@ namespace fibio { namespace fibers { namespace detail {
         
         void add_cleanup_function(std::function<void()> &&f);
         
-        void throw_on_error();
-        
+        static __thread fiber_object *current_fiber_;
+
         scheduler_ptr_t sched_;
-        boost::asio::io_service &io_service_;
-        boost::asio::io_service::strand fiber_strand_;
+        boost::asio::strand fiber_strand_;
         std::mutex fiber_mutex_;
         std::atomic<state_t> state_;
         entry_t entry_;
         runner_t runner_;
         caller_t *caller_;
-        boost::system::error_code last_error_;
         cleanup_queue_t cleanup_queue_;
         fss_map_t fss_;
         fiber_ptr_t this_ref_;
         std::string name_;
         std::nested_exception uncaught_exception_;
-        
-        static __thread fiber_object *current_fiber_;
     };
 }}} // End of namespace fibio::fibers::detail
 

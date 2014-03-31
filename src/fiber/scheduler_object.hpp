@@ -24,23 +24,18 @@ namespace fibio { namespace fibers { namespace detail {
         void start(size_t nthr);
         void join();
         
-        // FIXME: It doesn't work correctly
         void add_thread(size_t nthr);
         
         void on_fiber_exit(fiber_ptr_t p);
-        void on_check_timer(boost::system::error_code ec);
+        void on_check_timer(timer_ptr_t check_timer, boost::system::error_code ec);
         
         static std::shared_ptr<scheduler_object> get_instance();
         
         std::mutex m_;
         std::condition_variable cv_;
-        typedef std::vector<std::thread> threads_t;
-        threads_t threads_;
+        std::vector<std::thread> threads_;
         boost::asio::io_service io_service_;
-        
         std::atomic<size_t> fiber_count_;
-        timer_ptr_t check_timer_;
-        
         std::atomic<bool> started_;
         
         static std::once_flag instance_inited_;

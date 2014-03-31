@@ -212,10 +212,10 @@ namespace fibio { namespace fibers { namespace detail {
             }
             // This mutex is locked
             // Add this fiber into waiting queue
-            timer_ptr_t t(std::make_shared<timer_t>(this_fiber->io_service_));
+            timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
             t->expires_from_now(std::chrono::microseconds(usec));
             std::shared_ptr<timed_mutex_object> this_mutex=shared_from_this();
-            t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_mutex](boost::system::error_code ec){
+            t->async_wait(this_fiber->get_fiber_strand().wrap([this_fiber, this_mutex](boost::system::error_code ec){
                 std::lock_guard<std::mutex> lock(this_mutex->m_);
                 if (this_mutex->owner_!=this_fiber) {
                     // This fiber doesn't own the mutex
@@ -328,10 +328,10 @@ namespace fibio { namespace fibers { namespace detail {
             }
             // This mutex is locked
             // Add this fiber into waiting queue
-            timer_ptr_t t(std::make_shared<timer_t>(this_fiber->io_service_));
+            timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
             t->expires_from_now(std::chrono::microseconds(usec));
             std::shared_ptr<timed_recursive_mutex_object> this_mutex=shared_from_this();
-            t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_mutex](boost::system::error_code ec){
+            t->async_wait(this_fiber->get_fiber_strand().wrap([this_fiber, this_mutex](boost::system::error_code ec){
                 std::lock_guard<std::mutex> lock(this_mutex->m_);
                 if (this_mutex->owner_!=this_fiber) {
                     // This fiber doesn't own the mutex

@@ -34,11 +34,11 @@ namespace fibio { namespace fibers { namespace detail {
         }
         {
             std::lock_guard<std::mutex> lock(m_);
-            timer_ptr_t t(std::make_shared<timer_t>(this_fiber->io_service_));
+            timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
             suspended_.push_back(suspended_item({m, this_fiber, t}));
             std::shared_ptr<condition_variable_object> this_cv(shared_from_this());
             t->expires_from_now(std::chrono::microseconds(usec));
-            t->async_wait(this_fiber->fiber_strand_.wrap([this_fiber, this_cv, t, &ret](boost::system::error_code ec){
+            t->async_wait(this_fiber->get_fiber_strand().wrap([this_fiber, this_cv, t, &ret](boost::system::error_code ec){
                 if(!ec) {
                     // Timeout
                     // Timeout handler, find and remove this fiber from waiting queue

@@ -10,6 +10,7 @@
 #define fibio_fibers_detail_fiber_base_hpp
 
 #include <memory>
+#include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
 
 namespace fibio { namespace fibers { namespace detail {
@@ -19,6 +20,9 @@ namespace fibio { namespace fibers { namespace detail {
         virtual void pause()=0;
         virtual void activate()=0;
         virtual boost::asio::strand &get_fiber_strand()=0;
+        inline boost::asio::io_service &get_io_service() {
+            return get_fiber_strand().get_io_service();
+        }
     };
     
     fiber_base::ptr_t get_current_fiber_ptr();

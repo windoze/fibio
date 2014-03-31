@@ -22,8 +22,7 @@ namespace fibio { namespace fibers { namespace detail {
     
     fiber_object::fiber_object(scheduler_ptr_t sched, entry_t &&entry)
     : sched_(sched)
-    , io_service_(sched->io_service_)
-    , fiber_strand_(io_service_)
+    , fiber_strand_(sched_->io_service_)
     , state_(READY)
     , entry_(std::move(entry))
     , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1) )
@@ -138,12 +137,6 @@ namespace fibio { namespace fibers { namespace detail {
         }
     }
     
-    void fiber_object::throw_on_error() {
-        if (last_error_) {
-            throw boost::system::system_error(last_error_);
-        }
-    }
-    
     boost::asio::strand &fiber_object::get_fiber_strand() {
         return fiber_strand_;
     }
@@ -223,7 +216,7 @@ namespace fibio { namespace fibers { namespace detail {
             return;
         }
         CHECK_CALLER(this);
-        timer_t sleep_timer(io_service_);
+        timer_t sleep_timer(get_io_service());
         sleep_timer.expires_from_now(std::chrono::microseconds(usec));
         sleep_timer.async_wait(fiber_strand_.wrap(std::bind(&fiber_object::activate, shared_from_this())));
 
@@ -396,7 +389,7 @@ namespace fibio { namespace fibers {
             
             boost::asio::io_service &get_io_service() {
                 if (::fibio::fibers::detail::fiber_object::current_fiber_) {
-                    return ::fibio::fibers::detail::fiber_object::current_fiber_->io_service_;
+                    return ::fibio::fibers::detail::fiber_object::current_fiber_->get_io_service();
                 }
                 throw fiber_exception(boost::system::errc::no_such_process);
             }
