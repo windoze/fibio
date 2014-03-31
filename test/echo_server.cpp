@@ -18,6 +18,8 @@ std::atomic<unsigned short> listen_port;
 std::atomic<bool> should_exit(false);
 std::atomic<size_t> connections(0);
 
+typedef boost::asio::basic_waitable_timer<std::chrono::steady_clock> watchdog_timer_t;
+
 void hello(std::ostream &s) {
     s << "Fiberized.IO echo_server listening at " << address << ", port " << listen_port << std::endl;
 }
@@ -53,6 +55,44 @@ void console() {
     std::cout << "Exiting..." << std::endl;
 }
 
+void servant_watchdog(watchdog_timer_t &timer, tcp_stream &s) {
+    boost::system::error_code ignore_ec;
+    while (s.is_open()) {
+        timer.async_wait(asio::yield[ignore_ec]);
+        // close the stream if timeout
+        if (timer.expires_from_now() <= std::chrono::seconds(0)) {
+            s.close();
+        }
+    }
+}
+
+void echo_servant(tcp_stream s) {
+    struct conn_guard {
+        conn_guard() {connections+=1;}
+        ~conn_guard() {connections-=1;}
+    } guard;
+
+    watchdog_timer_t timer(asio::get_io_service());
+    timer.expires_from_now(std::chrono::seconds(3));
+    fiber watchdog(servant_watchdog, std::ref(timer), std::ref(s) );
+    hello(s);
+    std::string line;
+    while (std::getline(s, line)) {
+        s << line << std::endl;
+        // Reset the watchdog
+        timer.expires_from_now(std::chrono::seconds(3));
+    }
+    // Join the watchdog fiber, make sure it will not use released stream and timer
+    watchdog.join();
+}
+
+void main_watchdog(tcp_stream_acceptor &acc) {
+    while (!should_exit) {
+        this_fiber::sleep_for(std::chrono::seconds(1));
+    }
+    acc.close();
+}
+
 int main_fiber(int argc, char *argv[]) {
     if (argc<2) {
         std::cerr << "Usage:" << "\t" << argv[0] << " [address] port" << std::endl;
@@ -65,26 +105,15 @@ int main_fiber(int argc, char *argv[]) {
         listen_port=atoi(argv[2]);
     }
     fiber(console).detach();
-    auto acc=tcp_stream_acceptor(address, listen_port, std::chrono::seconds(1));
-    while(!should_exit) {
+    tcp_stream_acceptor acc(address, listen_port);
+    fiber watchdog(main_watchdog, std::ref(acc));
+    while(true) {
         boost::system::error_code ec;
         tcp_stream s=acc(ec);
-        if(!ec) {
-            fiber([](tcp_stream s){
-                struct conn_guard {
-                    conn_guard() {connections+=1;}
-                    ~conn_guard() {connections-=1;}
-                } guard;
-                s.set_read_timeout(std::chrono::seconds(3));
-                s.set_write_timeout(std::chrono::seconds(3));
-                hello(s);
-                s << s.rdbuf();
-            }, std::move(s)).detach();
-        } else if (ec!=make_error_code(boost::asio::error::timed_out)) {
-            std::cerr << ec.message() << std::endl;
-            return ec.value();
-        }
+        if(ec) break;
+        fiber(echo_servant, std::move(s)).detach();
     }
+    watchdog.join();
     return 0;
 }
 

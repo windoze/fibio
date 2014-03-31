@@ -119,9 +119,9 @@ namespace fibio {
         using fibers::this_fiber::is_a_fiber;
         using fibers::this_fiber::sleep_for;
         using fibers::this_fiber::sleep_until;
-        namespace detail {
-            using fibers::this_fiber::detail::get_io_service;
-        }
+    }
+    namespace asio {
+        using fibers::this_fiber::detail::get_io_service;
     }
 }   // End of namespace fibio
 

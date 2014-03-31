@@ -12,38 +12,44 @@
 #include <streambuf>
 #include <chrono>
 #include <vector>
-#include <fibio/io/detail/wrapper_base.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/asio/buffer.hpp>
+#include <boost/asio/ssl/stream_base.hpp>
+#include <fibio/fibers/fiber.hpp>
+#include <fibio/fibers/asio/yield.hpp>
+
+namespace boost { namespace asio { namespace ssl {
+    template<typename Stream>
+    class stream;
+}}}
 
 namespace fibio { namespace stream {
     enum duplex_mode {
         full_duplex,
         half_duplex,
     };
-
-    template<typename... Stream>
-    class fiberized_streambuf;
-
-    template<typename... Stream>
-    class fiberized_streambuf<io::fiberized<Stream...>>
+    
+    template<typename Stream>
+    class fiberized_streambuf_base
     : public std::streambuf
-    , public io::fiberized<Stream...>
+    , public Stream
     {
-        typedef io::fiberized<Stream...> base_type;
+        typedef Stream base_type;
     public:
-        typedef io::fiberized<Stream...> stream_type;
+        typedef Stream stream_type;
 
-        fiberized_streambuf()
-        : base_type()
+        fiberized_streambuf_base()
+        : base_type(asio::get_io_service())
         { init_buffers(); }
         
         // For SSL stream, construct with ssl::context
         template<typename Arg>
-        fiberized_streambuf(Arg &arg)
+        fiberized_streambuf_base(Arg &arg)
         : std::streambuf()
-        , base_type(arg)
+        , base_type(asio::get_io_service(), arg)
         { init_buffers(); }
 
-        fiberized_streambuf(fiberized_streambuf &&other)
+        fiberized_streambuf_base(fiberized_streambuf_base &&other)
         // FIXME: GCC 4.8.1 on Ubuntu, std::streambuf doesn't have move constructor
         // and have copy constructor declared as private, that prevents the generation
         // of default move constructor, and makes only untouched(newly-created)
@@ -59,7 +65,7 @@ namespace fibio { namespace stream {
         { init_buffers(); }
         
         /// Destructor flushes buffered data.
-        ~fiberized_streambuf() {
+        ~fiberized_streambuf_base() {
             if (pptr() != pbase())
                 overflow(traits_type::eof());
         }
@@ -71,7 +77,6 @@ namespace fibio { namespace stream {
         duplex_mode get_duplex_mode() const {
             return duplex_mode_;
         }
-
     protected:
         pos_type seekoff(off_type off,
                          std::ios_base::seekdir dir,
@@ -101,8 +106,11 @@ namespace fibio { namespace stream {
             if (duplex_mode_==half_duplex) sync();
             if (gptr() == egptr()) {
                 boost::system::error_code ec;
-                size_t bytes_transferred=base_type::read_some(boost::asio::buffer(&get_buffer_[0]+ putback_max, buffer_size-putback_max),
-                                                              ec);
+                //size_t bytes_transferred=base_type::read_some(boost::asio::buffer(&get_buffer_[0]+ putback_max, buffer_size-putback_max),
+                //                                              ec);
+                size_t bytes_transferred=base_type::async_read_some(boost::asio::buffer(&get_buffer_[0]+ putback_max,
+                                                                                        buffer_size-putback_max),
+                                                                    fibers::asio::yield[ec]);
                 if (ec || bytes_transferred==0) {
                     return traits_type::eof();
                 }
@@ -123,8 +131,10 @@ namespace fibio { namespace stream {
                     return traits_type::not_eof(c);
                 } else {
                     char c_=c;
-                    base_type::write_some(boost::asio::buffer(&c_, 1),
-                                          ec);
+                    //base_type::write_some(boost::asio::buffer(&c_, 1),
+                    //                      ec);
+                    base_type::async_write_some(boost::asio::buffer(&c_, 1),
+                                                fibers::asio::yield[ec]);
                     if (ec)
                         return traits_type::eof();
                     return c;
@@ -134,8 +144,10 @@ namespace fibio { namespace stream {
                 size_t size=pptr() - pbase();
                 while (size > 0)
                 {
-                    size_t bytes_transferred=base_type::write_some(boost::asio::buffer(ptr, size),
-                                                                   ec);
+                    //size_t bytes_transferred=base_type::write_some(boost::asio::buffer(ptr, size),
+                    //                                               ec);
+                    size_t bytes_transferred=base_type::async_write_some(boost::asio::buffer(ptr, size),
+                                                                         fibers::asio::yield[ec]);
                     ptr+=bytes_transferred;
                     size-=bytes_transferred;
                     if (ec)
@@ -192,6 +204,57 @@ namespace fibio { namespace stream {
         std::vector<char> put_buffer_;
         bool unbuffered_=false;
         duplex_mode duplex_mode_=half_duplex;
+    };
+    
+    template<typename Stream>
+    class fiberized_streambuf
+    : public fiberized_streambuf_base<Stream>
+    {
+        typedef fiberized_streambuf_base<Stream> base_type;
+    public:
+        using base_type::base_type;
+    };
+    
+    template<typename Protocol>
+    class fiberized_streambuf<boost::asio::basic_stream_socket<Protocol>>
+    : public fiberized_streambuf_base<boost::asio::basic_stream_socket<Protocol>>
+    {
+        typedef fiberized_streambuf_base<boost::asio::basic_stream_socket<Protocol>> base_type;
+    public:
+
+        using base_type::base_type;
+        
+        template<typename Arg>
+        boost::system::error_code connect(const Arg &arg) {
+            boost::system::error_code ec;
+            base_type::async_connect(arg, fibers::asio::yield[ec]);
+            return ec;
+        }
+    };
+
+    template<typename Stream>
+    class fiberized_streambuf<boost::asio::ssl::stream<Stream>>
+    : public fiberized_streambuf_base<boost::asio::ssl::stream<Stream>>
+    {
+        typedef fiberized_streambuf_base<boost::asio::ssl::stream<Stream>> base_type;
+    public:
+        template<typename Context>
+        fiberized_streambuf(Context &ctx)
+        : base_type(ctx)
+        {}
+        
+        void cancel()
+        { base_type::next_layer().cancel(); }
+        
+        template<typename Arg>
+        boost::system::error_code connect(const Arg &arg) {
+            boost::system::error_code ec;
+            base_type::next_layer().async_connect(arg, fibers::asio::yield[ec]);
+            if(ec) return ec;
+            base_type::async_handshake(boost::asio::ssl::stream_base::client,
+                                       fibers::asio::yield[ec]);
+            return ec;
+        }
     };
 }}  // End of namespace fibio::stream
 

@@ -9,17 +9,17 @@
 #ifndef fibio_stream_iostream_hpp
 #define fibio_stream_iostream_hpp
 
-#include <fibio/io/io.hpp>
 #include <fibio/stream/streambuf.hpp>
-#include <fibio/io/basic_stream_socket.hpp>
-#include <fibio/io/posix/stream_descriptor.hpp>
-#include <fibio/io/local/stream_protocol.hpp>
+#include <boost/asio/ip/basic_resolver.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/posix/stream_descriptor.hpp>
+#include <boost/asio/local/stream_protocol.hpp>
 
 namespace fibio { namespace stream {
     namespace detail {
-        template<typename... Stream>
+        template<typename Stream>
         struct iostream_base {
-            typedef fiberized_streambuf<Stream...> streambuf_t;
+            typedef fiberized_streambuf<Stream> streambuf_t;
             iostream_base()=default;
             iostream_base(iostream_base &&other)
             : sbuf_(std::move(other.sbuf_))
@@ -36,13 +36,13 @@ namespace fibio { namespace stream {
         };
     }
     
-    template<typename... Stream>
+    template<typename Stream>
     class fiberized_iostream
-    : public detail::iostream_base<Stream...>
+    : public detail::iostream_base<Stream>
     , public std::iostream
     {
-        typedef fiberized_streambuf<Stream...> streambuf_t;
-        typedef detail::iostream_base<Stream...> streambase_t;
+        typedef fiberized_streambuf<Stream> streambuf_t;
+        typedef detail::iostream_base<Stream> streambase_t;
     public:
         typedef typename streambuf_t::stream_type stream_type;
         typedef typename stream_type::lowest_layer_type::protocol_type protocol_type;
@@ -73,10 +73,25 @@ namespace fibio { namespace stream {
         boost::system::error_code open(T... x) {
             return this->sbuf_.lowest_layer().open(x...);
         }
+
+        template <typename Arg>
+        auto connect(const Arg &arg) -> decltype(this->sbuf_.connect(arg)) {
+            return this->sbuf_.connect(arg);
+        }
         
-        template <typename... T>
-        auto connect(T... x) -> decltype(this->sbuf_.connect(x...)) {
-            return this->sbuf_.connect(x...);
+        boost::system::error_code connect(const char *host, const char *service) {
+            return connect(std::string(host), std::string(service));
+        }
+        
+        boost::system::error_code connect(const std::string &host, const std::string &service) {
+            boost::system::error_code ec;
+            typedef typename protocol_type::resolver resolver_type;
+            typedef typename resolver_type::query query_type;
+            resolver_type r(asio::get_io_service());
+            query_type q(host, service);
+            typename resolver_type::iterator i=r.async_resolve(q, asio::yield[ec]);
+            if (ec) return ec;
+            return this->sbuf_.connect(i->endpoint());
         }
         
         /**
@@ -101,18 +116,6 @@ namespace fibio { namespace stream {
         inline stream_type &stream_descriptor()
         { return streambuf(); }
         
-        template<typename Rep, typename Period>
-        void set_connect_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { this->sbuf_.set_connect_timeout(timeout_duration); }
-        
-        template<typename Rep, typename Period>
-        void set_read_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { this->sbuf_.set_read_timeout(timeout_duration); }
-        
-        template<typename Rep, typename Period>
-        void set_write_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { this->sbuf_.set_write_timeout(timeout_duration); }
-        
         void set_duplex_mode(duplex_mode dm)
         { this->sbuf_.set_duplex_mode(dm); }
         
@@ -120,35 +123,28 @@ namespace fibio { namespace stream {
         { return this->sbuf_.get_duplex_mode(); }
     };
     
-    template<typename... Stream>
-    fiberized_iostream<Stream...> &operator<<(fiberized_iostream<Stream...> &is, duplex_mode dm) {
+    template<typename Stream>
+    fiberized_iostream<Stream> &operator<<(fiberized_iostream<Stream> &is, duplex_mode dm) {
         is.set_duplex_mode(dm);
         return is;
     }
 
     template<typename Stream>
     struct stream_acceptor {
+        typedef Stream stream_type;
         typedef typename Stream::stream_type socket_type;
-        typedef typename io::fiberized<typename Stream::protocol_type::acceptor> acceptor_type;
-        typedef typename Stream::protocol_type::endpoint endpoint_type;
+        typedef typename stream_type::protocol_type::acceptor acceptor_type;
+        typedef typename stream_type::protocol_type::endpoint endpoint_type;
 
         stream_acceptor(const std::string &s, unsigned short port_num)
-        : acc_(endpoint_type(boost::asio::ip::address::from_string(s.c_str()), port_num))
+        : acc_(asio::get_io_service(),
+               endpoint_type(boost::asio::ip::address::from_string(s.c_str()), port_num))
         {}
         
         stream_acceptor(unsigned short port_num)
-        : acc_(endpoint_type(boost::asio::ip::address(), port_num))
+        : acc_(asio::get_io_service(),
+               endpoint_type(boost::asio::ip::address(), port_num))
         {}
-        
-        template<typename Rep, typename Period>
-        stream_acceptor(const std::string &s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(boost::asio::ip::address::from_string(s.c_str()), port_num))
-        { acc_.set_accept_timeout(timeout_duration); }
-
-        template<typename Rep, typename Period>
-        stream_acceptor(unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(boost::asio::ip::address(), port_num))
-        { acc_.set_accept_timeout(timeout_duration); }
         
         stream_acceptor(stream_acceptor &&other)
         : acc_(std::move(other.acc_))
@@ -160,47 +156,46 @@ namespace fibio { namespace stream {
         void close()
         { acc_.close(); }
         
-        template<typename Rep, typename Period>
-        void set_accept_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { acc_.set_accept_timeout(timeout_duration); }
-        
-        Stream accept() {
-            Stream s;
-            acc_.accept(s.streambuf());
+        stream_type accept() {
+            stream_type s;
+            boost::system::error_code ec;
+            accept(s, ec);
             return s;
         }
         
-        Stream accept(boost::system::error_code &ec) {
-            Stream s;
-            acc_.accept(s.streambuf(), ec);
+        stream_type accept(boost::system::error_code &ec) {
+            stream_type s;
+            accept(s, ec);
             return s;
         }
         
-        void accept(Stream &s)
-        { acc_.accept(s.streambuf()); }
+        void accept(stream_type &s) {
+            boost::system::error_code ec;
+            accept(s, ec);
+        }
         
-        void accept(Stream &s, boost::system::error_code &ec)
-        { acc_.accept(s.streambuf(), ec); }
+        void accept(stream_type &s, boost::system::error_code &ec)
+        { acc_.async_accept(s.streambuf(), asio::yield[ec]); }
         
-        Stream operator()()
+        stream_type operator()()
         { return accept(); }
         
-        Stream operator()(boost::system::error_code &ec)
+        stream_type operator()(boost::system::error_code &ec)
         { return accept(ec); }
         
-        void operator()(Stream &s)
+        void operator()(stream_type &s)
         { accept(s); }
         
-        void operator()(Stream &s, boost::system::error_code &ec)
+        void operator()(stream_type &s, boost::system::error_code &ec)
         { accept(s, ec); }
         
         acceptor_type acc_;
     };
     
     // streams
-    typedef fiberized_iostream<tcp_socket> tcp_stream;
-    typedef fiberized_iostream<posix_stream_descriptor> posix_stream;
-    typedef fiberized_iostream<local_stream_socket> local_stream;
+    typedef fiberized_iostream<boost::asio::ip::tcp::socket> tcp_stream;
+    typedef fiberized_iostream<boost::asio::posix::stream_descriptor> posix_stream;
+    typedef fiberized_iostream<boost::asio::local::stream_protocol::socket> local_stream;
 
     // acceptors
     typedef stream_acceptor<tcp_stream> tcp_stream_acceptor;

@@ -15,6 +15,9 @@ TARGET_LINK_LIBRARIES(test_cq ${FIBIO_LIBS})
 add_executable(test_future test_future.cpp)
 TARGET_LINK_LIBRARIES(test_future ${FIBIO_LIBS})
 
+add_executable(test_asio test_asio.cpp)
+TARGET_LINK_LIBRARIES(test_asio ${FIBIO_LIBS})
+
 find_package(OpenSSL)
 add_executable(test_tcp_stream test_tcp_stream.cpp)
 TARGET_LINK_LIBRARIES(test_tcp_stream ${FIBIO_LIBS} ${OPENSSL_LIBRARIES})

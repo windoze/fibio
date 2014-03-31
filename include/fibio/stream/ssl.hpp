@@ -9,39 +9,27 @@
 #ifndef fibio_stream_ssl_hpp
 #define fibio_stream_ssl_hpp
 
-#include <fibio/io/ssl.hpp>
+#include <boost/asio/ssl.hpp>
 #include <fibio/stream/iostream.hpp>
 
 namespace fibio { namespace stream {
     // Acceptor for SSL over stream socket
     template<typename Stream>
-    struct stream_acceptor<fiberized_iostream<io::fiberized<boost::asio::ssl::stream<Stream>>>> {
-        // Stream is the fiberized_iostream wrap over ssl stream with underlying socket is fiberized<Stream>
-        typedef fiberized_iostream<io::fiberized<boost::asio::ssl::stream<Stream>>> stream_type;
-        // Socket type is io::fiberized<socket>
-        typedef typename io::fiberized<Stream> socket_type;
-        // Acceptor type is the acceptor work with underlying socket
-        typedef typename io::fiberized<typename socket_type::protocol_type::acceptor> acceptor_type;
-        // Endpoint is for underlying socket
-        typedef typename Stream::protocol_type::endpoint endpoint_type;
+    struct stream_acceptor<fiberized_iostream<boost::asio::ssl::stream<Stream>>> {
+        typedef fiberized_iostream<boost::asio::ssl::stream<Stream>> stream_type;
+        typedef Stream socket_type;
+        typedef typename socket_type::protocol_type::acceptor acceptor_type;
+        typedef typename socket_type::protocol_type::endpoint endpoint_type;
         
         stream_acceptor(const std::string &s, unsigned short port_num)
-        : acc_(endpoint_type(boost::asio::ip::address::from_string(s.c_str()), port_num))
+        : acc_(asio::get_io_service(),
+               endpoint_type(boost::asio::ip::address::from_string(s.c_str()), port_num))
         {}
         
         stream_acceptor(unsigned short port_num)
-        : acc_(endpoint_type(boost::asio::ip::address(), port_num))
+        : acc_(asio::get_io_service(),
+               endpoint_type(boost::asio::ip::address(), port_num))
         {}
-        
-        template<typename Rep, typename Period>
-        stream_acceptor(const std::string &s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(boost::asio::ip::address::from_string(s.c_str()), port_num))
-        { acc_.set_accept_timeout(timeout_duration); }
-        
-        template<typename Rep, typename Period>
-        stream_acceptor(unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(boost::asio::ip::address(), port_num))
-        { acc_.set_accept_timeout(timeout_duration); }
         
         stream_acceptor(stream_acceptor &&other)
         : acc_(std::move(other.acc_))
@@ -53,27 +41,29 @@ namespace fibio { namespace stream {
         void close()
         { acc_.close(); }
         
-        template<typename Rep, typename Period>
-        void set_accept_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { acc_.set_accept_timeout(timeout_duration); }
-        
-        stream_type accept() {
-            stream_type s;
-            acc_.accept(s.streambuf().next_layer());
+        stream_type accept(boost::asio::ssl::context &ctx) {
+            stream_type s(ctx);
+            boost::system::error_code ec;
+            async_accept(s, ec);
             return s;
         }
         
-        stream_type accept(boost::system::error_code &ec) {
-            stream_type s;
-            acc_.accept(s.streambuf().next_layer(), ec);
+        stream_type accept(boost::asio::ssl::context &ctx, boost::system::error_code &ec) {
+            stream_type s(ctx);
+            async_accept(s, ec);
             return s;
         }
         
-        void accept(stream_type &s)
-        { acc_.accept(s.streambuf().next_layer()); }
+        void accept(stream_type &s) {
+            boost::system::error_code ec;
+            async_accept(s, ec);
+        }
         
-        void accept(stream_type &s, boost::system::error_code &ec)
-        { acc_.accept(s.streambuf().next_layer(), ec); }
+        void accept(stream_type &s, boost::system::error_code &ec) {
+            acc_.async_accept(s.streambuf().next_layer(), asio::yield[ec]);
+            if(ec) return;
+            s.streambuf().async_handshake(boost::asio::ssl::stream_base::server, asio::yield[ec]);
+        }
         
         stream_type operator()()
         { return accept(); }
@@ -92,7 +82,13 @@ namespace fibio { namespace stream {
 }}
 
 namespace fibio { namespace ssl {
-    typedef stream::fiberized_iostream<io::fiberized<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>> tcp_stream;
+    // Introduce some useful types
+    using boost::asio::ssl::context;
+    using boost::asio::ssl::rfc2818_verification;
+    using boost::asio::ssl::verify_context;
+    typedef boost::asio::ssl::stream_base::handshake_type handshake_type;
+    
+    typedef stream::fiberized_iostream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> tcp_stream;
     typedef stream::stream_acceptor<tcp_stream> tcp_stream_acceptor;
 }}
 

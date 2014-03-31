@@ -10,9 +10,10 @@
 #include <vector>
 #include <chrono>
 #include <boost/random.hpp>
-#include <fibio/fiber.hpp>
-#include <fibio/stream/iostream.hpp>
 #include <boost/lexical_cast.hpp>
+#include <fibio/fiber.hpp>
+#include <fibio/asio.hpp>
+#include <fibio/iostream.hpp>
 #include <fibio/stream/ssl.hpp>
 
 using namespace fibio;
@@ -77,8 +78,6 @@ void ssl_child() {
     });
     ec=str.connect("127.0.0.1", "23457");
     assert(!ec);
-    str.stream_descriptor().handshake(ssl::handshake_type::client, ec);
-    assert(!ec);
     str << "hello" << std::endl;
     for(int i=0; i<100; i++) {
         // Receive a random number from server and send it back
@@ -113,8 +112,6 @@ void ssl_parent() {
     
     ssl::tcp_stream_acceptor acc("127.0.0.1", 23457);
     acc.accept(str, ec);
-    assert(!ec);
-    str.stream_descriptor().handshake(ssl::handshake_type::server, ec);
     assert(!ec);
     std::string line;
     std::getline(str, line);

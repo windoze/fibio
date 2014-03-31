@@ -22,6 +22,7 @@
 #include <boost/system/error_code.hpp>
 #include <boost/coroutine/coroutine.hpp>
 #include <fibio/fibers/exceptions.hpp>
+#include <fibio/fibers/detail/fiber_base.hpp>
 
 #if defined(DEBUG) && !defined(NDEBUG)
 #   define CHECK_CALLER(f) do { if (!f->caller_) assert(false); } while(0)
@@ -68,7 +69,7 @@ namespace fibio { namespace fibers { namespace detail {
     
     typedef std::map<fss_key_t, fss_value_t> fss_map_t;
     
-    struct fiber_object : std::enable_shared_from_this<fiber_object> {
+    struct fiber_object : std::enable_shared_from_this<fiber_object>, fiber_base {
         enum state_t {
             READY,
             RUNNING,
@@ -101,8 +102,9 @@ namespace fibio { namespace fibers { namespace detail {
             }
         }
 
-        void pause();
-        void activate();
+        virtual void pause() override;
+        virtual void activate() override;
+        virtual boost::asio::strand &get_fiber_strand() override;
 
         // Following functions can only be called inside coroutine
         void yield();

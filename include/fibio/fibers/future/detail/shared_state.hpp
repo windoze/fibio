@@ -37,7 +37,8 @@ namespace fibio { namespace fibers { namespace detail {
         boost::atomic< std::size_t >   use_count_;
         mutable mutex                  mtx_;
         mutable condition_variable     waiters_;
-        bool                           ready_;
+        mutable std::mutex             state_mtx_;
+        boost::atomic<bool>            ready_;
         boost::optional< R >           value_;
         boost::exception_ptr           except_;
         
@@ -51,17 +52,19 @@ namespace fibio { namespace fibers { namespace detail {
         {
             //TODO: set broken_exception if future was not already done
             //      notify all waiters
-            if ( ! ready_)
+            if (!ready_) {
+                std::lock_guard<std::mutex> lock(state_mtx_);
                 set_exception_( boost::copy_exception( broken_promise() ) );
+            }
         }
         
         void set_value_( R const& value)
         {
             //TODO: store the value and make the future ready
             //      notify all waiters
-            if ( ready_)
-                boost::throw_exception(
-                                       promise_already_satisfied() );
+            if (ready_)
+                boost::throw_exception(promise_already_satisfied() );
+            std::lock_guard<std::mutex> lock(state_mtx_);
             value_ = value;
             mark_ready_and_notify_();
         }
@@ -71,9 +74,9 @@ namespace fibio { namespace fibers { namespace detail {
         {
             //TODO: store the value and make the future ready
             //      notify all waiters
-            if ( ready_)
-                boost::throw_exception(
-                                       promise_already_satisfied() );
+            if (ready_)
+                boost::throw_exception(promise_already_satisfied() );
+            std::lock_guard<std::mutex> lock(state_mtx_);
             value_ = boost::move( value);
             mark_ready_and_notify_();
         }
@@ -82,9 +85,9 @@ namespace fibio { namespace fibers { namespace detail {
         {
             //TODO: store the value and make the future ready
             //      notify all waiters
-            if ( ready_)
-                boost::throw_exception(
-                                       promise_already_satisfied() );
+            if (ready_)
+                boost::throw_exception(promise_already_satisfied() );
+            std::lock_guard<std::mutex> lock(state_mtx_);
             value_ = boost::move( value);
             mark_ready_and_notify_();
         }
@@ -94,9 +97,9 @@ namespace fibio { namespace fibers { namespace detail {
         {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      done = true, notify all waiters
-            if ( ready_)
-                boost::throw_exception(
-                                       promise_already_satisfied() );
+            if (ready_)
+                boost::throw_exception(promise_already_satisfied());
+            std::lock_guard<std::mutex> lock(state_mtx_);
             except_ = except;
             mark_ready_and_notify_();
         }
@@ -108,8 +111,9 @@ namespace fibio { namespace fibers { namespace detail {
             //      it effectively calls wait_() in order to wait for the result
             //      if it satisfies the requirements of MoveAssignable, the value is moved,
             //      otherwise it is copied
-            wait_( lk);
-            if ( except_)
+            wait_(lk);
+            std::lock_guard<std::mutex> lock(state_mtx_);
+            if (except_)
                 rethrow_exception( except_);
             return value_.get();
         }
@@ -117,8 +121,8 @@ namespace fibio { namespace fibers { namespace detail {
         void wait_( unique_lock< mutex > & lk) const
         {
             //TODO: blocks until the result becomes available
-            while ( ! ready_)
-                waiters_.wait( lk);
+            while (!ready_)
+                waiters_.wait(lk);
         }
         
         template< class Rep, class Period >
@@ -166,7 +170,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: lock mutex
             //      set broken_exception if future was not already done
             //      done = true, notify all waiters
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             owner_destroyed_();
         }
         
@@ -177,7 +181,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      associated with the promise object while updating the promise object
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             set_value_( value);
         }
         
@@ -189,7 +193,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      associated with the promise object while updating the promise object
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             set_value_( boost::move( value) );
         }
 #else
@@ -200,7 +204,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      associated with the promise object while updating the promise object
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             set_value_( boost::move( value) );
         }
 #endif
@@ -212,7 +216,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      associated with the promise object while updating the promise object
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             set_exception_( except);
         }
         
@@ -276,7 +280,8 @@ namespace fibio { namespace fibers { namespace detail {
         boost::atomic< std::size_t >   use_count_;
         mutable mutex           mtx_;
         mutable condition_variable       waiters_;
-        bool                    ready_;
+        mutable std::mutex             state_mtx_;
+        boost::atomic<bool>              ready_;
         R                   *   value_;
         boost::exception_ptr           except_;
         
@@ -290,17 +295,19 @@ namespace fibio { namespace fibers { namespace detail {
         {
             //TODO: set broken_exception if future was not already done
             //      notify all waiters
-            if ( ! ready_)
+            if (!ready_) {
+                std::lock_guard<std::mutex> lock(state_mtx_);
                 set_exception_( boost::copy_exception( broken_promise() ) );
+            }
         }
         
         void set_value_( R & value)
         {
             //TODO: store the value and make the future ready
             //      notify all waiters
-            if ( ready_)
-                boost::throw_exception(
-                                       promise_already_satisfied() );
+            if (ready_)
+                boost::throw_exception(promise_already_satisfied() );
+            std::lock_guard<std::mutex> lock(state_mtx_);
             value_ = & value;
             mark_ready_and_notify_();
         }
@@ -309,9 +316,9 @@ namespace fibio { namespace fibers { namespace detail {
         {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      done = true, notify all waiters
-            if ( ready_)
-                boost::throw_exception(
-                                       promise_already_satisfied() );
+            if (ready_)
+                boost::throw_exception(promise_already_satisfied() );
+            std::lock_guard<std::mutex> lock(state_mtx_);
             except_ = except;
             mark_ready_and_notify_();
         }
@@ -323,9 +330,10 @@ namespace fibio { namespace fibers { namespace detail {
             //      it effectively calls wait_() in order to wait for the result
             //      if it satisfies the requirements of MoveAssignable, the value is moved,
             //      otherwise it is copied
-            wait_( lk);
-            if ( except_)
-                rethrow_exception( except_);
+            wait_(lk);
+            std::lock_guard<std::mutex> lock(state_mtx_);
+            if (except_)
+                rethrow_exception(except_);
             return * value_;
         }
         
@@ -381,7 +389,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: lock mutex
             //      set broken_exception if future was not already done
             //      done = true, notify all waiters
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             owner_destroyed_();
         }
         
@@ -392,7 +400,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      associated with the promise object while updating the promise object
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             set_value_( value);
         }
         
@@ -403,7 +411,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      associated with the promise object while updating the promise object
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             set_exception_( except);
         }
         
@@ -467,7 +475,8 @@ namespace fibio { namespace fibers { namespace detail {
         boost::atomic< std::size_t >   use_count_;
         mutable mutex           mtx_;
         mutable condition_variable       waiters_;
-        bool                    ready_;
+        std::mutex                     state_mtx_;
+        boost::atomic<bool>              ready_;
         boost::exception_ptr           except_;
         
         void mark_ready_and_notify_()
@@ -480,17 +489,19 @@ namespace fibio { namespace fibers { namespace detail {
         {
             //TODO: set broken_exception if future was not already done
             //      notify all waiters
-            if ( ! ready_)
-                set_exception_( boost::copy_exception( broken_promise() ) );
+            if (!ready_) {
+                std::lock_guard<std::mutex> lock(state_mtx_);
+                set_exception_(boost::copy_exception( broken_promise() ) );
+            }
         }
         
         void set_value_()
         {
             //TODO: store the value and make the future ready
             //      notify all waiters
-            if ( ready_)
-                boost::throw_exception(
-                                       promise_already_satisfied() );
+            if (ready_)
+                boost::throw_exception(promise_already_satisfied() );
+            std::lock_guard<std::mutex> lock(state_mtx_);
             mark_ready_and_notify_();
         }
         
@@ -498,9 +509,9 @@ namespace fibio { namespace fibers { namespace detail {
         {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      done = true, notify all waiters
-            if ( ready_)
-                boost::throw_exception(
-                                       promise_already_satisfied() );
+            if (ready_)
+                boost::throw_exception(promise_already_satisfied() );
+            std::lock_guard<std::mutex> lock(state_mtx_);
             except_ = except;
             mark_ready_and_notify_();
         }
@@ -512,12 +523,13 @@ namespace fibio { namespace fibers { namespace detail {
             //      it effectively calls wait_() in order to wait for the result
             //      if it satisfies the requirements of MoveAssignable, the value is moved,
             //      otherwise it is copied
-            wait_( lk);
-            if ( except_)
+            wait_(lk);
+            std::lock_guard<std::mutex> lock(state_mtx_);
+            if (except_)
                 rethrow_exception( except_);
         }
         
-        void wait_( unique_lock< mutex > & lk) const
+        void wait_(unique_lock< mutex > & lk) const
         {
             //TODO: blocks until the result becomes available
             while ( ! ready_)
@@ -568,7 +580,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: lock mutex
             //      set broken_exception if future was not already done
             //      done = true, notify all waiters
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             owner_destroyed_();
         }
         
@@ -579,7 +591,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      associated with the promise object while updating the promise object
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             set_value_();
         }
         
@@ -590,7 +602,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      associated with the promise object while updating the promise object
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
-            unique_lock< mutex > lk( mtx_);
+            //unique_lock< mutex > lk( mtx_);
             set_exception_( except);
         }
         

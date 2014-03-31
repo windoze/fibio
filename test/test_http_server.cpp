@@ -104,7 +104,7 @@ void the_server() {
     // Check exit flag
     while (!should_exit) {
         http_server::connection sc;
-        ec=svr.accept(sc, std::chrono::seconds(1));
+        ec=svr.accept(sc);
         if(ec) {
             if (ec!=boost::asio::error::make_error_code(boost::asio::error::timed_out)) {
                 std::cout << ec << std::endl;
@@ -125,7 +125,7 @@ int main_fiber(int argc, char *argv[]) {
         fibers.create_fiber(the_client);
     }
     fibers.join_all();
-    should_exit=true;
+    //should_exit=true;
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }

@@ -118,15 +118,13 @@ namespace fibio { namespace http { namespace server {
         stream_.close();
     }
     
-    bool server::connection::recv(request &req, uint64_t timeout) {
+    bool server::connection::recv(request &req) {
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
-        stream_.set_read_timeout(std::chrono::microseconds(timeout));
         return req.read(stream_);
     }
     
-    bool server::connection::send(response &resp, uint64_t timeout) {
+    bool server::connection::send(response &resp) {
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
-        stream_.set_write_timeout(std::chrono::microseconds(timeout));
         bool ret=resp.write(stream_);
         if (!resp.keep_alive) {
             stream_.close();
@@ -149,8 +147,7 @@ namespace fibio { namespace http { namespace server {
     , acceptor_(port)
     {}
     
-    boost::system::error_code server::accept(server::connection &sc, uint64_t timeout) {
-        acceptor_.set_accept_timeout(std::chrono::microseconds(timeout));
+    boost::system::error_code server::accept(server::connection &sc) {
         boost::system::error_code ec;
         acceptor_(sc.stream_, ec);
         if (!ec) {
