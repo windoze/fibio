@@ -123,22 +123,6 @@ namespace fibio { namespace fibers { namespace detail {
         
         void throw_on_error();
         
-        struct callback_handler {
-            explicit callback_handler(fibers::detail::fiber_ptr_t fthis)
-            : this_fiber(fibers::detail::fiber_object::current_fiber_->shared_from_this())
-            {
-                this_fiber->state_=BLOCKED;
-            }
-            
-            void operator()(boost::system::error_code ec) {
-                this_fiber->last_error_=ec;
-                this_fiber->state_=fibers::detail::fiber_object::RUNNING;
-                this_fiber->one_step();
-            }
-            
-            fiber_ptr_t this_fiber;
-        };
-        
         scheduler_ptr_t sched_;
         boost::asio::io_service &io_service_;
         boost::asio::io_service::strand fiber_strand_;
