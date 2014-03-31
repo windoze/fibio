@@ -19,7 +19,7 @@
 #include <boost/asio/error.hpp>
 #include <boost/asio/handler_type.hpp>
 #include <boost/throw_exception.hpp>
-#include <fibio/fibers/asio/detail/async_activator.hpp>
+#include <fibio/fibers/detail/fiber_base.hpp>
 
 namespace fibio { namespace fibers { namespace asio { namespace detail {
     template<typename T>
@@ -29,9 +29,7 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
         yield_handler(const yield_t &y)
         : ec_(y.ec_)
         , value_(0)
-        , activator_(std::make_shared<async_activator>(fibio::fibers::detail::get_current_fiber_ptr(),
-                                                       y.timeout_,
-                                                       std::move(y.cancelation_)))
+        , fiber_(fibio::fibers::detail::get_current_fiber_ptr())
         {}
         
         void operator()(T t)
@@ -39,7 +37,7 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
             // Async op completed, resume waiting fiber
             *ec_ = boost::system::error_code();
             *value_ = t;
-            activator_->activate();
+            fiber_->get_fiber_strand().dispatch( std::bind(&fibio::fibers::detail::fiber_base::activate, fiber_) );
         }
         
         void operator()(const boost::system::error_code &ec, T t)
@@ -51,17 +49,13 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
                 *ec_ = ec;
             }
             *value_ = t;
-            activator_->activate();
-        }
-        
-        void start_timer_with_cancelation() {
-            activator_->start_timer_with_cancelation();
+            fiber_->get_fiber_strand().dispatch( std::bind(&fibio::fibers::detail::fiber_base::activate, fiber_) );
         }
         
         //private:
         boost::system::error_code *ec_;
         T *value_;
-        async_activator::ptr_t activator_;
+        fibio::fibers::detail::fiber_base::ptr_t fiber_;
     };
     
     // Completion handler to adapt a void promise as a completion handler.
@@ -71,16 +65,14 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
     public:
         yield_handler(const yield_t &y)
         : ec_(y.ec_)
-        , activator_(std::make_shared<async_activator>(fibio::fibers::detail::get_current_fiber_ptr(),
-                                                       y.timeout_,
-                                                       std::move(y.cancelation_)))
+        , fiber_(fibio::fibers::detail::get_current_fiber_ptr())
         {}
         
         void operator()()
         {
             // Async op completed, resume waiting fiber
             *ec_ = boost::system::error_code();
-            activator_->activate();
+            fiber_->get_fiber_strand().dispatch( std::bind(&fibio::fibers::detail::fiber_base::activate, fiber_) );
         }
         
         void operator()(boost::system::error_code const& ec)
@@ -91,16 +83,12 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
             } else {
                 *ec_ = ec;
             }
-            activator_->activate();
-        }
-        
-        void start_timer_with_cancelation() {
-            activator_->start_timer_with_cancelation();
+            fiber_->get_fiber_strand().dispatch( std::bind(&fibio::fibers::detail::fiber_base::activate, fiber_) );
         }
         
         //private:
         boost::system::error_code *ec_;
-        async_activator::ptr_t activator_;
+        fibio::fibers::detail::fiber_base::ptr_t fiber_;
     };
 }}}}    // End of namespace fibio::fibers::asio::detail
 
@@ -116,7 +104,6 @@ namespace boost { namespace asio {
             out_ec_ = h.ec_;
             if (!out_ec_) h.ec_ = & ec_;
             h.value_ = & value_;
-            h.start_timer_with_cancelation();
         }
         
         type get()
@@ -145,7 +132,6 @@ namespace boost { namespace asio {
         {
             out_ec_ = h.ec_;
             if (!out_ec_) h.ec_ = & ec_;
-            h.start_timer_with_cancelation();
         }
         
         void get()
@@ -180,17 +166,5 @@ namespace boost { namespace asio {
     template<typename ReturnType, typename Arg2>
     struct handler_type<fibio::fibers::asio::yield_t, ReturnType( boost::system::error_code, Arg2)>
     { typedef fibio::fibers::asio::detail::yield_handler<Arg2> type; };
-
-    template <typename Function, typename Result>
-    void asio_handler_invoke(Function function, fibio::fibers::asio::detail::yield_handler<Result>* context)
-    {
-        context->activator_->fiber_->get_fiber_strand().dispatch(function);
-    }
-    
-    template <typename Function>
-    void asio_handler_invoke(Function function, fibio::fibers::asio::detail::yield_handler<void>* context)
-    {
-        context->activator_->fiber_->get_fiber_strand().dispatch(function);
-    }
 }}  // End of namespace boost::asio
 #endif

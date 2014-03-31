@@ -76,10 +76,11 @@
 		2D5A308318E71CD100C5EB41 /* libboost_context-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15D06418E5C7AB00E64B99 /* libboost_context-mt.a */; };
 		2D5A308418E71CD100C5EB41 /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15D06518E5C7AB00E64B99 /* libboost_coroutine-mt.a */; };
 		2D5A308518E71CD100C5EB41 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15D06718E5C7AB00E64B99 /* libboost_system-mt.a */; };
-		2D5A308718E7D66500C5EB41 /* async_activator.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D5A308618E7D66500C5EB41 /* async_activator.hpp */; };
 		2D5A308A18E85E6A00C5EB41 /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD3B6F018CE0EF7009E1F3E /* common.cpp */; };
 		2D5A308B18E85E6A00C5EB41 /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD3B6EB18CDFFA8009E1F3E /* client.cpp */; };
 		2D5A308C18E85E6A00C5EB41 /* server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D131A1D18D1F91A0086156F /* server.cpp */; };
+		2D5A308F18E95EB200C5EB41 /* use_future.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D5A308E18E95EB200C5EB41 /* use_future.hpp */; };
+		2D5A309118E95F3600C5EB41 /* use_future.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D5A309018E95F3600C5EB41 /* use_future.hpp */; };
 		2DD5663D18D870D9002A259D /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DD5663C18D870D9002A259D /* libz.dylib */; };
 		2DD5665018DA1BC6002A259D /* test_fibers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5664E18DA1BC6002A259D /* test_fibers.cpp */; };
 		2DD5666318DB35D3002A259D /* fibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* fibio.dylib */; };
@@ -240,8 +241,10 @@
 		2D5A307018E7162D00C5EB41 /* fiber_base.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = fiber_base.hpp; sourceTree = "<group>"; };
 		2D5A307618E71C0900C5EB41 /* test_asio */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_asio; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D5A307F18E71C4900C5EB41 /* test_asio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_asio.cpp; sourceTree = "<group>"; };
-		2D5A308618E7D66500C5EB41 /* async_activator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = async_activator.hpp; sourceTree = "<group>"; };
 		2D5A308D18E86EAE00C5EB41 /* iostream.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = iostream.hpp; sourceTree = "<group>"; };
+		2D5A308E18E95EB200C5EB41 /* use_future.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = use_future.hpp; sourceTree = "<group>"; };
+		2D5A309018E95F3600C5EB41 /* use_future.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = use_future.hpp; sourceTree = "<group>"; };
+		2D5A309218E9605E00C5EB41 /* asio.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = asio.hpp; sourceTree = "<group>"; };
 		2D6A7BF318E05C5500AC89EC /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		2D7E685F18CCCD5D00B7C4E5 /* concurrent_queue.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = concurrent_queue.hpp; sourceTree = "<group>"; };
 		2D7E686018CCCD5D00B7C4E5 /* fiber.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = fiber.hpp; sourceTree = "<group>"; };
@@ -499,6 +502,7 @@
 			children = (
 				2D5A306C18E7019B00C5EB41 /* detail */,
 				2D5A306F18E7142C00C5EB41 /* yield.hpp */,
+				2D5A308E18E95EB200C5EB41 /* use_future.hpp */,
 			);
 			path = asio;
 			sourceTree = "<group>";
@@ -506,8 +510,8 @@
 		2D5A306C18E7019B00C5EB41 /* detail */ = {
 			isa = PBXGroup;
 			children = (
-				2D5A308618E7D66500C5EB41 /* async_activator.hpp */,
 				2D5A306D18E710C300C5EB41 /* yield.hpp */,
+				2D5A309018E95F3600C5EB41 /* use_future.hpp */,
 			);
 			path = detail;
 			sourceTree = "<group>";
@@ -566,6 +570,7 @@
 			children = (
 				2D7E686018CCCD5D00B7C4E5 /* fiber.hpp */,
 				2D15D0A218E6C95800E64B99 /* future.hpp */,
+				2D5A309218E9605E00C5EB41 /* asio.hpp */,
 				2D5A308D18E86EAE00C5EB41 /* iostream.hpp */,
 				2D7E686118CCCD5D00B7C4E5 /* fibers */,
 				2D7E685E18CCCD5D00B7C4E5 /* concurrent */,
@@ -700,13 +705,14 @@
 				2D5A307118E7162D00C5EB41 /* fiber_base.hpp in Headers */,
 				2D15D0A618E6D0CA00E64B99 /* task_base.hpp in Headers */,
 				2D15D0AA18E6D21600E64B99 /* packaged_task.hpp in Headers */,
-				2D5A308718E7D66500C5EB41 /* async_activator.hpp in Headers */,
 				2D15D0A818E6D17700E64B99 /* task_object.hpp in Headers */,
 				2D15D0A418E6D05D00E64B99 /* shared_state_object.hpp in Headers */,
 				2D15D0AC18E6DB5100E64B99 /* promise.hpp in Headers */,
 				2D5A306E18E710C300C5EB41 /* yield.hpp in Headers */,
+				2D5A309118E95F3600C5EB41 /* use_future.hpp in Headers */,
 				2D15D08A18E6C7BD00E64B99 /* future_status.hpp in Headers */,
 				2D15D08818E6C71D00E64B99 /* shared_state.hpp in Headers */,
+				2D5A308F18E95EB200C5EB41 /* use_future.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1601,6 +1607,7 @@
 				2D5A307E18E71C0900C5EB41 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		2D7E684B18CCCD2D00B7C4E5 /* Build configuration list for PBXProject "fibio" */ = {
 			isa = XCConfigurationList;
