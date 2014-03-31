@@ -31,16 +31,6 @@ namespace fibio { namespace stream {
                endpoint_type(boost::asio::ip::address(), port_num))
         {}
         
-        template<typename Rep, typename Period>
-        stream_acceptor(const std::string &s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(boost::asio::ip::address::from_string(s.c_str()), port_num))
-        { acc_.set_accept_timeout(timeout_duration); }
-        
-        template<typename Rep, typename Period>
-        stream_acceptor(unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(boost::asio::ip::address(), port_num))
-        { acc_.set_accept_timeout(timeout_duration); }
-        
         stream_acceptor(stream_acceptor &&other)
         : acc_(std::move(other.acc_))
         {}
@@ -50,10 +40,6 @@ namespace fibio { namespace stream {
         
         void close()
         { acc_.close(); }
-        
-        template<typename Rep, typename Period>
-        void set_accept_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { acc_.set_accept_timeout(timeout_duration); }
         
         stream_type accept(boost::asio::ssl::context &ctx) {
             stream_type s(ctx);
@@ -74,9 +60,9 @@ namespace fibio { namespace stream {
         }
         
         void accept(stream_type &s, boost::system::error_code &ec) {
-            acc_.async_accept(s.streambuf().next_layer(), asio::yield(ec, accept_timeout_, acc_));
+            acc_.async_accept(s.streambuf().next_layer(), asio::yield[ec]);
             if(ec) return;
-            s.streambuf().async_handshake(boost::asio::ssl::stream_base::server, asio::yield(ec, accept_timeout_, acc_));
+            s.streambuf().async_handshake(boost::asio::ssl::stream_base::server, asio::yield[ec]);
         }
         
         stream_type operator()()
@@ -92,7 +78,6 @@ namespace fibio { namespace stream {
         { accept(s, ec); }
         
         acceptor_type acc_;
-        uint64_t accept_timeout_=0;
     };
 }}
 

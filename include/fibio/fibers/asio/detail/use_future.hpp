@@ -43,7 +43,6 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
         void operator()(T t)
         {
             promise_->set_value(t);
-            //fibio::fibers::detail::scheduler::instance()->run();
         }
         
         void operator()(const boost::system::error_code &ec, T t)
@@ -52,10 +51,6 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
                 promise_->set_exception(boost::copy_exception(boost::system::system_error(ec)));
             else
                 promise_->set_value();
-            
-            // scheduler::run() resumes a ready fiber
-            // invoke scheduler::run() until no fiber was resumed
-            //fibio::fibers::detail::scheduler::instance()->run();
         }
         
         //private:
@@ -79,7 +74,6 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
         void operator()()
         {
             promise_->set_value();
-            //boost::fibers::detail::scheduler::instance()->run();
         }
         
         void operator()(const boost::system::error_code &ec)
@@ -88,10 +82,6 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
                 promise_->set_exception(boost::copy_exception(boost::system::system_error(ec)));
             else
                 promise_->set_value();
-            
-            // scheduler::run() resumes a ready fiber
-            // invoke scheduler::run() until no fiber was resumed
-            //boost::fibers::detail::scheduler::instance()->run();
         }
         
         //private:

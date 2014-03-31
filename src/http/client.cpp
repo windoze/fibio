@@ -121,9 +121,6 @@ namespace fibio { namespace http { namespace client {
     }
 
     boost::system::error_code client::connect(const std::string &server, const std::string &port) {
-        stream_.set_connect_timeout(std::chrono::seconds(10));
-        stream_.set_write_timeout(std::chrono::seconds(10));
-        stream_.set_read_timeout(std::chrono::seconds(10));
         server_=server;
         port_=port;
         return stream_.connect(server, port);
@@ -145,15 +142,12 @@ namespace fibio { namespace http { namespace client {
         return auto_decompress_;
     }
     
-    bool client::send_request(request &req, response &resp, uint64_t timeout) {
+    bool client::send_request(request &req, response &resp) {
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         // Make sure there is no pending data in the last response
         resp.clear();
         req.accept_compressed(auto_decompress_);
         resp.set_auto_decompression(auto_decompress_);
-        stream_.set_connect_timeout(std::chrono::milliseconds(timeout));
-        stream_.set_write_timeout(std::chrono::milliseconds(timeout));
-        stream_.set_read_timeout(std::chrono::milliseconds(timeout));
         if(!req.write(stream_)) return false;
         if (!stream_.is_open() || stream_.eof() || stream_.fail() || stream_.bad()) return false;
         //if (!stream_.is_open()) return false;

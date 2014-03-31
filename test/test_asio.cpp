@@ -10,7 +10,7 @@
 #include <chrono>
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <fibio/fiber.hpp>
-#include <fibio/fibers/asio/yield.hpp>
+#include <fibio/asio.hpp>
 
 using namespace fibio;
 
@@ -27,23 +27,26 @@ int main_fiber(int argc, char *argv[]) {
     my_timer_t timer(asio::get_io_service());
     boost::system::error_code ec;
     {
+        // Async cancelation from another fiber
         timer.expires_from_now(std::chrono::seconds(3));
         
         fiber f(canceler, std::ref(timer));
         
         printf("parent waiting...\n");
         timer.async_wait(asio::yield[ec]);
-        assert(ec.value()==boost::system::errc::operation_canceled);
+        assert(ec==boost::asio::error::make_error_code(boost::asio::error::operation_aborted));
         printf("timer canceled\n");
 
         f.join();
     }
     {
+        // Use future
         timer.expires_from_now(std::chrono::seconds(3));
         printf("parent waiting again...\n");
-        timer.async_wait(asio::yield(ec, std::chrono::seconds(1), timer));
-        printf("timer canceled again\n");
-        assert(ec.value()==boost::system::errc::operation_canceled);
+        future<void> f=timer.async_wait(asio::use_future);
+        future_status status=f.wait_for(std::chrono::seconds(1));
+        assert(status==future_status::timeout);
+        printf("future timeout\n");
     }
     std::cout << "main_fiber exiting" << std::endl;
     return 0;

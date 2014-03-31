@@ -24,23 +24,6 @@ namespace boost { namespace asio { namespace ssl {
 }}}
 
 namespace fibio { namespace stream {
-    namespace detail {
-        template<typename Stream>
-        struct cancelable : public Stream {
-            typedef Stream base_type;
-            using base_type::base_type;
-            void cancel() { base_type::cancel(); }
-        };
-        
-        // HACK: Why boost::asio::ssl::stream doesn't have "cancel"? WTF...
-        template<typename Stream>
-        struct cancelable<boost::asio::ssl::stream<Stream>> : public boost::asio::ssl::stream<Stream> {
-            typedef boost::asio::ssl::stream<Stream> base_type;
-            using base_type::base_type;
-            void cancel() { base_type::next_layer().cancel(); }
-        };
-    }   // End of namespace detail
-    
     enum duplex_mode {
         full_duplex,
         half_duplex,
@@ -49,11 +32,11 @@ namespace fibio { namespace stream {
     template<typename Stream>
     class fiberized_streambuf_base
     : public std::streambuf
-    , public detail::cancelable<Stream>
+    , public Stream
     {
-        typedef detail::cancelable<Stream> base_type;
+        typedef Stream base_type;
     public:
-        typedef typename detail::cancelable<Stream>::base_type stream_type;
+        typedef Stream stream_type;
 
         fiberized_streambuf_base()
         : base_type(asio::get_io_service())
@@ -94,15 +77,6 @@ namespace fibio { namespace stream {
         duplex_mode get_duplex_mode() const {
             return duplex_mode_;
         }
-        
-        template<typename Rep, typename Period>
-        void set_read_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { read_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
-        
-        template<typename Rep, typename Period>
-        void set_write_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { write_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
-        
     protected:
         pos_type seekoff(off_type off,
                          std::ios_base::seekdir dir,
@@ -136,10 +110,7 @@ namespace fibio { namespace stream {
                 //                                              ec);
                 size_t bytes_transferred=base_type::async_read_some(boost::asio::buffer(&get_buffer_[0]+ putback_max,
                                                                                         buffer_size-putback_max),
-                                                                    fibers::asio::yield(ec,
-                                                                                        read_timeout_,
-                                                                                        this
-                                                                                        ));
+                                                                    fibers::asio::yield[ec]);
                 if (ec || bytes_transferred==0) {
                     return traits_type::eof();
                 }
@@ -176,10 +147,7 @@ namespace fibio { namespace stream {
                     //size_t bytes_transferred=base_type::write_some(boost::asio::buffer(ptr, size),
                     //                                               ec);
                     size_t bytes_transferred=base_type::async_write_some(boost::asio::buffer(ptr, size),
-                                                                         fibers::asio::yield(ec,
-                                                                                             write_timeout_,
-                                                                                             this
-                                                                                             ));
+                                                                         fibers::asio::yield[ec]);
                     ptr+=bytes_transferred;
                     size-=bytes_transferred;
                     if (ec)
@@ -236,8 +204,6 @@ namespace fibio { namespace stream {
         std::vector<char> put_buffer_;
         bool unbuffered_=false;
         duplex_mode duplex_mode_=half_duplex;
-        uint64_t read_timeout_=0;
-        uint64_t write_timeout_=0;
     };
     
     template<typename Stream>
@@ -261,16 +227,9 @@ namespace fibio { namespace stream {
         template<typename Arg>
         boost::system::error_code connect(const Arg &arg) {
             boost::system::error_code ec;
-            base_type::async_connect(arg, fibers::asio::yield(ec, connect_timeout_, *this));
+            base_type::async_connect(arg, fibers::asio::yield[ec]);
             return ec;
         }
-        
-        template<typename Rep, typename Period>
-        void set_connect_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { connect_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
-        
-    private:
-        uint64_t connect_timeout_=0;
     };
 
     template<typename Stream>
@@ -290,19 +249,12 @@ namespace fibio { namespace stream {
         template<typename Arg>
         boost::system::error_code connect(const Arg &arg) {
             boost::system::error_code ec;
-            base_type::next_layer().async_connect(arg, fibers::asio::yield(ec, connect_timeout_, *this));
+            base_type::next_layer().async_connect(arg, fibers::asio::yield[ec]);
             if(ec) return ec;
             base_type::async_handshake(boost::asio::ssl::stream_base::client,
-                                       fibers::asio::yield(ec, connect_timeout_, *this));
+                                       fibers::asio::yield[ec]);
             return ec;
         }
-        
-        template<typename Rep, typename Period>
-        void set_connect_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { connect_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
-        
-    private:
-        uint64_t connect_timeout_=0;
     };
 }}  // End of namespace fibio::stream
 

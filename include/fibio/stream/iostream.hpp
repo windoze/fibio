@@ -116,18 +116,6 @@ namespace fibio { namespace stream {
         inline stream_type &stream_descriptor()
         { return streambuf(); }
         
-        template<typename Rep, typename Period>
-        void set_connect_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { this->sbuf_.set_connect_timeout(timeout_duration); }
-        
-        template<typename Rep, typename Period>
-        void set_read_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { this->sbuf_.set_read_timeout(timeout_duration); }
-        
-        template<typename Rep, typename Period>
-        void set_write_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { this->sbuf_.set_write_timeout(timeout_duration); }
-        
         void set_duplex_mode(duplex_mode dm)
         { this->sbuf_.set_duplex_mode(dm); }
         
@@ -158,18 +146,6 @@ namespace fibio { namespace stream {
                endpoint_type(boost::asio::ip::address(), port_num))
         {}
         
-        template<typename Rep, typename Period>
-        stream_acceptor(const std::string &s, unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(boost::asio::ip::address::from_string(s.c_str()), port_num))
-        , accept_timeout_(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count())
-        {}
-
-        template<typename Rep, typename Period>
-        stream_acceptor(unsigned short port_num, const std::chrono::duration<Rep, Period>& timeout_duration)
-        : acc_(endpoint_type(boost::asio::ip::address(), port_num))
-        , accept_timeout_(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count())
-        {}
-        
         stream_acceptor(stream_acceptor &&other)
         : acc_(std::move(other.acc_))
         {}
@@ -179,10 +155,6 @@ namespace fibio { namespace stream {
         
         void close()
         { acc_.close(); }
-        
-        template<typename Rep, typename Period>
-        void set_accept_timeout(const std::chrono::duration<Rep, Period>& timeout_duration)
-        { accept_timeout_=std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count(); }
         
         stream_type accept() {
             stream_type s;
@@ -203,7 +175,7 @@ namespace fibio { namespace stream {
         }
         
         void accept(stream_type &s, boost::system::error_code &ec)
-        { acc_.async_accept(s.streambuf(), asio::yield(ec, accept_timeout_, acc_)); }
+        { acc_.async_accept(s.streambuf(), asio::yield[ec]); }
         
         stream_type operator()()
         { return accept(); }
@@ -218,7 +190,6 @@ namespace fibio { namespace stream {
         { accept(s, ec); }
         
         acceptor_type acc_;
-        uint64_t accept_timeout_=0;
     };
     
     // streams

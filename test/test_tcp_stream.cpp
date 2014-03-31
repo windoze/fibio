@@ -12,6 +12,7 @@
 #include <boost/random.hpp>
 #include <boost/lexical_cast.hpp>
 #include <fibio/fiber.hpp>
+#include <fibio/asio.hpp>
 #include <fibio/iostream.hpp>
 #include <fibio/stream/ssl.hpp>
 

@@ -43,11 +43,7 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
         void operator()(const boost::system::error_code &ec, T t)
         {
             // Async op completed, resume waiting fiber
-            if(ec==boost::asio::error::make_error_code(boost::asio::error::operation_aborted)) {
-                *ec_ = boost::asio::error::make_error_code(boost::asio::error::timed_out);
-            } else {
-                *ec_ = ec;
-            }
+            *ec_ = ec;
             *value_ = t;
             fiber_->get_fiber_strand().dispatch( std::bind(&fibio::fibers::detail::fiber_base::activate, fiber_) );
         }
@@ -78,11 +74,7 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
         void operator()(boost::system::error_code const& ec)
         {
             // Async op completed, resume waiting fiber
-            if(ec==boost::asio::error::make_error_code(boost::asio::error::operation_aborted)) {
-                *ec_ = boost::asio::error::make_error_code(boost::asio::error::timed_out);
-            } else {
-                *ec_ = ec;
-            }
+            *ec_ = ec;
             fiber_->get_fiber_strand().dispatch( std::bind(&fibio::fibers::detail::fiber_base::activate, fiber_) );
         }
         

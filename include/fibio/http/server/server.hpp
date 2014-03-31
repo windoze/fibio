@@ -29,18 +29,10 @@ namespace fibio { namespace http { namespace server {
             connection(connection &&other)=default;
             connection(const connection &)=delete;
             
-            bool recv(request &req, uint64_t timeout=0);
-            bool send(response &resp, uint64_t timeout=0);
+            bool recv(request &req);
+            bool send(response &resp);
             
             void close();
-            
-            template<typename Rep, typename Period>
-            bool recv(request &req, const std::chrono::duration<Rep, Period>& timeout_duration)
-            { return recv(req, std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count()); }
-            
-            template<typename Rep, typename Period>
-            bool send(response &resp, const std::chrono::duration<Rep, Period>& timeout_duration)
-            { return send(resp, std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count()); }
             
             std::string host_;
             stream::tcp_stream stream_;
@@ -48,13 +40,9 @@ namespace fibio { namespace http { namespace server {
         
         server(const std::string &addr, unsigned short port, const std::string &host);
         server(unsigned short port, const std::string &host);
-        boost::system::error_code accept(connection &sc, uint64_t timeout=0);
+        boost::system::error_code accept(connection &sc);
         void close();
         
-        template<typename Rep, typename Period>
-        boost::system::error_code accept(connection &sc, const std::chrono::duration<Rep, Period>& timeout_duration)
-        { return accept(sc, std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count()); }
-
         std::string host_;
         tcp_stream_acceptor acceptor_;
     };

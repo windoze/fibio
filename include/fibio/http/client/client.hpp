@@ -31,11 +31,7 @@ namespace fibio { namespace http { namespace client {
         void set_auto_decompress(bool c);
         bool get_auto_decompress() const;
         
-        bool send_request(request &req, response &resp, uint64_t timeout=0);
-        
-        template<typename Rep, typename Period>
-        bool send_request(request &req, response &resp, const std::chrono::duration<Rep, Period>& timeout_duration)
-        { return send_request(req, resp, std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count()); }
+        bool send_request(request &req, response &resp);
         
         std::string server_;
         std::string port_;
