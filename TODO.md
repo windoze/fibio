@@ -3,21 +3,21 @@ TODO List for Fiberized.IO
 
 BUGS
 ----
-* <del>scheduler::add_thread caused problem, disabled</del>
-* <del>asio returns error_code with system_category, while make_error_code uses generic_category, which makes comparison fail</del>
+* <del>scheduler::add_thread caused problem, disabled(FIXED)</del>
 
 Core
 ----
 
 * Add signal handler to scheduler to handle Ctrl-C/Ctrl-D/...
 * Refine `FIBERIZED_MAIN` macro if we have to determin thread number before starting scheduler
-* <del>Complete `fibio::io::{udp, local_stream, local_datagram}`</del>
+    * make this work under Windows
 * Make `concurrent_queue` fully work between `fiber` and `not-a-fiber`
     * <del>c_q<fibers::mutex, fiber::c_v> can transfer data from outside to fiber, as long as there is no size limit(push won't block)</del>
     * <del>c_q<std::mutex, std::c_v> can transfer data from a fiber to outside, as long as there is no size limit(push won't block)</del>
     * Extra work is still needed to make both directions work with size_limit set
 * Find a way to get stack track for uncaught exception in fiber
-* <del>Future support</del>
+* Find a way to properly implement timeout for async ops
+* <del>Future support(DONE)</del>
 * Logging
     * Async log (high throughput/low reliability)
     * Sync log (low throughput/high reliability)
@@ -27,7 +27,12 @@ Core
 * <del>Make sure `fibio::condition_variable` and `std::condition_variable` can be used to communicate between `fiber` and `not-a-fiber`</del>
     * <del>Make sure `not-a-fiber` can notify `fiber` via `fibio::condition_variable`</del>
     * <del>Make sure `fiber` can notify `not-a-fiber` via `std::condition_variable`</del>
-* <del>Shared mutex(RWLock)</del>
+* Make sure `future` can work between `fiber` and `not-a-fiber`
+* <del>Shared mutex(DONE)</del>
+* Windows support
+    * Windows handle stream(should work with some typedefs)
+    * Windows std stream guard(should work by replacing fd 0,1,2 with handle STDIN,STDOUT,STDERR)
+    * Windows Service control
 
 Protocol
 --------
@@ -44,7 +49,7 @@ Protocol
 * HTTP request router for HTTP server
 * Connection pool
 * HTTPS support
-* <del>SSL support</del>
+* <del>SSL support(DONE)</del>
 
 Utilities
 ---------
