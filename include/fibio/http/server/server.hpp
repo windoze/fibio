@@ -32,6 +32,7 @@ namespace fibio { namespace http { namespace server {
             bool recv(request &req);
             bool send(response &resp);
             
+            bool is_open() const { return stream_.is_open(); }
             void close();
             
             std::string host_;

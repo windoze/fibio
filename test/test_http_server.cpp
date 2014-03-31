@@ -67,9 +67,25 @@ void the_client() {
     }
 }
 
+typedef boost::asio::basic_waitable_timer<std::chrono::steady_clock> watchdog_timer_t;
+
+void servant_watchdog(watchdog_timer_t &timer, http_server::connection &c) {
+    boost::system::error_code ignore_ec;
+    while (c.is_open()) {
+        timer.async_wait(asio::yield[ignore_ec]);
+        // close the stream if timeout
+        if (timer.expires_from_now() <= std::chrono::seconds(0)) {
+            c.close();
+        }
+    }
+}
+
 void servant(http_server::connection sc) {
     http_server::request req;
     int count=0;
+    watchdog_timer_t timer(asio::get_io_service());
+    timer.expires_from_now(std::chrono::seconds(3));
+    fiber watchdog(servant_watchdog, std::ref(timer), std::ref(sc));
     while(sc.recv(req)) {
         //req.write(std::cout);
         //std::cout.flush();
@@ -96,23 +112,28 @@ void servant(http_server::connection sc) {
         sc.stream_.flush();
         count++;
     }
+    watchdog.join();
+}
+
+void main_watchdog(http_server &svr) {
+    while (!should_exit) {
+        this_fiber::sleep_for(std::chrono::seconds(1));
+    }
+    svr.close();
 }
 
 void the_server() {
     http_server svr(23456, "localhost:23456");
+    fiber watchdog(main_watchdog, std::ref(svr));
     boost::system::error_code ec;
     // Check exit flag
     while (!should_exit) {
         http_server::connection sc;
         ec=svr.accept(sc);
-        if(ec) {
-            if (ec!=boost::asio::error::make_error_code(boost::asio::error::timed_out)) {
-                std::cout << ec << std::endl;
-            }
-        } else {
-            fiber(servant, std::move(sc)).detach();
-        }
+        if(ec) break;
+        fiber(servant, std::move(sc)).detach();
     }
+    watchdog.join();
 }
 
 int main_fiber(int argc, char *argv[]) {
@@ -125,7 +146,7 @@ int main_fiber(int argc, char *argv[]) {
         fibers.create_fiber(the_client);
     }
     fibers.join_all();
-    //should_exit=true;
+    should_exit=true;
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }
