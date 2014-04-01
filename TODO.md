@@ -34,22 +34,15 @@ Core
     * Windows std stream guard(should work by replacing fd 0,1,2 with handle STDIN,STDOUT,STDERR)
     * Windows Service control
 
+
+TODO List for auxiliary libraries
+=================================
+
 Protocol
 --------
 
-* Test drive, start with a simple Redis client
-* HTTP client
-    * Cookie
-    * Chunked response
-* HTTP server framework
-    * Chunked resquest (File upload, etc.)
-    * Session store
-    * WebSocket
-    * RESTful service
-* HTTP request router for HTTP server
-* Connection pool
-* HTTPS support
-* <del>SSL support(DONE)</del>
+* HTTP support moved to a separated library at [fibio-http](https://github.com/windoze/fibio-http)
+* SMTP client to send mail
 
 Utilities
 ---------
