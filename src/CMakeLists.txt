@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
-set(SOURCE_LIST)
+
 file(GLOB FIBER_SRC "fiber/*.[ch]pp")
+add_library(fibio ${FIBER_SRC})
+target_link_libraries(fibio ${Boost_LIBRARIES})
+
+find_package(ZLIB REQUIRED)
 file(GLOB HTTP_SRC "http/*.[ch]pp")
-list(APPEND SOURCE_LIST ${FIBER_SRC} ${IO_SRC} ${HTTP_SRC} "../http-parser/http_parser.c")
-add_library(fibio STATIC ${SOURCE_LIST})
+add_library(fibio_http  ${HTTP_SRC} "../http-parser/http_parser.c")
+target_link_libraries(fibio_http ${Boost_LIBRARIES} fibio)

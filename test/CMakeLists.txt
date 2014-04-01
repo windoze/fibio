@@ -23,10 +23,10 @@ add_executable(test_tcp_stream test_tcp_stream.cpp)
 TARGET_LINK_LIBRARIES(test_tcp_stream ${FIBIO_LIBS} ${OPENSSL_LIBRARIES})
 
 add_executable(test_http_client test_http_client.cpp)
-TARGET_LINK_LIBRARIES(test_http_client ${FIBIO_LIBS} ${ZLIB_LIBRARIES})
+TARGET_LINK_LIBRARIES(test_http_client ${FIBIO_LIBS} ${ZLIB_LIBRARIES} fibio_http)
 
 add_executable(test_http_server test_http_server.cpp)
-TARGET_LINK_LIBRARIES(test_http_server ${FIBIO_LIBS} ${ZLIB_LIBRARIES})
+TARGET_LINK_LIBRARIES(test_http_server ${FIBIO_LIBS} ${ZLIB_LIBRARIES} fibio_http)
 
 add_executable(echo_server echo_server.cpp)
 TARGET_LINK_LIBRARIES(echo_server ${FIBIO_LIBS})
