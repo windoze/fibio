@@ -8,13 +8,10 @@ if(APPLE)
 endif(APPLE)
 
 find_package(Threads REQUIRED)
-#set(Boost_USE_STATIC_LIBS on)
-find_package(Boost 1.55.0 COMPONENTS system coroutine context iostreams REQUIRED)
+find_package(Boost 1.55.0 COMPONENTS system coroutine context REQUIRED)
 
 INCLUDE_DIRECTORIES(
     ${Boost_INCLUDE_DIRS}
-    ${ZLIB_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}/http-parser
     ${CMAKE_SOURCE_DIR}/include
 )
 
