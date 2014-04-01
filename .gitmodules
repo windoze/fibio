@@ -1,6 +1,0 @@
-[submodule "asio"]
-	path = asio
-	url = https://github.com/chriskohlhoff/asio.git
-[submodule "http-parser"]
-	path = http-parser
-	url = https://github.com/joyent/http-parser.git
