@@ -38,7 +38,6 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
             *ec_ = boost::system::error_code();
             *value_ = t;
             fiber_->activate();
-            //fiber_->get_fiber_strand().dispatch( std::bind(&fibio::fibers::detail::fiber_base::activate, fiber_) );
         }
         
         void operator()(const boost::system::error_code &ec, T t)
@@ -47,7 +46,6 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
             *ec_ = ec;
             *value_ = t;
             fiber_->activate();
-            //fiber_->get_fiber_strand().dispatch( std::bind(&fibio::fibers::detail::fiber_base::activate, fiber_) );
         }
         
         //private:
@@ -71,7 +69,6 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
             // Async op completed, resume waiting fiber
             *ec_ = boost::system::error_code();
             fiber_->activate();
-            //fiber_->get_fiber_strand().dispatch( std::bind(&fibio::fibers::detail::fiber_base::activate, fiber_) );
         }
         
         void operator()(boost::system::error_code const& ec)
@@ -79,7 +76,6 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
             // Async op completed, resume waiting fiber
             *ec_ = ec;
             fiber_->activate();
-            //fiber_->get_fiber_strand().dispatch( std::bind(&fibio::fibers::detail::fiber_base::activate, fiber_) );
         }
         
         //private:
