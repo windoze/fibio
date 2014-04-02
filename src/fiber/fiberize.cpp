@@ -17,9 +17,9 @@ namespace fibio { namespace fibers { namespace detail {
     , cout_buf_(new sbuf_t())
     , cerr_buf_(new sbuf_t())
     {
-        old_cin_buf_=std::cin.rdbuf(cin_buf_);
-        old_cout_buf_=std::cout.rdbuf(cout_buf_);
-        old_cerr_buf_=std::cerr.rdbuf(cerr_buf_);
+        old_cin_buf_=std::cin.rdbuf(cin_buf_.get());
+        old_cout_buf_=std::cout.rdbuf(cout_buf_.get());
+        old_cerr_buf_=std::cerr.rdbuf(cerr_buf_.get());
         cin_buf_->assign(0);
         cout_buf_->assign(1);
         cerr_buf_->assign(2);
@@ -36,19 +36,5 @@ namespace fibio { namespace fibers { namespace detail {
         std::cin.rdbuf(old_cin_buf_);
         std::cout.rdbuf(old_cout_buf_);
         std::cerr.rdbuf(old_cerr_buf_);
-        delete cin_buf_;
-        delete cout_buf_;
-        delete cerr_buf_;
-    }
-    
-    void fiberized_std_stream_guard::open() {
-        if (cin_buf_->is_open()) {
-            return;
-        }
-        cin_buf_->assign(0);
-        cout_buf_->assign(1);
-        cerr_buf_->assign(2);
-        // Set cerr to unbuffered
-        std::cerr.rdbuf()->pubsetbuf(0, 0);
     }
 }}}   // End of namespace fibio::fibers::detail

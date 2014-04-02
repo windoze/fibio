@@ -10,6 +10,7 @@
 #define fibio_fiberize_hpp
 
 #include <type_traits>
+#include <memory>
 #include <iostream>
 #include <boost/asio/posix/stream_descriptor.hpp>
 #include <fibio/fibers/fiber.hpp>
@@ -19,12 +20,10 @@ namespace fibio { namespace fibers {
     namespace detail {
         struct fiberized_std_stream_guard {
             typedef stream::fiberized_streambuf<boost::asio::posix::stream_descriptor> sbuf_t;
-            typedef sbuf_t *sbuf_ptr_t;
+            typedef std::unique_ptr<sbuf_t> sbuf_ptr_t;
             
             fiberized_std_stream_guard(boost::asio::io_service &iosvc);
             ~fiberized_std_stream_guard();
-            
-            void open();
             
             std::streambuf *old_cin_buf_;
             std::streambuf *old_cout_buf_;
