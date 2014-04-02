@@ -81,8 +81,10 @@ namespace fibio { namespace fibers { namespace detail {
         typedef std::function<void()> entry_t;
         typedef boost::coroutines::coroutine<state_t>::pull_type runner_t;
         typedef boost::coroutines::coroutine<state_t>::push_type caller_t;
+        typedef std::shared_ptr<boost::asio::strand> strand_ptr_t;
         
         fiber_object(scheduler_ptr_t sched, entry_t &&entry);
+        fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, entry_t &&entry);
         ~fiber_object();
         
         void set_name(const std::string &s);
@@ -124,7 +126,7 @@ namespace fibio { namespace fibers { namespace detail {
         static __thread fiber_object *current_fiber_;
 
         scheduler_ptr_t sched_;
-        boost::asio::strand fiber_strand_;
+        strand_ptr_t fiber_strand_;
         std::mutex fiber_mutex_;
         std::atomic<state_t> state_;
         entry_t entry_;

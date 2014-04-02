@@ -46,17 +46,34 @@ namespace fibio { namespace fibers {
     struct fiber {
         typedef uintptr_t id;
         
+        struct attributes {
+            enum scheduling_policy {
+                free,
+                stick_with_parent
+            };
+            scheduling_policy policy;
+            
+            constexpr attributes(scheduling_policy p) : policy(p) {}
+        };
+        
         explicit fiber(fiber &&other) noexcept;
         explicit fiber(scheduler &s, std::function<void()> &&f);
 
 #ifdef NO_VARIADIC_TEMPLATE
         fiber(std::function<void()> &&f);
+        fiber(attributes, std::function<void()> &&f);
 #else
         template<typename Fn, typename... Args>
         explicit fiber(Fn &&fn, Args&&... args) {
             start(detail::wrap(std::forward<Fn>(fn), std::forward<Args>(args)...));
         }
         void start(std::function<void()> &&f);
+
+        template<typename Fn, typename... Args>
+        explicit fiber(attributes attr, Fn &&fn, Args&&... args) {
+            start(attr, detail::wrap(std::forward<Fn>(fn), std::forward<Args>(args)...));
+        }
+        void start(attributes, std::function<void()> &&f);
 #endif
  
         fiber() = default;
@@ -74,7 +91,9 @@ namespace fibio { namespace fibers {
 
         void set_name(const std::string &s);
         std::string get_name();
-      
+        
+    //private:
+        fiber(std::shared_ptr<detail::fiber_object> m);
         std::shared_ptr<detail::fiber_object> m_;
     };
     
@@ -85,7 +104,7 @@ namespace fibio { namespace fibers {
             void sleep_usec(uint64_t usec);
             boost::asio::io_service &get_io_service();
         }
-        
+
         void yield();
         
         fiber::id get_id();

@@ -29,6 +29,17 @@ namespace fibio { namespace fibers { namespace detail {
         return ret;
     }
     
+    fiber_ptr_t scheduler_object::make_fiber(std::shared_ptr<boost::asio::strand> s,std::function<void()> &&entry) {
+        std::lock_guard<std::mutex> guard(m_);
+        fiber_count_++;
+        fiber_ptr_t ret(std::make_shared<fiber_object>(shared_from_this(), s, std::move(entry)));
+        if (!started_) {
+            started_=true;
+        }
+        ret->schedule();
+        return ret;
+    }
+    
     void scheduler_object::start(size_t nthr) {
         std::lock_guard<std::mutex> guard(m_);
         if (threads_.size()>0) {

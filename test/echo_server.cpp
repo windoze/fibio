@@ -74,7 +74,7 @@ void echo_servant(tcp_stream s) {
 
     watchdog_timer_t timer(asio::get_io_service());
     timer.expires_from_now(std::chrono::seconds(3));
-    fiber watchdog(servant_watchdog, std::ref(timer), std::ref(s) );
+    fiber watchdog(fiber::attributes(fiber::attributes::stick_with_parent), servant_watchdog, std::ref(timer), std::ref(s) );
     hello(s);
     std::string line;
     while (std::getline(s, line)) {
@@ -108,7 +108,7 @@ int main_fiber(int argc, char *argv[]) {
     }
     fiber(console).detach();
     tcp_stream_acceptor acc(address, listen_port);
-    fiber watchdog(main_watchdog, std::ref(acc));
+    fiber watchdog(fiber::attributes(fiber::attributes::stick_with_parent), main_watchdog, std::ref(acc));
     while(true) {
         boost::system::error_code ec;
         tcp_stream s=acc(ec);

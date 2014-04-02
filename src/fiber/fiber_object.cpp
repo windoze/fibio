@@ -22,7 +22,16 @@ namespace fibio { namespace fibers { namespace detail {
     
     fiber_object::fiber_object(scheduler_ptr_t sched, entry_t &&entry)
     : sched_(sched)
-    , fiber_strand_(sched_->io_service_)
+    , fiber_strand_(std::make_shared<boost::asio::strand>(sched_->io_service_))
+    , state_(READY)
+    , entry_(std::move(entry))
+    , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1) )
+    , caller_(0)
+    {}
+    
+    fiber_object::fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, entry_t &&entry)
+    : sched_(sched)
+    , fiber_strand_(strand)
     , state_(READY)
     , entry_(std::move(entry))
     , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1) )
@@ -30,7 +39,6 @@ namespace fibio { namespace fibers { namespace detail {
     {}
     
     fiber_object::~fiber_object() {
-        //printf("Destroy fiber 0x%lx \n", reinterpret_cast<unsigned long>(this));
         if (state_!=STOPPED) {
             // std::thread will call std::terminate if deleting a unstopped thread
             std::terminate();
@@ -128,12 +136,12 @@ namespace fibio { namespace fibers { namespace detail {
                 }
             }
             // Post exit message to scheduler
-            fiber_strand_.post(std::bind(&scheduler_object::on_fiber_exit, sched_, shared_from_this()));
+            get_fiber_strand().post(std::bind(&scheduler_object::on_fiber_exit, sched_, shared_from_this()));
         }
     }
     
     boost::asio::strand &fiber_object::get_fiber_strand() {
-        return fiber_strand_;
+        return *fiber_strand_;
     }
     
     // Switch out of fiber context
@@ -293,6 +301,14 @@ namespace fibio { namespace fibers {
     void fiber::start(std::function<void ()> &&f) {
         m_=scheduler::get_instance().m_->make_fiber(std::move(f));
     }
+    void fiber::start(attributes attr, std::function<void ()> &&f) {
+        if (attr.policy==attributes::scheduling_policy::free) {
+            m_=detail::fiber_object::current_fiber_->sched_->make_fiber(std::move(f));
+        } else {
+            m_=detail::fiber_object::current_fiber_->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
+                                                                        std::move(f));
+        }
+    }
 #endif
     
     fiber::fiber(fiber &&other) noexcept
@@ -353,7 +369,7 @@ namespace fibio { namespace fibers {
             throw fiber_exception(boost::system::errc::no_such_process);
         }
         detail::fiber_ptr_t this_fiber=m_;
-        m_->fiber_strand_.post(std::bind(&detail::fiber_object::detach, m_));
+        m_->get_fiber_strand().post(std::bind(&detail::fiber_object::detach, m_));
         m_.reset();
     }
     
