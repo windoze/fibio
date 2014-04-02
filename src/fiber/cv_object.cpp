@@ -10,6 +10,19 @@
 #include <boost/system/error_code.hpp>
 
 namespace fibio { namespace fibers { namespace detail {
+    struct relock_guard {
+        inline relock_guard(mutex_ptr_t mtx, fiber_ptr_t f)
+        : mtx_(mtx)
+        , this_fiber(f)
+        { mtx_->unlock(this_fiber); }
+        
+        inline ~relock_guard()
+        { mtx_->lock(this_fiber); }
+        
+        mutex_ptr_t mtx_;
+        fiber_ptr_t this_fiber;
+    };
+    
     void condition_variable_object::wait(mutex_ptr_t m, fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         if (this_fiber!=m->owner_) {
@@ -18,12 +31,12 @@ namespace fibio { namespace fibers { namespace detail {
         }
         {
             std::lock_guard<std::mutex> lock(m_);
+            // The "suspension of this fiber" is actually happened here, not the pause()
+            // as other will see there is a fiber in the waiting queue.
             suspended_.push_back(suspended_item({m, this_fiber, timer_ptr_t()}));
-            m->raw_unlock(this_fiber);
         }
-        // Make sure the current lock owner is awaken *after* the pause of this fiber
-        this_fiber->pause(m->owner_);
-        m->lock(this_fiber);
+        relock_guard lk(m, this_fiber);
+        this_fiber->pause();
     }
     
     cv_status condition_variable_object::wait_usec(mutex_ptr_t m, fiber_ptr_t this_fiber, uint64_t usec) {
@@ -57,11 +70,9 @@ namespace fibio { namespace fibers { namespace detail {
                 }
                 this_fiber->schedule();
             }));
-            m->raw_unlock(this_fiber);
         }
-        // Make sure the current lock owner is awaken *after* the pause of this fiber
-        this_fiber->pause(m->owner_);
-        m->lock(this_fiber);
+        relock_guard lk(m, this_fiber);
+        this_fiber->pause();
         return ret;
     }
 

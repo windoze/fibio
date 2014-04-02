@@ -102,7 +102,7 @@ namespace fibio { namespace fibers { namespace detail {
             }
         }
 
-        virtual void pause(ptr_t switch_to=ptr_t()) override;
+        virtual void pause() override;
         virtual void activate() override;
         virtual boost::asio::strand &get_fiber_strand() override;
         
@@ -130,7 +130,6 @@ namespace fibio { namespace fibers { namespace detail {
         entry_t entry_;
         runner_t runner_;
         caller_t *caller_;
-        ptr_t switch_to_;
         cleanup_queue_t cleanup_queue_;
         fss_map_t fss_;
         fiber_ptr_t this_ref_;

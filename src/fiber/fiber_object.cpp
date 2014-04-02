@@ -110,12 +110,6 @@ namespace fibio { namespace fibers { namespace detail {
             schedule();
         } else if (s==BLOCKED) {
             // Must make sure this fiber will be posted elsewhere later, otherwise it will hold forever
-            // Activate switch_to_ if it's set
-            if (switch_to_) {
-                ptr_t temp;
-                temp.swap(switch_to_);
-                temp->activate();
-            }
         } else if (s==STOPPED) {
             cleanup_queue_t temp;
             {
@@ -143,8 +137,7 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     // Switch out of fiber context
-    void fiber_object::pause(ptr_t switch_to) {
-        switch_to_=switch_to;
+    void fiber_object::pause() {
         set_state(BLOCKED);
     }
     

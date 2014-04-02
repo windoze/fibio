@@ -29,30 +29,25 @@ namespace fibio { namespace fibers { namespace detail {
         this_fiber->pause();
     }
     
-    void mutex_object::raw_unlock(fiber_ptr_t this_fiber) {
-        CHECK_CALLER(this_fiber);
-        std::lock_guard<std::mutex> lock(m_);
-        if (owner_!=this_fiber) {
-            // This fiber doesn't own the mutex
-            throw lock_error(boost::system::errc::operation_not_permitted);
-        }
-        if (suspended_.empty()) {
-            // Nobody is waiting
-            owner_.reset();
-            return;
-        }
-        // Set new owner and remove it from suspended queue
-        std::swap(owner_, suspended_.front());
-        suspended_.pop_front();
-    }
-    
     void mutex_object::unlock(fiber_ptr_t this_fiber) {
-        raw_unlock(this_fiber);
-        if(owner_) {
-            //owner_->activate();
+        CHECK_CALLER(this_fiber);
+        {
+            std::lock_guard<std::mutex> lock(m_);
+            if (owner_!=this_fiber) {
+                // This fiber doesn't own the mutex
+                throw lock_error(boost::system::errc::operation_not_permitted);
+            }
+            if (suspended_.empty()) {
+                // Nobody is waiting
+                owner_.reset();
+                return;
+            }
+            // Set new owner and remove it from suspended queue
+            std::swap(owner_, suspended_.front());
+            suspended_.pop_front();
             owner_->schedule();
-            this_fiber->yield();
         }
+        this_fiber->yield();
     }
     
     bool mutex_object::try_lock(fiber_ptr_t this_fiber) {
