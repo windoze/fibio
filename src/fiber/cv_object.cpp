@@ -21,7 +21,8 @@ namespace fibio { namespace fibers { namespace detail {
             suspended_.push_back(suspended_item({m, this_fiber, timer_ptr_t()}));
             m->raw_unlock(this_fiber);
         }
-        this_fiber->pause();
+        // Make sure the current lock owner is awaken *after* the pause of this fiber
+        this_fiber->pause(m->owner_);
         m->lock(this_fiber);
     }
     
@@ -58,7 +59,8 @@ namespace fibio { namespace fibers { namespace detail {
             }));
             m->raw_unlock(this_fiber);
         }
-        this_fiber->pause();
+        // Make sure the current lock owner is awaken *after* the pause of this fiber
+        this_fiber->pause(m->owner_);
         m->lock(this_fiber);
         return ret;
     }

@@ -44,12 +44,15 @@ namespace fibio { namespace fibers { namespace detail {
         // Set new owner and remove it from suspended queue
         std::swap(owner_, suspended_.front());
         suspended_.pop_front();
-        owner_->schedule();
     }
     
     void mutex_object::unlock(fiber_ptr_t this_fiber) {
         raw_unlock(this_fiber);
-        this_fiber->yield();
+        if(owner_) {
+            //owner_->activate();
+            owner_->schedule();
+            this_fiber->yield();
+        }
     }
     
     bool mutex_object::try_lock(fiber_ptr_t this_fiber) {

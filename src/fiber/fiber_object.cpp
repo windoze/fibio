@@ -78,10 +78,6 @@ namespace fibio { namespace fibers { namespace detail {
         caller_=0;
     }
     
-    void fiber_object::schedule() {
-        fiber_strand_.post(std::bind(&fiber_object::activate, shared_from_this()));
-    }
-    
     void fiber_object::detach() {
         std::lock_guard<std::mutex> lock(fiber_mutex_);
         if (state_!=STOPPED) {
@@ -113,8 +109,13 @@ namespace fibio { namespace fibers { namespace detail {
             // Post this fiber to the scheduler
             schedule();
         } else if (s==BLOCKED) {
-            // Do nothing
             // Must make sure this fiber will be posted elsewhere later, otherwise it will hold forever
+            // Activate switch_to_ if it's set
+            if (switch_to_) {
+                ptr_t temp;
+                temp.swap(switch_to_);
+                temp->activate();
+            }
         } else if (s==STOPPED) {
             cleanup_queue_t temp;
             {
@@ -142,13 +143,22 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     // Switch out of fiber context
-    void fiber_object::pause() {
+    void fiber_object::pause(ptr_t switch_to) {
+        switch_to_=switch_to;
         set_state(BLOCKED);
     }
     
+    inline void activate_fiber(fiber_ptr_t this_fiber) {
+        this_fiber->state_=fiber_object::READY;
+        this_fiber->one_step();
+    }
+    
     void fiber_object::activate() {
-        state_=READY;
-        one_step();
+        get_fiber_strand().dispatch(std::bind(activate_fiber, shared_from_this()));
+    }
+    
+    void fiber_object::schedule() {
+        get_fiber_strand().post(std::bind(activate_fiber, shared_from_this()));
     }
     
     // Following functions can only be called inside coroutine
@@ -218,7 +228,8 @@ namespace fibio { namespace fibers { namespace detail {
         CHECK_CALLER(this);
         timer_t sleep_timer(get_io_service());
         sleep_timer.expires_from_now(std::chrono::microseconds(usec));
-        sleep_timer.async_wait(fiber_strand_.wrap(std::bind(&fiber_object::activate, shared_from_this())));
+        //sleep_timer.async_wait(fiber_strand_.wrap(std::bind(&fiber_object::activate, shared_from_this())));
+        sleep_timer.async_wait(std::bind(&fiber_object::activate, shared_from_this()));
 
         pause();
     }
