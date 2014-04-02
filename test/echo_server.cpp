@@ -83,6 +83,8 @@ void echo_servant(tcp_stream s) {
         timer.expires_from_now(std::chrono::seconds(3));
     }
     // Join the watchdog fiber, make sure it will not use released stream and timer
+    timer.expires_from_now(std::chrono::seconds(0));
+    timer.cancel();
     watchdog.join();
 }
 
