@@ -87,25 +87,34 @@ namespace fibio { namespace concurrent {
             return true;
         }
         
+        // Push items without blocking
         template<typename InIterator>
-        inline size_type push_n(InIterator ii, size_type nelem) {
+        inline InIterator push_some(InIterator first, InIterator last) {
+            LockType lock(the_mutex_);
+            if (!opened_) {
+                // Cannot push into a closed queue
+                return first;
+            }
+            for( ; first!=last && the_queue_.size()<capacity_; ++first) {
+                the_queue_.push(*first);
+                empty_cv_.notify_one();
+            }
+            return first;
+        }
+        
+        template<typename InIterator>
+        inline bool push_all(InIterator first, InIterator last) {
             LockType lock(the_mutex_);
             if (!opened_) {
                 // Cannot push into a closed queue
                 return false;
             }
-            // Check if the queue is full
-            if(the_queue_.size()>=capacity_)
-            {
-                return false;
-            }
-            nelem=std::min(capacity_-the_queue_.size(), nelem);
-            size_type i=0;
-            for(; i<nelem; i++) {
-                the_queue_.push(*ii);
+            while(first!=last) {
+                the_queue_.push(*first);
                 empty_cv_.notify_one();
+                ++first;
             }
-            return i;
+            return true;
         }
         
         inline bool push(T &&data) {
@@ -321,8 +330,9 @@ namespace fibio { namespace concurrent {
             return false;
         }
 
-            template<typename OutIterator>
-        inline size_type pop_n(OutIterator oi, size_type nelem)
+        // Pop at most nelem items
+        template<typename OutIterator>
+        inline size_type pop_some(OutIterator oi, size_type nelem=size_type(-1))
         {
             LockType lock(the_mutex_);
             if(the_queue_.empty())
