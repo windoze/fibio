@@ -95,13 +95,21 @@ namespace boost { namespace asio {
         // Ensure any exceptions thrown from the handler are propagated back to the
         // caller via the future.
         template<typename Function, typename T>
-        void asio_handler_invoke(Function f, fibio::fibers::asio::detail::promise_handler<T> *h)
+        void fibio_do_handler_invoke(Function f, fibio::fibers::asio::detail::promise_handler<T> h)
         {
-            std::shared_ptr<fibio::fibers::promise<T>> p(h->promise_);
+            std::shared_ptr<fibio::fibers::promise<T>> p(h.promise_);
             try
             { f(); }
             catch (...)
             { p->set_exception(boost::current_exception()); }
+        }
+        
+        template<typename Function, typename T>
+        void asio_handler_invoke(Function f, fibio::fibers::asio::detail::promise_handler<T> *h)
+        {
+            fibio::fiber(fibio_do_handler_invoke<Function, T>,
+                         f,
+                         fibio::fibers::asio::detail::promise_handler<T>(std::move(*h))).detach();
         }
     }   // End of namespace boost::asio::detail
     
