@@ -22,7 +22,7 @@ namespace fibio { namespace fibers {
             typedef stream::fiberized_streambuf<boost::asio::posix::stream_descriptor> sbuf_t;
             typedef std::unique_ptr<sbuf_t> sbuf_ptr_t;
             
-            inline fiberized_std_stream_guard(boost::asio::io_service &iosvc=this_fiber::detail::get_io_service())
+            inline fiberized_std_stream_guard(boost::asio::io_service &iosvc=scheduler::get_instance().get_io_service())
             : old_cin_buf_(0)
             , old_cout_buf_(0)
             , old_cerr_buf_(0)
@@ -61,10 +61,10 @@ namespace fibio { namespace fibers {
         };
     }   // End of namespace fibio::fibers::detail
     
-#ifndef NO_VARIADIC_TEMPLATE
+//#ifndef NO_VARIADIC_TEMPLATE
+#if 0
     template<typename Fn, typename ...Args>
     int fiberize(size_t nthr, Fn &&fn, Args&& ...args) {
-        typedef typename std::result_of<Fn(Args...)>::type ActualRet;
         int ret;
         try {
             fibio::scheduler sched=fibio::scheduler::get_instance();
@@ -83,7 +83,6 @@ namespace fibio { namespace fibers {
     
     template<typename Fn, typename ...Args>
     int fiberize(Fn &&fn, Args&& ...args) {
-        typedef typename std::result_of<Fn(Args...)>::type ActualRet;
         int ret;
         try {
             fibio::scheduler sched=fibio::scheduler::get_instance();
@@ -106,7 +105,7 @@ namespace fibio { namespace fibers {
             fibio::scheduler sched=fibio::scheduler::get_instance();
             sched.start(nthr);
             fibio::fiber f([&](){
-                detail::fiberized_std_stream_guard guard(this_fiber::detail::get_io_service());
+                detail::fiberized_std_stream_guard guard;
                 ret=fn(argc, argv);
             });
             sched.join();
@@ -123,7 +122,7 @@ namespace fibio { namespace fibers {
             fibio::scheduler sched=fibio::scheduler::get_instance();
             sched.start();
             fibio::fiber f([&](){
-                detail::fiberized_std_stream_guard guard(this_fiber::detail::get_io_service());
+                detail::fiberized_std_stream_guard guard;
                 ret=fn(argc, argv);
             });
             sched.join();
