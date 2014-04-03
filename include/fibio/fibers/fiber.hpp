@@ -28,6 +28,8 @@ namespace fibio { namespace fibers {
         scheduler();
         scheduler(std::shared_ptr<detail::scheduler_object>);
         
+        boost::asio::io_service &get_io_service();
+        
         void start(size_t nthr=1);
         void join();
         

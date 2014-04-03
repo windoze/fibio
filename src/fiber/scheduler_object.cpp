@@ -121,6 +121,9 @@ namespace fibio { namespace fibers {
     : m_(m)
     {}
     
+    boost::asio::io_service &scheduler::get_io_service()
+    { return m_->io_service_; }
+    
     void scheduler::start(size_t nthr) {
         m_->start(nthr);
     }
