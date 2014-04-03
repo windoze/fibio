@@ -25,7 +25,7 @@ Core
     * Log4CXX/Log4CPP/Log4CPlus (?)
 * async/await support (?), this is little hard as creating coroutine inside a fiber may interfere with fiber scheduling, need to find a clean solution to support this
 * <del>Make sure `fibio::condition_variable` and `std::condition_variable` can be used to communicate between `fiber` and `not-a-fiber`</del>
-    * <del>Make sure `not-a-fiber` can notify `fiber` via `fibio::condition_variable`</del>
+    * <del>Make sure `not-a-fiber` can notify `fiber` via `fibio::condition_variable`</del>(Only bare-notify works, as mutex only works inside of fibers, should not be big problem as fibio::condition_variable doesn't spuriously wake up waiters)
     * <del>Make sure `fiber` can notify `not-a-fiber` via `std::condition_variable`</del>
 * Make sure `future` can work between `fiber` and `not-a-fiber`
 * <del>Shared mutex(DONE)</del>
