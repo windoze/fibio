@@ -15,6 +15,7 @@
 #include <fibio/asio.hpp>
 #include <fibio/iostream.hpp>
 #include <fibio/stream/ssl.hpp>
+#include <fibio/fiberize.hpp>
 
 using namespace fibio;
 
@@ -130,15 +131,11 @@ void ssl_parent() {
     f.join();
 }
 
-int main_fiber(int argc, char *argv[]) {
+int fibio::main(int argc, char *argv[]) {
     fiber_group fibers;
     fibers.create_fiber(parent);
     fibers.create_fiber(ssl_parent);
     fibers.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
-}
-
-int main(int argc, char *argv[]) {
-    return fiberize(1, main_fiber, argc, argv);
 }

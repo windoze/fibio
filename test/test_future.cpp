@@ -9,10 +9,11 @@
 #include <iostream>
 #include <fibio/fiber.hpp>
 #include <fibio/future.hpp>
+#include <fibio/fiberize.hpp>
 
 using namespace fibio;
 
-int main_fiber(int argc, char *argv[]) {
+int fibio::main(int argc, char *argv[]) {
     // future from a packaged_task
     packaged_task<int()> task([](){ return 7; }); // wrap the function
     future<int> f1 = task.get_future();  // get a future
@@ -39,8 +40,4 @@ int main_fiber(int argc, char *argv[]) {
     assert(n3==9);
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
-}
-
-int main(int argc, char *argv[]) {
-    return fiberize(4, main_fiber, argc, argv);
 }

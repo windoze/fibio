@@ -11,6 +11,7 @@
 #include <chrono>
 #include <boost/random.hpp>
 #include <fibio/fiber.hpp>
+#include <fibio/fiberize.hpp>
 
 using namespace fibio;
 mutex m;
@@ -61,7 +62,9 @@ void parent() {
     //printf("parent():2\n");
 }
 
-int main_fiber(int argc, char *argv[]) {
+int fibio::main(int argc, char *argv[]) {
+    scheduler::get_instance().add_worker_thread(3);
+
     fiber_group fibers;
     fibers.create_fiber(parent);
     for (int i=0; i<100; i++) {
@@ -74,8 +77,4 @@ int main_fiber(int argc, char *argv[]) {
     fibers.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
-}
-
-int main(int argc, char *argv[]) {
-    return fiberize(1, main_fiber, argc, argv);
 }

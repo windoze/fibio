@@ -46,7 +46,7 @@ namespace fibio { namespace concurrent {
             empty_cv_.notify_all();
         }
         
-        inline bool closed() const {
+        inline bool is_open() const {
             LockType lock(the_mutex_);
             return opened_;
         }
@@ -71,21 +71,32 @@ namespace fibio { namespace concurrent {
             return true;
         }
         
-        inline bool try_push(const T &data) {
+        inline bool push(T &&data) {
             LockType lock(the_mutex_);
             if (!opened_) {
                 // Cannot push into a closed queue
                 return false;
             }
-            // Check if the queue is full
-            if(the_queue_.size()>=capacity_)
+            // Wait until queue is closed or not full
+            while((the_queue_.size()>=capacity_) && opened_)
             {
+                full_cv_.wait(lock);
+            }
+            if (!opened_) {
+                // Queue closed
                 return false;
             }
-            the_queue_.push(data);
+            the_queue_.push(std::move(data));
             empty_cv_.notify_one();
             return true;
         }
+        
+        // std::back_inserter support
+        inline void push_back(const T &data)
+        { return push(data); }
+        
+        inline void push_back(T &&data)
+        { return push(std::move(data)); }
         
         // Push items without blocking
         template<typename InIterator>
@@ -117,19 +128,15 @@ namespace fibio { namespace concurrent {
             return true;
         }
         
-        inline bool push(T &&data) {
+        inline bool try_push(const T &data) {
             LockType lock(the_mutex_);
             if (!opened_) {
                 // Cannot push into a closed queue
                 return false;
             }
-            // Wait until queue is closed or not full
-            while((the_queue_.size()>=capacity_) && opened_)
+            // Check if the queue is full
+            if(the_queue_.size()>=capacity_)
             {
-                full_cv_.wait(lock);
-            }
-            if (!opened_) {
-                // Queue closed
                 return false;
             }
             the_queue_.push(std::move(data));
@@ -332,7 +339,7 @@ namespace fibio { namespace concurrent {
 
         // Pop at most nelem items
         template<typename OutIterator>
-        inline size_type pop_some(OutIterator oi, size_type nelem=size_type(-1))
+        inline OutIterator pop_some(OutIterator oi, size_type nelem=size_type(-1))
         {
             LockType lock(the_mutex_);
             if(the_queue_.empty())
@@ -347,7 +354,7 @@ namespace fibio { namespace concurrent {
                 oi++;
                 full_cv_.notify_one();
             }
-            return i;
+            return oi;
         }
         
         inline bool empty() const {

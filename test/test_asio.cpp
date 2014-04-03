@@ -11,6 +11,7 @@
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <fibio/fiber.hpp>
 #include <fibio/asio.hpp>
+#include <fibio/fiberize.hpp>
 
 using namespace fibio;
 
@@ -23,14 +24,14 @@ void canceler(my_timer_t &timer) {
     printf("child exiting...\n");
 }
 
-int main_fiber(int argc, char *argv[]) {
+int fibio::main(int argc, char *argv[]) {
     my_timer_t timer(asio::get_io_service());
     boost::system::error_code ec;
     {
         // Async cancelation from another fiber
         timer.expires_from_now(std::chrono::seconds(3));
         
-        fiber f(canceler, std::ref(timer));
+        fiber f(fiber::attributes(fiber::attributes::stick_with_parent), canceler, std::ref(timer));
         
         printf("parent waiting...\n");
         timer.async_wait(asio::yield[ec]);
@@ -50,8 +51,4 @@ int main_fiber(int argc, char *argv[]) {
     }
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
-}
-
-int main(int argc, char *argv[]) {
-    return fiberize(1, main_fiber, argc, argv);
 }

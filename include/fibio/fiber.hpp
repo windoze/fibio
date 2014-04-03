@@ -16,6 +16,5 @@
 #include <fibio/fibers/barrier.hpp>
 #include <fibio/fibers/fss.hpp>
 #include <fibio/fibers/fiber_group.hpp>
-#include <fibio/fibers/fiberize.hpp>
 
 #endif

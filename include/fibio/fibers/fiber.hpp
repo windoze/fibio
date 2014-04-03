@@ -31,14 +31,10 @@ namespace fibio { namespace fibers {
         void start(size_t nthr=1);
         void join();
         
-        // FIXME: It doesn't work correctly
         void add_worker_thread(size_t nthr=1);
         
         static scheduler get_instance();
         static void reset_instance();
-        
-        void attach_std_stream();
-        void restore_std_stream();
         
         std::shared_ptr<detail::scheduler_object> m_;
     };
@@ -48,8 +44,10 @@ namespace fibio { namespace fibers {
         
         struct attributes {
             enum scheduling_policy {
-                free,
-                stick_with_parent
+                // scheduled freely in this scheduler
+                normal,
+                // always runs in the same thread with parent
+                stick_with_parent,
             };
             scheduling_policy policy;
             

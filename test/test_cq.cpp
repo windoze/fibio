@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <fibio/fiber.hpp>
+#include <fibio/fiberize.hpp>
 #include <fibio/concurrent/concurrent_queue.hpp>
 
 using namespace fibio;
@@ -39,14 +40,12 @@ void parent() {
     assert(s==sum);
 }
 
-int main_fiber(int argc, char *argv[]) {
+int fibio::main(int argc, char *argv[]) {
+    scheduler::get_instance().add_worker_thread(3);
+    
     fiber_group fibers;
     fibers.create_fiber(parent);
     fibers.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
-}
-
-int main(int argc, char *argv[]) {
-    return fiberize(4, main_fiber, argc, argv);
 }

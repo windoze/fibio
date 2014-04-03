@@ -9,8 +9,6 @@ Core
 ----
 
 * Add signal handler to scheduler to handle Ctrl-C/Ctrl-D/...
-* Refine `FIBERIZED_MAIN` macro if we have to determin thread number before starting scheduler
-    * make this work under Windows
 * Make `concurrent_queue` fully work between `fiber` and `not-a-fiber`
     * <del>c_q<fibers::mutex, fiber::c_v> can transfer data from outside to fiber, as long as there is no size limit(push won't block)</del>
     * <del>c_q<std::mutex, std::c_v> can transfer data from a fiber to outside, as long as there is no size limit(push won't block)</del>
@@ -30,6 +28,7 @@ Core
 * Make sure `future` can work between `fiber` and `not-a-fiber`
 * <del>Shared mutex(DONE)</del>
 * Windows support
+    * Default main function, WinMain and ServiceMain, ANSI and Unicode version
     * Windows handle stream(should work with some typedefs)
     * Windows std stream guard(should work by replacing fd 0,1,2 with handle STDIN,STDOUT,STDERR)
     * Windows Service control

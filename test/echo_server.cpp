@@ -11,6 +11,7 @@
 #include <atomic>
 #include <fibio/fiber.hpp>
 #include <fibio/stream/iostream.hpp>
+#include <fibio/fiberize.hpp>
 
 using namespace fibio;
 std::string address("0::0");
@@ -95,7 +96,7 @@ void main_watchdog(tcp_stream_acceptor &acc) {
     acc.close();
 }
 
-int main_fiber(int argc, char *argv[]) {
+int fibio::main(int argc, char *argv[]) {
     if (argc<2) {
         std::cerr << "Usage:" << "\t" << argv[0] << " [address] port" << std::endl;
         return 1;
@@ -106,6 +107,7 @@ int main_fiber(int argc, char *argv[]) {
         address=argv[1];
         listen_port=atoi(argv[2]);
     }
+    scheduler::get_instance().add_worker_thread(3);
     fiber(console).detach();
     tcp_stream_acceptor acc(address, listen_port);
     fiber watchdog(fiber::attributes(fiber::attributes::stick_with_parent), main_watchdog, std::ref(acc));
@@ -117,8 +119,4 @@ int main_fiber(int argc, char *argv[]) {
     }
     watchdog.join();
     return 0;
-}
-
-int main(int argc, char *argv[]) {
-    return fiberize(4, main_fiber, argc, argv);
 }

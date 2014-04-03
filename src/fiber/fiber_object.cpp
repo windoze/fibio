@@ -302,11 +302,29 @@ namespace fibio { namespace fibers {
         m_=scheduler::get_instance().m_->make_fiber(std::move(f));
     }
     void fiber::start(attributes attr, std::function<void ()> &&f) {
-        if (attr.policy==attributes::scheduling_policy::free) {
-            m_=detail::fiber_object::current_fiber_->sched_->make_fiber(std::move(f));
-        } else {
-            m_=detail::fiber_object::current_fiber_->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
-                                                                        std::move(f));
+        switch(attr.policy) {
+            case attributes::scheduling_policy::normal: {
+                if (detail::fiber_object::current_fiber_) {
+                    // use current scheduler if we're in a fiber
+                    m_=detail::fiber_object::current_fiber_->sched_->make_fiber(std::move(f));
+                } else {
+                    // use default scheduler
+                    m_=scheduler::get_instance().m_->make_fiber(std::move(f));
+                }
+                break;
+            }
+            case attributes::scheduling_policy::stick_with_parent: {
+                if (detail::fiber_object::current_fiber_) {
+                    m_=scheduler::get_instance().m_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
+                                                                std::move(f));
+                } else {
+                    m_=detail::fiber_object::current_fiber_->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
+                                                                                std::move(f));
+                }
+                break;
+            }
+            default:
+                break;
         }
     }
 #endif

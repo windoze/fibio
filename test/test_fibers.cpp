@@ -10,6 +10,7 @@
 #include <vector>
 #include <chrono>
 #include <fibio/fiber.hpp>
+#include <fibio/fiberize.hpp>
 
 using namespace fibio;
 
@@ -44,7 +45,8 @@ void ex() {
     throw std::runtime_error("exception from child fiber");
 }
 
-int main_fiber(int argc, char *argv[]) {
+int fibio::main(int argc, char *argv[]) {
+    scheduler::get_instance().add_worker_thread(3);
     fiber_group fibers;
     
     data d1(1);
@@ -102,8 +104,4 @@ int main_fiber(int argc, char *argv[]) {
     assert(d6.n=400);
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
-}
-
-int main(int argc, char *argv[]) {
-    return fiberize(1, main_fiber, argc, argv);
 }

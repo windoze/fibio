@@ -10,6 +10,7 @@
 #include <vector>
 #include <chrono>
 #include <fibio/fiber.hpp>
+#include <fibio/fiberize.hpp>
 
 using namespace fibio;
 
@@ -44,7 +45,9 @@ void parent(mutex &m, condition_variable &cv) {
     f.join();
 }
 
-int main_fiber(int argc, char *argv[]) {
+int fibio::main(int argc, char *argv[]) {
+    scheduler::get_instance().add_worker_thread(3);
+
     mutex m;
     condition_variable cv;
 
@@ -53,8 +56,4 @@ int main_fiber(int argc, char *argv[]) {
     fibers.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
-}
-
-int main(int argc, char *argv[]) {
-    return fiberize(1, main_fiber, argc, argv);
 }
