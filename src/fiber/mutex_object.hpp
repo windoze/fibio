@@ -14,6 +14,11 @@
 #include "fiber_object.hpp"
 
 namespace fibio { namespace fibers { namespace detail {
+    template<typename SuspendedItem>
+    inline bool is_this_fiber(fiber_ptr_t f, const SuspendedItem &si) {
+        return f==si.f_;
+    }
+
     struct mutex_object : std::enable_shared_from_this<mutex_object> {
         void lock(fiber_ptr_t this_fiber);
         bool try_lock(fiber_ptr_t this_fiber);

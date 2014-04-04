@@ -39,6 +39,31 @@ namespace fibio { namespace fibers { namespace detail {
         this_fiber->pause();
     }
     
+    static inline void timeout_handler(fiber_ptr_t this_fiber,
+                                condition_variable_ptr_t this_cv,
+                                timer_ptr_t t,
+                                cv_status &ret,
+                                boost::system::error_code ec)
+    {
+        if(!ec) {
+            // Timeout
+            // Timeout handler, find and remove this fiber from waiting queue
+            std::lock_guard<std::mutex> lock(this_cv->mtx_);
+            ret=cv_status::timeout;
+            // Find and remove this fiber from waiting queue
+            auto i=std::find_if(this_cv->suspended_.begin(),
+                                this_cv->suspended_.end(),
+                                std::bind(is_this_fiber<condition_variable_object::suspended_item>,
+                                          this_fiber,
+                                          std::placeholders::_1)
+                                );
+            if (i!=this_cv->suspended_.end()) {
+                this_cv->suspended_.erase(i);
+            }
+        }
+        this_fiber->schedule();
+    }
+    
     cv_status condition_variable_object::wait_usec(mutex_ptr_t m, fiber_ptr_t this_fiber, uint64_t usec) {
         //CHECK_CALLER(this_fiber);
         cv_status ret=cv_status::no_timeout;
@@ -52,24 +77,12 @@ namespace fibio { namespace fibers { namespace detail {
             suspended_.push_back(suspended_item({m, this_fiber, t}));
             std::shared_ptr<condition_variable_object> this_cv(shared_from_this());
             t->expires_from_now(std::chrono::microseconds(usec));
-            t->async_wait(this_fiber->get_fiber_strand().wrap([this_fiber, this_cv, t, &ret](boost::system::error_code ec){
-                if(!ec) {
-                    // Timeout
-                    // Timeout handler, find and remove this fiber from waiting queue
-                    std::lock_guard<std::mutex> lock(this_cv->mtx_);
-                    ret=cv_status::timeout;
-                    // Find and remove this fiber from waiting queue
-                    auto i=std::find_if(this_cv->suspended_.begin(),
-                                        this_cv->suspended_.end(),
-                                        [this_fiber](const suspended_item &i)->bool{
-                                            return i.f_==this_fiber;
-                                        });
-                    if (i!=this_cv->suspended_.end()) {
-                        this_cv->suspended_.erase(i);
-                    }
-                }
-                this_fiber->schedule();
-            }));
+            t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timeout_handler,
+                                                                        this_fiber,
+                                                                        this_cv,
+                                                                        t,
+                                                                        std::ref(ret),
+                                                                        std::placeholders::_1)));
         }
         relock_guard lk(m, this_fiber);
         this_fiber->pause();
@@ -153,32 +166,34 @@ namespace fibio { namespace fibers {
         impl_->notify_all();
     }
     
+    struct cleanup_handler {
+        condition_variable &c_;
+        std::unique_lock<mutex> l_;
+        
+        cleanup_handler(condition_variable &cond,
+                        std::unique_lock<mutex> lk)
+        : c_(cond)
+        , l_(std::move(lk))
+        {}
+        
+        void operator()() {
+            l_.unlock();
+            c_.notify_all();
+        }
+    };
+    
+    inline void run_cleanup_handler(cleanup_handler *h) {
+        std::unique_ptr<cleanup_handler> ch(h);
+        (*ch)();
+    }
+    
     void notify_all_at_thread_exit(condition_variable &cond,
                                    std::unique_lock<mutex> lk)
     {
         CHECK_CURRENT_FIBER;
-        struct cleanup_handler {
-            condition_variable &c_;
-            std::unique_lock<mutex> l_;
-            
-            cleanup_handler(condition_variable &cond,
-                            std::unique_lock<mutex> lk)
-            : c_(cond)
-            , l_(std::move(lk))
-            {}
-            
-            void operator()() {
-                l_.unlock();
-                c_.notify_all();
-            }
-        };
-        
         if (detail::fiber_object::current_fiber_) {
             cleanup_handler *h=new cleanup_handler(cond, std::move(lk));
-            detail::fiber_object::current_fiber_->add_cleanup_function([&](){
-                (*h)();
-                delete h;
-            });
+            detail::fiber_object::current_fiber_->add_cleanup_function(std::bind(run_cleanup_handler, h));
         }
     }
 }}  // End of namespace fibio::fibers

@@ -195,6 +195,29 @@ namespace fibio { namespace fibers { namespace detail {
         }
         this_fiber->yield();
     }
+    
+    static inline void timed_mutex_timeout_handler(fiber_ptr_t this_fiber,
+                                                   timed_mutex_ptr_t this_mutex,
+                                                   boost::system::error_code ec)
+    {
+        std::lock_guard<std::mutex> lock(this_mutex->mtx_);
+        if (this_mutex->owner_!=this_fiber) {
+            // This fiber doesn't own the mutex
+            // Find and remove this fiber from waiting queue
+            auto i=std::find_if(this_mutex->suspended_.begin(),
+                                this_mutex->suspended_.end(),
+                                std::bind(is_this_fiber<timed_mutex_object::suspended_item>,
+                                          this_fiber,
+                                          std::placeholders::_1)
+                                );
+            if (i!=this_mutex->suspended_.end()) {
+                this_mutex->suspended_.erase(i);
+            }
+        } else {
+            // This fiber should not be in the suspended queue, do nothing
+        }
+        this_fiber->schedule();
+    }
 
     bool timed_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
         CHECK_CALLER(this_fiber);
@@ -213,24 +236,10 @@ namespace fibio { namespace fibers { namespace detail {
             timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
             t->expires_from_now(std::chrono::microseconds(usec));
             std::shared_ptr<timed_mutex_object> this_mutex=shared_from_this();
-            t->async_wait(this_fiber->get_fiber_strand().wrap([this_fiber, this_mutex](boost::system::error_code ec){
-                std::lock_guard<std::mutex> lock(this_mutex->mtx_);
-                if (this_mutex->owner_!=this_fiber) {
-                    // This fiber doesn't own the mutex
-                    // Find and remove this fiber from waiting queue
-                    auto i=std::find_if(this_mutex->suspended_.begin(),
-                                        this_mutex->suspended_.end(),
-                                        [this_fiber](const suspended_item &i)->bool{
-                                            return i.f_==this_fiber;
-                                        });
-                    if (i!=this_mutex->suspended_.end()) {
-                        this_mutex->suspended_.erase(i);
-                    }
-                } else {
-                    // This fiber should not be in the suspended queue, do nothing
-                }
-                this_fiber->schedule();
-            }));
+            t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_mutex_timeout_handler,
+                                                                        this_fiber,
+                                                                        this_mutex,
+                                                                        std::placeholders::_1)));
             suspended_.push_back({this_fiber, t});
         }
         this_fiber->pause();
@@ -309,6 +318,29 @@ namespace fibio { namespace fibers { namespace detail {
         // Cannot acquire the lock now
         return owner_==this_fiber;
     }
+    
+    static inline void timed_recursive_mutex_timeout_handler(fiber_ptr_t this_fiber,
+                                                             timed_recursive_mutex_ptr_t this_mutex,
+                                                             boost::system::error_code ec)
+    {
+        std::lock_guard<std::mutex> lock(this_mutex->mtx_);
+        if (this_mutex->owner_!=this_fiber) {
+            // This fiber doesn't own the mutex
+            // Find and remove this fiber from waiting queue
+            auto i=std::find_if(this_mutex->suspended_.begin(),
+                                this_mutex->suspended_.end(),
+                                std::bind(is_this_fiber<timed_recursive_mutex_object::suspended_item>,
+                                          this_fiber,
+                                          std::placeholders::_1)
+                                );
+            if (i!=this_mutex->suspended_.end()) {
+                this_mutex->suspended_.erase(i);
+            }
+        } else {
+            // This fiber should not be in the suspended queue, do nothing
+        }
+        this_fiber->schedule();
+    }
 
     bool timed_recursive_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
         CHECK_CALLER(this_fiber);
@@ -329,24 +361,10 @@ namespace fibio { namespace fibers { namespace detail {
             timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
             t->expires_from_now(std::chrono::microseconds(usec));
             std::shared_ptr<timed_recursive_mutex_object> this_mutex=shared_from_this();
-            t->async_wait(this_fiber->get_fiber_strand().wrap([this_fiber, this_mutex](boost::system::error_code ec){
-                std::lock_guard<std::mutex> lock(this_mutex->mtx_);
-                if (this_mutex->owner_!=this_fiber) {
-                    // This fiber doesn't own the mutex
-                    // Find and remove this fiber from waiting queue
-                    auto i=std::find_if(this_mutex->suspended_.begin(),
-                                        this_mutex->suspended_.end(),
-                                        [this_fiber](const suspended_item &i)->bool{
-                                            return i.f_==this_fiber;
-                                        });
-                    if (i!=this_mutex->suspended_.end()) {
-                        this_mutex->suspended_.erase(i);
-                    }
-                } else {
-                    // This fiber should not be in the suspended queue, do nothing
-                }
-                this_fiber->schedule();
-            }));
+            t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_recursive_mutex_timeout_handler,
+                                                                        this_fiber,
+                                                                        this_mutex,
+                                                                        std::placeholders::_1)));
             suspended_.push_back({this_fiber, t});
         }
         this_fiber->pause();

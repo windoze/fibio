@@ -40,6 +40,10 @@ namespace fibio { namespace fibers { namespace detail {
         return ret;
     }
     
+    static inline void run_in_this_thread(scheduler_ptr_t pthis) {
+        pthis->io_service_.run();
+    }
+    
     void scheduler_object::start(size_t nthr) {
         std::lock_guard<std::mutex> guard(mtx_);
         if (threads_.size()>0) {
@@ -52,9 +56,7 @@ namespace fibio { namespace fibers { namespace detail {
         scheduler_ptr_t pthis(shared_from_this());
         check_timer->async_wait(std::bind(&scheduler_object::on_check_timer, pthis, check_timer, std::placeholders::_1));
         for(size_t i=0; i<nthr; i++) {
-            threads_.push_back(std::thread([pthis](){
-                pthis->io_service_.run();
-            }));
+            threads_.push_back(std::thread(std::bind(run_in_this_thread, pthis)));
         }
     }
     
@@ -80,9 +82,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<std::mutex> guard(mtx_);
         scheduler_ptr_t pthis(shared_from_this());
         for(size_t i=0; i<nthr; i++) {
-            threads_.push_back(std::thread([pthis](){
-                pthis->io_service_.run();
-            }));
+            threads_.push_back(std::thread(std::bind(run_in_this_thread, pthis)));
         }
     }
     
@@ -103,11 +103,13 @@ namespace fibio { namespace fibers { namespace detail {
             cv_.notify_one();
         }
     }
+    
+    static inline void init_instance() {
+        scheduler_object::the_instance_=std::make_shared<scheduler_object>();
+    }
 
     std::shared_ptr<scheduler_object> scheduler_object::get_instance() {
-        std::call_once(instance_inited_, [](){
-            scheduler_object::the_instance_=std::make_shared<scheduler_object>();
-        });
+        std::call_once(instance_inited_, init_instance);
         return scheduler_object::the_instance_;
     }
 }}} // End of namespace fibio::fibers::detail
