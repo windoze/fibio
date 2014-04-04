@@ -20,8 +20,8 @@
 namespace fibio { namespace fibers { namespace detail {
     struct scheduler_object : std::enable_shared_from_this<scheduler_object> {
         scheduler_object();
-        fiber_ptr_t make_fiber(std::function<void()> &&entry);
-        fiber_ptr_t make_fiber(std::shared_ptr<boost::asio::strand> s, std::function<void()> &&entry);
+        fiber_ptr_t make_fiber(fiber_data_ptr entry);
+        fiber_ptr_t make_fiber(std::shared_ptr<boost::asio::strand> s, fiber_data_ptr entry);
         void start(size_t nthr);
         void join();
         

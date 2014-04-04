@@ -14,6 +14,7 @@
 #include <vector>
 #include <boost/system/error_code.hpp>
 #include <boost/asio/buffer.hpp>
+#include <boost/asio/basic_stream_socket.hpp>
 #include <boost/asio/ssl/stream_base.hpp>
 #include <fibio/fibers/fiber.hpp>
 #include <fibio/fibers/asio/yield.hpp>

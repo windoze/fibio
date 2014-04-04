@@ -23,6 +23,7 @@
 #include <boost/coroutine/coroutine.hpp>
 #include <fibio/fibers/exceptions.hpp>
 #include <fibio/fibers/detail/fiber_base.hpp>
+#include <fibio/fibers/detail/fiber_data.hpp>
 
 #if defined(DEBUG) && !defined(NDEBUG)
 #   define CHECK_CALLER(f) do { if (!f->caller_) assert(false); } while(0)
@@ -84,13 +85,14 @@ namespace fibio { namespace fibers { namespace detail {
         };
         
         typedef std::deque<std::function<void()>> cleanup_queue_t;
-        typedef std::function<void()> entry_t;
+        //typedef std::function<void()> entry_t;
+        typedef fiber_data_ptr entry_t;
         typedef boost::coroutines::coroutine<state_t>::pull_type runner_t;
         typedef boost::coroutines::coroutine<state_t>::push_type caller_t;
         typedef std::shared_ptr<boost::asio::strand> strand_ptr_t;
         
-        fiber_object(scheduler_ptr_t sched, entry_t &&entry);
-        fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, entry_t &&entry);
+        fiber_object(scheduler_ptr_t sched, entry_t entry);
+        fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, entry_t entry);
         ~fiber_object();
         
         void set_name(const std::string &s);

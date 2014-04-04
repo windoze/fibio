@@ -16,14 +16,9 @@
 #include <type_traits>
 #include <boost/asio/io_service.hpp>
 #include <fibio/fibers/detail/forward.hpp>
-#include <fibio/fibers/detail/make_tuple_indices.hpp>
+#include <fibio/fibers/detail/fiber_data.hpp>
 
 namespace fibio { namespace fibers {
-#ifndef NO_VARIADIC_TEMPLATE
-    namespace detail {
-        using fibio::detail::wrap;
-    }
-#endif
     struct scheduler {
         scheduler();
         scheduler(std::shared_ptr<detail::scheduler_object>);
@@ -56,31 +51,51 @@ namespace fibio { namespace fibers {
             constexpr attributes(scheduling_policy p) : policy(p) {}
         };
         
+        template <class F>
+        explicit fiber(F &&f)
+        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f))))
+        {
+            start();
+        }
+        
+        template <class F>
+        fiber(const attributes &attrs, F &&f)
+        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f))))
+        {
+            start(attrs);
+        }
+        
+        template <class F, class Arg, class ...Args>
+        fiber(F&& f, Arg&& arg, Args&&... args)
+        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f)),
+                                        detail::decay_copy(std::forward<Arg>(arg)),
+                                        detail::decay_copy(std::forward<Args>(args))...)
+                )
+        
+        {
+            start();
+        }
+        
+        template <class F, class Arg, class ...Args>
+        fiber(const attributes &attrs, F&& f, Arg&& arg, Args&&... args)
+        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f)),
+                                        detail::decay_copy(std::forward<Arg>(arg)),
+                                        detail::decay_copy(std::forward<Args>(args))...)
+                )
+        {
+            start(attrs);
+        }
+        
         explicit fiber(fiber &&other) noexcept;
-        explicit fiber(scheduler &s, std::function<void()> &&f);
-
-#ifdef NO_VARIADIC_TEMPLATE
-        fiber(std::function<void()> &&f);
-        fiber(attributes, std::function<void()> &&f);
-#else
-        template<typename Fn, typename... Args>
-        explicit fiber(Fn &&fn, Args&&... args) {
-            start(detail::wrap(std::forward<Fn>(fn), std::forward<Args>(args)...));
-        }
-        void start(std::function<void()> &&f);
-
-        template<typename Fn, typename... Args>
-        explicit fiber(attributes attr, Fn &&fn, Args&&... args) {
-            start(attr, detail::wrap(std::forward<Fn>(fn), std::forward<Args>(args)...));
-        }
-        void start(attributes, std::function<void()> &&f);
-#endif
- 
+        explicit fiber(scheduler &s, detail::fiber_data_ptr data);
         fiber() = default;
         fiber(const fiber&) = delete;
         
         fiber& operator=(fiber &&other) noexcept;
         
+        void start();
+        void start(attributes);
+ 
         bool joinable() const noexcept;
         id get_id() const noexcept;
         void join(bool propagate_exception=false);
@@ -93,7 +108,7 @@ namespace fibio { namespace fibers {
         std::string get_name();
         
     //private:
-        fiber(std::shared_ptr<detail::fiber_object> m);
+        detail::fiber_data_ptr data_;
         std::shared_ptr<detail::fiber_object> impl_;
     };
     

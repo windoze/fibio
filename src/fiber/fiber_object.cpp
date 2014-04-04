@@ -20,20 +20,20 @@
 namespace fibio { namespace fibers { namespace detail {
     __thread fiber_object *fiber_object::current_fiber_=0;
     
-    fiber_object::fiber_object(scheduler_ptr_t sched, entry_t &&entry)
+    fiber_object::fiber_object(scheduler_ptr_t sched, entry_t entry)
     : sched_(sched)
     , fiber_strand_(std::make_shared<boost::asio::strand>(sched_->io_service_))
     , state_(READY)
-    , entry_(std::move(entry))
+    , entry_(entry)
     , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1) )
     , caller_(0)
     {}
     
-    fiber_object::fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, entry_t &&entry)
+    fiber_object::fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, entry_t entry)
     : sched_(sched)
     , fiber_strand_(strand)
     , state_(READY)
-    , entry_(std::move(entry))
+    , entry_(entry)
     , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1) )
     , caller_(0)
     {}
@@ -62,7 +62,7 @@ namespace fibio { namespace fibers { namespace detail {
         // Now we're out of constructor
         caller_=&c;
         try {
-            entry_();
+            entry_->run();
         } catch(const boost::coroutines::detail::forced_unwind&) {
             // Boost.Coroutine requirement
             throw;
@@ -289,37 +289,28 @@ namespace fibio { namespace fibers { namespace detail {
 }}}   // End of namespace fibio::fibers::detail
 
 namespace fibio { namespace fibers {
-#ifdef NO_VARIADIC_TEMPLATE
-    fiber::fiber(std::function<void()> &&f)
-    : m_(scheduler::get_instance().m_->make_fiber(std::move(f)))
-    {}
-    
-    fiber::fiber(scheduler &s, std::function<void()> &&f)
-    : m_(s.m_->make_fiber(std::move(f)))
-    {}
-#else
-    void fiber::start(std::function<void ()> &&f) {
-        impl_=scheduler::get_instance().impl_->make_fiber(std::move(f));
+    void fiber::start() {
+        impl_=scheduler::get_instance().impl_->make_fiber(data_);
     }
-    void fiber::start(attributes attr, std::function<void ()> &&f) {
+    void fiber::start(attributes attr) {
         switch(attr.policy) {
             case attributes::scheduling_policy::normal: {
                 if (detail::fiber_object::current_fiber_) {
                     // use current scheduler if we're in a fiber
-                    impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(std::move(f));
+                    impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(data_);
                 } else {
                     // use default scheduler
-                    impl_=scheduler::get_instance().impl_->make_fiber(std::move(f));
+                    impl_=scheduler::get_instance().impl_->make_fiber(data_);
                 }
                 break;
             }
             case attributes::scheduling_policy::stick_with_parent: {
                 if (detail::fiber_object::current_fiber_) {
                     impl_=scheduler::get_instance().impl_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
-                                                                std::move(f));
+                                                                      data_);
                 } else {
                     impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
-                                                                                std::move(f));
+                                                                                   data_);
                 }
                 break;
             }
@@ -327,15 +318,17 @@ namespace fibio { namespace fibers {
                 break;
         }
     }
-#endif
     
     fiber::fiber(fiber &&other) noexcept
-    : impl_(std::move(other.impl_))
+    : data_(std::move(other.data_))
+    , impl_(std::move(other.impl_))
     {}
     
-    fiber::fiber(fibio::fibers::scheduler &s, std::function<void ()> &&f)
-    : impl_(s.impl_->make_fiber(std::move(f)))
+    /*
+    fiber::fiber(fibio::fibers::scheduler &s, )
+    : impl_(s.impl_->make_fiber(data_))
     {}
+     */
     
     fiber& fiber::operator=(fiber &&other) noexcept {
         if (joinable()) {
