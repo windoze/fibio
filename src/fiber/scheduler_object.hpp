@@ -32,7 +32,7 @@ namespace fibio { namespace fibers { namespace detail {
         
         static std::shared_ptr<scheduler_object> get_instance();
         
-        std::mutex m_;
+        std::mutex mtx_;
         std::condition_variable cv_;
         std::vector<std::thread> threads_;
         boost::asio::io_service io_service_;

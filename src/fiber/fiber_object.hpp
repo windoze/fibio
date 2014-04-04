@@ -127,7 +127,7 @@ namespace fibio { namespace fibers { namespace detail {
 
         scheduler_ptr_t sched_;
         strand_ptr_t fiber_strand_;
-        std::mutex fiber_mutex_;
+        std::mutex mtx_;
         std::atomic<state_t> state_;
         entry_t entry_;
         runner_t runner_;

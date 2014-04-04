@@ -13,7 +13,7 @@ namespace fibio { namespace fibers { namespace detail {
     void mutex_object::lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         {
-            std::lock_guard<std::mutex> lock(m_);
+            std::lock_guard<std::mutex> lock(mtx_);
             if (owner_==this_fiber) {
                 throw lock_error(boost::system::errc::resource_deadlock_would_occur);
             } else if(!owner_) {
@@ -32,7 +32,7 @@ namespace fibio { namespace fibers { namespace detail {
     void mutex_object::unlock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         {
-            std::lock_guard<std::mutex> lock(m_);
+            std::lock_guard<std::mutex> lock(mtx_);
             if (owner_!=this_fiber) {
                 // This fiber doesn't own the mutex
                 throw lock_error(boost::system::errc::operation_not_permitted);
@@ -52,7 +52,7 @@ namespace fibio { namespace fibers { namespace detail {
     
     bool mutex_object::try_lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        std::lock_guard<std::mutex> lock(m_);
+        std::lock_guard<std::mutex> lock(mtx_);
         if (owner_==this_fiber) {
             // This fiber already owns the mutex
         } else if(!owner_) {
@@ -67,7 +67,7 @@ namespace fibio { namespace fibers { namespace detail {
     void recursive_mutex_object::lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         {
-            std::lock_guard<std::mutex> lock(m_);
+            std::lock_guard<std::mutex> lock(mtx_);
             if (owner_==this_fiber) {
                 ++level_;
                 return;
@@ -90,7 +90,7 @@ namespace fibio { namespace fibers { namespace detail {
     void recursive_mutex_object::unlock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         {
-            std::lock_guard<std::mutex> lock(m_);
+            std::lock_guard<std::mutex> lock(mtx_);
             if (owner_!=this_fiber) {
                 // This fiber doesn't own the mutex
                 throw lock_error(boost::system::errc::operation_not_permitted);
@@ -117,7 +117,7 @@ namespace fibio { namespace fibers { namespace detail {
     
     bool recursive_mutex_object::try_lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        std::lock_guard<std::mutex> lock(m_);
+        std::lock_guard<std::mutex> lock(mtx_);
         if (owner_==this_fiber) {
             // This fiber already owns the mutex, increase recursive level
             ++level_;
@@ -136,7 +136,7 @@ namespace fibio { namespace fibers { namespace detail {
     void timed_mutex_object::lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         {
-            std::lock_guard<std::mutex> lock(m_);
+            std::lock_guard<std::mutex> lock(mtx_);
             if (owner_==this_fiber) {
                 throw lock_error(boost::system::errc::resource_deadlock_would_occur);
             } else if(!owner_) {
@@ -154,7 +154,7 @@ namespace fibio { namespace fibers { namespace detail {
 
     bool timed_mutex_object::try_lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        std::lock_guard<std::mutex> lock(m_);
+        std::lock_guard<std::mutex> lock(mtx_);
         if (owner_==this_fiber) {
             // This fiber already owns the mutex
             return true;
@@ -171,7 +171,7 @@ namespace fibio { namespace fibers { namespace detail {
     void timed_mutex_object::unlock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         {
-            std::lock_guard<std::mutex> lock(m_);
+            std::lock_guard<std::mutex> lock(mtx_);
             if (owner_!=this_fiber) {
                 // This fiber doesn't own the mutex
                 throw lock_error(boost::system::errc::operation_not_permitted);
@@ -199,7 +199,7 @@ namespace fibio { namespace fibers { namespace detail {
     bool timed_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
         CHECK_CALLER(this_fiber);
         {
-            std::lock_guard<std::mutex> lock(m_);
+            std::lock_guard<std::mutex> lock(mtx_);
             if (owner_==this_fiber) {
                 throw lock_error(boost::system::errc::resource_deadlock_would_occur);
             } else if(!owner_) {
@@ -214,7 +214,7 @@ namespace fibio { namespace fibers { namespace detail {
             t->expires_from_now(std::chrono::microseconds(usec));
             std::shared_ptr<timed_mutex_object> this_mutex=shared_from_this();
             t->async_wait(this_fiber->get_fiber_strand().wrap([this_fiber, this_mutex](boost::system::error_code ec){
-                std::lock_guard<std::mutex> lock(this_mutex->m_);
+                std::lock_guard<std::mutex> lock(this_mutex->mtx_);
                 if (this_mutex->owner_!=this_fiber) {
                     // This fiber doesn't own the mutex
                     // Find and remove this fiber from waiting queue
@@ -241,7 +241,7 @@ namespace fibio { namespace fibers { namespace detail {
     void timed_recursive_mutex_object::lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         {
-            std::lock_guard<std::mutex> lock(m_);
+            std::lock_guard<std::mutex> lock(mtx_);
             if (owner_==this_fiber) {
                 ++level_;
                 return;
@@ -262,7 +262,7 @@ namespace fibio { namespace fibers { namespace detail {
     void timed_recursive_mutex_object::unlock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         {
-            std::lock_guard<std::mutex> lock(m_);
+            std::lock_guard<std::mutex> lock(mtx_);
             if (owner_!=this_fiber) {
                 // This fiber doesn't own the mutex
                 throw lock_error(boost::system::errc::operation_not_permitted);
@@ -296,7 +296,7 @@ namespace fibio { namespace fibers { namespace detail {
     
     bool timed_recursive_mutex_object::try_lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        std::lock_guard<std::mutex> lock(m_);
+        std::lock_guard<std::mutex> lock(mtx_);
         if (owner_==this_fiber) {
             // This fiber already owns the mutex, increase recursive level
             ++level_;
@@ -313,7 +313,7 @@ namespace fibio { namespace fibers { namespace detail {
     bool timed_recursive_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
         CHECK_CALLER(this_fiber);
         {
-            std::lock_guard<std::mutex> lock(m_);
+            std::lock_guard<std::mutex> lock(mtx_);
             if (owner_==this_fiber) {
                 ++level_;
                 return true;
@@ -330,7 +330,7 @@ namespace fibio { namespace fibers { namespace detail {
             t->expires_from_now(std::chrono::microseconds(usec));
             std::shared_ptr<timed_recursive_mutex_object> this_mutex=shared_from_this();
             t->async_wait(this_fiber->get_fiber_strand().wrap([this_fiber, this_mutex](boost::system::error_code ec){
-                std::lock_guard<std::mutex> lock(this_mutex->m_);
+                std::lock_guard<std::mutex> lock(this_mutex->mtx_);
                 if (this_mutex->owner_!=this_fiber) {
                     // This fiber doesn't own the mutex
                     // Find and remove this fiber from waiting queue

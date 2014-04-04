@@ -19,7 +19,7 @@ namespace fibio { namespace fibers { namespace detail {
     {}
     
     fiber_ptr_t scheduler_object::make_fiber(std::function<void()> &&entry) {
-        std::lock_guard<std::mutex> guard(m_);
+        std::lock_guard<std::mutex> guard(mtx_);
         fiber_count_++;
         fiber_ptr_t ret(std::make_shared<fiber_object>(shared_from_this(), std::move(entry)));
         if (!started_) {
@@ -30,7 +30,7 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     fiber_ptr_t scheduler_object::make_fiber(std::shared_ptr<boost::asio::strand> s,std::function<void()> &&entry) {
-        std::lock_guard<std::mutex> guard(m_);
+        std::lock_guard<std::mutex> guard(mtx_);
         fiber_count_++;
         fiber_ptr_t ret(std::make_shared<fiber_object>(shared_from_this(), s, std::move(entry)));
         if (!started_) {
@@ -41,7 +41,7 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void scheduler_object::start(size_t nthr) {
-        std::lock_guard<std::mutex> guard(m_);
+        std::lock_guard<std::mutex> guard(mtx_);
         if (threads_.size()>0) {
             // Already started
             return;
@@ -61,7 +61,7 @@ namespace fibio { namespace fibers { namespace detail {
     void scheduler_object::join() {
         {
             // Wait until there is no running fiber
-            std::unique_lock<std::mutex> lock(m_);
+            std::unique_lock<std::mutex> lock(mtx_);
             while (started_ && fiber_count_>0) {
                 cv_.wait(lock);
             }
@@ -77,7 +77,7 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void scheduler_object::add_thread(size_t nthr) {
-        std::lock_guard<std::mutex> guard(m_);
+        std::lock_guard<std::mutex> guard(mtx_);
         scheduler_ptr_t pthis(shared_from_this());
         for(size_t i=0; i<nthr; i++) {
             threads_.push_back(std::thread([pthis](){
@@ -87,14 +87,14 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void scheduler_object::on_fiber_exit(fiber_ptr_t p) {
-        std::lock_guard<std::mutex> guard(m_);
+        std::lock_guard<std::mutex> guard(mtx_);
         fiber_count_--;
         // Release this_ref for detached fibers
         p->this_ref_.reset();
     }
     
     void scheduler_object::on_check_timer(timer_ptr_t check_timer, boost::system::error_code ec) {
-        std::lock_guard<std::mutex> guard(m_);
+        std::lock_guard<std::mutex> guard(mtx_);
         if (fiber_count_>0 || !started_) {
             check_timer->expires_from_now(std::chrono::milliseconds(50));
             check_timer->async_wait(std::bind(&scheduler_object::on_check_timer, shared_from_this(), check_timer, std::placeholders::_1));
