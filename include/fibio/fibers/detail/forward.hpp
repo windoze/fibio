@@ -9,16 +9,7 @@
 #ifndef fibio_fibers_detail_forward_hpp
 #define fibio_fibers_detail_forward_hpp
 
-#include <functional>
-#include <chrono>
-#include <memory>
-#include <boost/system/error_code.hpp>
-#include <boost/system/system_error.hpp>
 #include <boost/asio/io_service.hpp>
-#include <boost/asio/basic_waitable_timer.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ip/udp.hpp>
-#include <boost/asio/ip/icmp.hpp>
 
 namespace fibio { namespace fibers { namespace detail {
     struct scheduler_object;
