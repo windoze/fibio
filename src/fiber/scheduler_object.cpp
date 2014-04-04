@@ -114,26 +114,26 @@ namespace fibio { namespace fibers { namespace detail {
 
 namespace fibio { namespace fibers {
     scheduler::scheduler()
-    : m_(std::make_shared<detail::scheduler_object>())
+    : impl_(std::make_shared<detail::scheduler_object>())
     {}
     
-    scheduler::scheduler(std::shared_ptr<detail::scheduler_object> m)
-    : m_(m)
+    scheduler::scheduler(std::shared_ptr<detail::scheduler_object> impl)
+    : impl_(impl)
     {}
     
     boost::asio::io_service &scheduler::get_io_service()
-    { return m_->io_service_; }
+    { return impl_->io_service_; }
     
     void scheduler::start(size_t nthr) {
-        m_->start(nthr);
+        impl_->start(nthr);
     }
     
     void scheduler::join() {
-        m_->join();
+        impl_->join();
     }
     
     void scheduler::add_worker_thread(size_t nthr) {
-        m_->add_thread(nthr);
+        impl_->add_thread(nthr);
     }
     
     scheduler scheduler::get_instance() {

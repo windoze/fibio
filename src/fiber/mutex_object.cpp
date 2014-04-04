@@ -357,53 +357,53 @@ namespace fibio { namespace fibers { namespace detail {
 
 namespace fibio { namespace fibers {
     mutex::mutex()
-    : m_(std::make_shared<detail::mutex_object>())
+    : impl_(std::make_shared<detail::mutex_object>())
     {}
     
     void mutex::lock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            m_->lock(detail::fiber_object::current_fiber_->shared_from_this());
+            impl_->lock(detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
     void mutex::unlock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            m_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
+            impl_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
     bool mutex::try_lock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            return m_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
+            return impl_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
         }
         return false;
     }
     
     timed_mutex::timed_mutex()
-    : m_(std::make_shared<detail::timed_mutex_object>())
+    : impl_(std::make_shared<detail::timed_mutex_object>())
     {}
     
     void timed_mutex::lock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            m_->lock(detail::fiber_object::current_fiber_->shared_from_this());
+            impl_->lock(detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
     void timed_mutex::unlock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            m_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
+            impl_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
     bool timed_mutex::try_lock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            return m_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
+            return impl_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
         }
         return false;
     }
@@ -411,59 +411,59 @@ namespace fibio { namespace fibers {
     bool timed_mutex::try_lock_usec(uint64_t usec) {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            return m_->try_lock_usec(detail::fiber_object::current_fiber_->shared_from_this(), usec);
+            return impl_->try_lock_usec(detail::fiber_object::current_fiber_->shared_from_this(), usec);
         }
         return false;
     }
     
     recursive_mutex::recursive_mutex()
-    : m_(std::make_shared<detail::recursive_mutex_object>())
+    : impl_(std::make_shared<detail::recursive_mutex_object>())
     {}
     
     void recursive_mutex::lock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            m_->lock(detail::fiber_object::current_fiber_->shared_from_this());
+            impl_->lock(detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
     void recursive_mutex::unlock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            m_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
+            impl_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
     bool recursive_mutex::try_lock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            return m_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
+            return impl_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
         }
         return false;
     }
     
     timed_recursive_mutex::timed_recursive_mutex()
-    : m_(std::make_shared<detail::timed_recursive_mutex_object>())
+    : impl_(std::make_shared<detail::timed_recursive_mutex_object>())
     {}
     
     void timed_recursive_mutex::lock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            m_->lock(detail::fiber_object::current_fiber_->shared_from_this());
+            impl_->lock(detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
     void timed_recursive_mutex::unlock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            m_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
+            impl_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
     bool timed_recursive_mutex::try_lock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            return m_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
+            return impl_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
         }
         return false;
     }
@@ -471,7 +471,7 @@ namespace fibio { namespace fibers {
     bool timed_recursive_mutex::try_lock_usec(uint64_t usec) {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            return m_->try_lock_usec(detail::fiber_object::current_fiber_->shared_from_this(), usec);
+            return impl_->try_lock_usec(detail::fiber_object::current_fiber_->shared_from_this(), usec);
         }
         return false;
     }

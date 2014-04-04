@@ -299,26 +299,26 @@ namespace fibio { namespace fibers {
     {}
 #else
     void fiber::start(std::function<void ()> &&f) {
-        m_=scheduler::get_instance().m_->make_fiber(std::move(f));
+        impl_=scheduler::get_instance().impl_->make_fiber(std::move(f));
     }
     void fiber::start(attributes attr, std::function<void ()> &&f) {
         switch(attr.policy) {
             case attributes::scheduling_policy::normal: {
                 if (detail::fiber_object::current_fiber_) {
                     // use current scheduler if we're in a fiber
-                    m_=detail::fiber_object::current_fiber_->sched_->make_fiber(std::move(f));
+                    impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(std::move(f));
                 } else {
                     // use default scheduler
-                    m_=scheduler::get_instance().m_->make_fiber(std::move(f));
+                    impl_=scheduler::get_instance().impl_->make_fiber(std::move(f));
                 }
                 break;
             }
             case attributes::scheduling_policy::stick_with_parent: {
                 if (detail::fiber_object::current_fiber_) {
-                    m_=scheduler::get_instance().m_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
+                    impl_=scheduler::get_instance().impl_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
                                                                 std::move(f));
                 } else {
-                    m_=detail::fiber_object::current_fiber_->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
+                    impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
                                                                                 std::move(f));
                 }
                 break;
@@ -330,11 +330,11 @@ namespace fibio { namespace fibers {
 #endif
     
     fiber::fiber(fiber &&other) noexcept
-    : m_(std::move(other.m_))
+    : impl_(std::move(other.impl_))
     {}
     
     fiber::fiber(fibio::fibers::scheduler &s, std::function<void ()> &&f)
-    : m_(s.m_->make_fiber(std::move(f)))
+    : impl_(s.impl_->make_fiber(std::move(f)))
     {}
     
     fiber& fiber::operator=(fiber &&other) noexcept {
@@ -342,32 +342,32 @@ namespace fibio { namespace fibers {
             // This fiber is still active, std::thread will call std::terminate in the case
             std::terminate();
         }
-        m_=std::move(other.m_);
+        impl_=std::move(other.impl_);
         return *this;
     }
     
     void fiber::set_name(const std::string &s) {
-        m_->set_name(s);
+        impl_->set_name(s);
     }
     
     std::string fiber::get_name() {
-        return m_->get_name();
+        return impl_->get_name();
     }
     
     bool fiber::joinable() const noexcept {
         // Return true iff this is a fiber and not the current calling fiber
-        return (m_ && detail::fiber_object::current_fiber_!=m_.get());
+        return (impl_ && detail::fiber_object::current_fiber_!=impl_.get());
     }
     
     fiber::id fiber::get_id() const noexcept {
-        return reinterpret_cast<fiber::id>(m_.get());
+        return reinterpret_cast<fiber::id>(impl_.get());
     }
     
     void fiber::join(bool propagate_exception) {
-        if (!m_) {
+        if (!impl_) {
             throw fiber_exception(boost::system::errc::no_such_process);
         }
-        if (m_.get()==detail::fiber_object::current_fiber_) {
+        if (impl_.get()==detail::fiber_object::current_fiber_) {
             throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
         }
         if (!joinable()) {
@@ -375,9 +375,9 @@ namespace fibio { namespace fibers {
         }
         if (detail::fiber_object::current_fiber_) {
             if (propagate_exception) {
-                detail::fiber_object::current_fiber_->join_and_rethrow(m_);
+                detail::fiber_object::current_fiber_->join_and_rethrow(impl_);
             } else {
-                detail::fiber_object::current_fiber_->join(m_);
+                detail::fiber_object::current_fiber_->join(impl_);
             }
         }
     }
@@ -386,13 +386,13 @@ namespace fibio { namespace fibers {
         if (!joinable()) {
             throw fiber_exception(boost::system::errc::no_such_process);
         }
-        detail::fiber_ptr_t this_fiber=m_;
-        m_->get_fiber_strand().post(std::bind(&detail::fiber_object::detach, m_));
-        m_.reset();
+        detail::fiber_ptr_t this_fiber=impl_;
+        impl_->get_fiber_strand().post(std::bind(&detail::fiber_object::detach, impl_));
+        impl_.reset();
     }
     
     void fiber::swap(fiber &other) noexcept(true) {
-        std::swap(m_, other.m_);
+        std::swap(impl_, other.impl_);
     }
     
     unsigned fiber::hardware_concurrency() noexcept {

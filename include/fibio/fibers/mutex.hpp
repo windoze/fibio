@@ -23,7 +23,7 @@ namespace fibio { namespace fibers {
         void unlock();
         bool try_lock();
         
-        std::shared_ptr<detail::mutex_object> m_;
+        std::shared_ptr<detail::mutex_object> impl_;
     };
     
     struct timed_mutex {
@@ -45,7 +45,7 @@ namespace fibio { namespace fibers {
         }
         
         bool try_lock_usec(uint64_t usec);
-        std::shared_ptr<detail::timed_mutex_object> m_;
+        std::shared_ptr<detail::timed_mutex_object> impl_;
     };
     
     struct recursive_mutex {
@@ -56,7 +56,7 @@ namespace fibio { namespace fibers {
         void unlock();
         bool try_lock();
         
-        std::shared_ptr<detail::recursive_mutex_object> m_;
+        std::shared_ptr<detail::recursive_mutex_object> impl_;
     };
     
     struct timed_recursive_mutex {
@@ -78,7 +78,7 @@ namespace fibio { namespace fibers {
         }
         
         bool try_lock_usec(uint64_t usec);
-        std::shared_ptr<detail::timed_recursive_mutex_object> m_;
+        std::shared_ptr<detail::timed_recursive_mutex_object> impl_;
     };
 }}  // End of namespace fibio::fibers
 

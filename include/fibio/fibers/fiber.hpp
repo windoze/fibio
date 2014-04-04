@@ -38,7 +38,7 @@ namespace fibio { namespace fibers {
         static scheduler get_instance();
         static void reset_instance();
         
-        std::shared_ptr<detail::scheduler_object> m_;
+        std::shared_ptr<detail::scheduler_object> impl_;
     };
     
     struct fiber {
@@ -94,7 +94,7 @@ namespace fibio { namespace fibers {
         
     //private:
         fiber(std::shared_ptr<detail::fiber_object> m);
-        std::shared_ptr<detail::fiber_object> m_;
+        std::shared_ptr<detail::fiber_object> impl_;
     };
     
     constexpr fiber::id not_a_fiber=0;

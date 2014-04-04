@@ -71,7 +71,7 @@ namespace fibio { namespace fibers {
         void notify_all();
         
         cv_status wait_usec(std::unique_lock<mutex>& lock, uint64_t usec);
-        std::shared_ptr<detail::condition_variable_object> m_;
+        std::shared_ptr<detail::condition_variable_object> impl_;
     };
 
     void notify_all_at_thread_exit(condition_variable &cond, unique_lock<mutex> lk);

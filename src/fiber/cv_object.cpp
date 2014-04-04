@@ -127,30 +127,30 @@ namespace fibio { namespace fibers { namespace detail {
 
 namespace fibio { namespace fibers {
     condition_variable::condition_variable()
-    : m_(std::make_shared<detail::condition_variable_object>())
+    : impl_(std::make_shared<detail::condition_variable_object>())
     {}
     
     void condition_variable::wait(std::unique_lock<mutex>& lock) {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            m_->wait(lock.mutex()->m_, detail::fiber_object::current_fiber_->shared_from_this());
+            impl_->wait(lock.mutex()->impl_, detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
     cv_status condition_variable::wait_usec(std::unique_lock<mutex>& lock, uint64_t usec) {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            return m_->wait_usec(lock.mutex()->m_, detail::fiber_object::current_fiber_->shared_from_this(), usec);
+            return impl_->wait_usec(lock.mutex()->impl_, detail::fiber_object::current_fiber_->shared_from_this(), usec);
         }
         return cv_status::timeout;
     }
     
     void condition_variable::notify_one() {
-        m_->notify_one();
+        impl_->notify_one();
     }
     
     void condition_variable::notify_all() {
-        m_->notify_all();
+        impl_->notify_all();
     }
     
     void notify_all_at_thread_exit(condition_variable &cond,
