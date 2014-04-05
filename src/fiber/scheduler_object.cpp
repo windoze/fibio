@@ -25,7 +25,7 @@ namespace fibio { namespace fibers { namespace detail {
         if (!started_) {
             started_=true;
         }
-        ret->schedule();
+        ret->resume();
         return ret;
     }
     
@@ -36,7 +36,7 @@ namespace fibio { namespace fibers { namespace detail {
         if (!started_) {
             started_=true;
         }
-        ret->schedule();
+        ret->resume();
         return ret;
     }
     

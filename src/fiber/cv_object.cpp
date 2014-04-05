@@ -61,7 +61,7 @@ namespace fibio { namespace fibers { namespace detail {
                 this_cv->suspended_.erase(i);
             }
         }
-        this_fiber->schedule();
+        this_fiber->resume();
     }
     
     cv_status condition_variable_object::wait_usec(mutex_ptr_t m, fiber_ptr_t this_fiber, uint64_t usec) {
@@ -104,7 +104,7 @@ namespace fibio { namespace fibers { namespace detail {
                 p.t_.reset();
             } else {
                 // No timer attached to the waiting fiber, directly schedule it
-                p.f_->schedule();
+                p.f_->resume();
             }
         }
         // Only yield if currently in a fiber
@@ -126,7 +126,7 @@ namespace fibio { namespace fibers { namespace detail {
                     p.t_->cancel();
                 } else {
                     // No timer attached to the waiting fiber, directly schedule it
-                    p.f_->schedule();
+                    p.f_->resume();
                 }
             }
         }

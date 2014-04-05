@@ -43,7 +43,7 @@ namespace fibio { namespace fibers { namespace detail {
         // Set new owner and remove it from suspended queue
         std::swap(owner_, suspended_.front());
         suspended_.pop_front();
-        owner_->schedule();
+        owner_->resume();
 
         { relock_guard<std::mutex> relock(mtx_); this_fiber->yield(); }
     }
@@ -106,7 +106,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::swap(owner_, suspended_.front());
         suspended_.pop_front();
         level_=1;
-        owner_->schedule();
+        owner_->resume();
         
         { relock_guard<std::mutex> relock(mtx_); this_fiber->yield(); }
     }
@@ -184,7 +184,7 @@ namespace fibio { namespace fibers { namespace detail {
             t->cancel();
         } else {
             // No attached timer, directly schedule new owner
-            owner_->schedule();
+            owner_->resume();
         }
         
         { relock_guard<std::mutex> relock(mtx_); this_fiber->yield(); }
@@ -210,7 +210,7 @@ namespace fibio { namespace fibers { namespace detail {
         } else {
             // This fiber should not be in the suspended queue, do nothing
         }
-        this_fiber->schedule();
+        this_fiber->resume();
     }
 
     bool timed_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
@@ -289,7 +289,7 @@ namespace fibio { namespace fibers { namespace detail {
             t->cancel();
         } else {
             // No attached timer, directly schedule new owner
-            owner_->schedule();
+            owner_->resume();
         }
 
         { relock_guard<std::mutex> relock(mtx_); this_fiber->yield(); }
@@ -331,7 +331,7 @@ namespace fibio { namespace fibers { namespace detail {
         } else {
             // This fiber should not be in the suspended queue, do nothing
         }
-        this_fiber->schedule();
+        this_fiber->resume();
     }
 
     bool timed_recursive_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {

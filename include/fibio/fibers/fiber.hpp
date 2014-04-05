@@ -59,7 +59,7 @@ namespace fibio { namespace fibers {
         }
         
         template <class F>
-        fiber(const attributes &attrs, F &&f)
+        fiber(attributes attrs, F &&f)
         : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f))))
         {
             start(attrs);
@@ -77,7 +77,7 @@ namespace fibio { namespace fibers {
         }
         
         template <class F, class Arg, class ...Args>
-        fiber(const attributes &attrs, F&& f, Arg&& arg, Args&&... args)
+        fiber(attributes attrs, F&& f, Arg&& arg, Args&&... args)
         : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f)),
                                         detail::decay_copy(std::forward<Arg>(arg)),
                                         detail::decay_copy(std::forward<Args>(args))...)

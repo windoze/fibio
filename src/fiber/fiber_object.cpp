@@ -115,7 +115,7 @@ namespace fibio { namespace fibers { namespace detail {
         state_t s= state_;
         if (s==READY) {
             // Post this fiber to the scheduler
-            schedule();
+            resume();
         } else if (s==BLOCKED) {
             // Must make sure this fiber will be posted elsewhere later, otherwise it will hold forever
         } else if (s==STOPPED) {
@@ -158,7 +158,7 @@ namespace fibio { namespace fibers { namespace detail {
         get_fiber_strand().dispatch(std::bind(activate_fiber, shared_from_this()));
     }
     
-    void fiber_object::schedule() {
+    void fiber_object::resume() {
         get_fiber_strand().post(std::bind(activate_fiber, shared_from_this()));
     }
     

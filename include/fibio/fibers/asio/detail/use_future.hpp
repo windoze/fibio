@@ -88,26 +88,26 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
         std::shared_ptr<promise<void>> promise_;
         fibio::fibers::detail::fiber_base::ptr_t fiber_;
     };
+
+    // Ensure any exceptions thrown from the handler are propagated back to the
+    // caller via the future.
+    template<typename Function, typename T>
+    void fibio_do_handler_invoke(Function f, fibio::fibers::asio::detail::promise_handler<T> h)
+    {
+        std::shared_ptr<fibio::fibers::promise<T>> p(h.promise_);
+        try
+        { f(); }
+        catch (...)
+        { p->set_exception(boost::current_exception()); }
+    }
 }}}}    // End of namespace fibio::fibers::asio::detail
 
 namespace boost { namespace asio {
     namespace detail {
-        // Ensure any exceptions thrown from the handler are propagated back to the
-        // caller via the future.
-        template<typename Function, typename T>
-        void fibio_do_handler_invoke(Function f, fibio::fibers::asio::detail::promise_handler<T> h)
-        {
-            std::shared_ptr<fibio::fibers::promise<T>> p(h.promise_);
-            try
-            { f(); }
-            catch (...)
-            { p->set_exception(boost::current_exception()); }
-        }
-        
         template<typename Function, typename T>
         void asio_handler_invoke(Function f, fibio::fibers::asio::detail::promise_handler<T> *h)
         {
-            fibio::fiber(fibio_do_handler_invoke<Function, T>,
+            fibio::fiber(fibio::fibers::asio::detail::fibio_do_handler_invoke<Function, T>,
                          f,
                          fibio::fibers::asio::detail::promise_handler<T>(std::move(*h))).detach();
         }

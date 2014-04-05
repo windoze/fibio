@@ -18,6 +18,7 @@ namespace fibio { namespace fibers { namespace detail {
         typedef std::shared_ptr<fiber_base> ptr_t;
         virtual ~fiber_base(){};
         virtual void pause()=0;
+        virtual void resume()=0;
         virtual void activate()=0;
         virtual boost::asio::strand &get_fiber_strand()=0;
         inline boost::asio::io_service &get_io_service() {
