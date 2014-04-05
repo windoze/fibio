@@ -146,6 +146,18 @@ namespace fibio { namespace fibers { namespace detail {
         std::string name_;
         std::nested_exception uncaught_exception_;
     };
+    
+    template<typename Lockable>
+    struct relock_guard {
+        inline relock_guard(Lockable &mtx)
+        : mtx_(mtx)
+        { mtx_.unlock(); }
+        
+        inline ~relock_guard()
+        { mtx_.lock(); }
+        
+        Lockable &mtx_;
+    };
 }}} // End of namespace fibio::fibers::detail
 
 #endif

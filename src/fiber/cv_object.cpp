@@ -10,13 +10,13 @@
 #include <boost/system/error_code.hpp>
 
 namespace fibio { namespace fibers { namespace detail {
-    struct relock_guard {
-        inline relock_guard(mutex_ptr_t mtx, fiber_ptr_t f)
+    struct fibio_relock_guard {
+        inline fibio_relock_guard(mutex_ptr_t mtx, fiber_ptr_t f)
         : mtx_(mtx)
         , this_fiber(f)
         { mtx_->unlock(this_fiber); }
         
-        inline ~relock_guard()
+        inline ~fibio_relock_guard()
         { mtx_->lock(this_fiber); }
         
         mutex_ptr_t mtx_;
@@ -35,7 +35,7 @@ namespace fibio { namespace fibers { namespace detail {
             // as other will see there is a fiber in the waiting queue.
             suspended_.push_back(suspended_item({m, this_fiber, timer_ptr_t()}));
         }
-        relock_guard lk(m, this_fiber);
+        fibio_relock_guard lk(m, this_fiber);
         this_fiber->pause();
     }
     
@@ -84,7 +84,7 @@ namespace fibio { namespace fibers { namespace detail {
                                                                         std::ref(ret),
                                                                         std::placeholders::_1)));
         }
-        relock_guard lk(m, this_fiber);
+        fibio_relock_guard lk(m, this_fiber);
         this_fiber->pause();
         return ret;
     }
@@ -187,7 +187,7 @@ namespace fibio { namespace fibers {
         (*ch)();
     }
     
-    void notify_all_at_thread_exit(condition_variable &cond,
+    void notify_all_at_fiber_exit(condition_variable &cond,
                                    std::unique_lock<mutex> lk)
     {
         CHECK_CURRENT_FIBER;

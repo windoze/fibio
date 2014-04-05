@@ -169,19 +169,18 @@ namespace fibio { namespace fibers { namespace detail {
 
     void fiber_object::join(fiber_ptr_t f) {
         CHECK_CALLER(this);
-        {
-            std::lock_guard<std::mutex> lock(f->mtx_);
-            if (this==f.get()) {
-                // The fiber is joining itself
-                throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
-            } else if (f->state_==STOPPED) {
-                // f is already stopped, do nothing
-                return;
-            } else {
-                f->cleanup_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
-            }
+        std::lock_guard<std::mutex> lock(f->mtx_);
+        if (this==f.get()) {
+            // The fiber is joining itself
+            throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
+        } else if (f->state_==STOPPED) {
+            // f is already stopped, do nothing
+            return;
+        } else {
+            f->cleanup_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
         }
-        pause();
+
+        { relock_guard<std::mutex> relock(f->mtx_); pause(); }
     }
     
     void propagate_exception(fiber_ptr_t f) {
@@ -200,24 +199,22 @@ namespace fibio { namespace fibers { namespace detail {
     
     void fiber_object::join_and_rethrow(fiber_ptr_t f) {
         CHECK_CALLER(this);
-        {
-            std::lock_guard<std::mutex> lock(f->mtx_);
-            if (this==f.get()) {
-                // The fiber is joining itself
-                throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
-            } else if (f->state_==STOPPED) {
-                // f is already stopped
-                propagate_exception(f);
-                return;
-            } else {
-                // std::cout << "fiber(pthis) blocked" << std::endl;
-                f->cleanup_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
-            }
+        std::lock_guard<std::mutex> lock(f->mtx_);
+        if (this==f.get()) {
+            // The fiber is joining itself
+            throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
+        } else if (f->state_==STOPPED) {
+            // f is already stopped
+            propagate_exception(f);
+            return;
+        } else {
+            // std::cout << "fiber(pthis) blocked" << std::endl;
+            f->cleanup_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
         }
-        pause();
+
+        { relock_guard<std::mutex> relock(f->mtx_); pause(); }
 
         // Joining completed, propagate exception from joinee
-        std::lock_guard<std::mutex> lock(f->mtx_);
         propagate_exception(f);
     }
 
@@ -229,7 +226,6 @@ namespace fibio { namespace fibers { namespace detail {
         CHECK_CALLER(this);
         timer_t sleep_timer(get_io_service());
         sleep_timer.expires_from_now(std::chrono::microseconds(usec));
-        //sleep_timer.async_wait(fiber_strand_.wrap(std::bind(&fiber_object::activate, shared_from_this())));
         sleep_timer.async_wait(std::bind(&fiber_object::activate, shared_from_this()));
 
         pause();
@@ -323,12 +319,6 @@ namespace fibio { namespace fibers {
     : data_(std::move(other.data_))
     , impl_(std::move(other.impl_))
     {}
-    
-    /*
-    fiber::fiber(fibio::fibers::scheduler &s, )
-    : impl_(s.impl_->make_fiber(data_))
-    {}
-     */
     
     fiber& fiber::operator=(fiber &&other) noexcept {
         if (joinable()) {

@@ -74,7 +74,7 @@ namespace fibio { namespace fibers {
         std::shared_ptr<detail::condition_variable_object> impl_;
     };
 
-    void notify_all_at_thread_exit(condition_variable &cond, unique_lock<mutex> lk);
+    void notify_all_at_fiber_exit(condition_variable &cond, unique_lock<mutex> lk);
     
     namespace detail {
         template<typename MutexType>
@@ -170,7 +170,7 @@ namespace fibio {
     using fibers::condition_variable;
     using fibers::condition_variable_any;
     using fibers::cv_status;
-    using fibers::notify_all_at_thread_exit;
+    using fibers::notify_all_at_fiber_exit;
 }   // End of namespace fibio
 
 #endif

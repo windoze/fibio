@@ -12,42 +12,40 @@
 namespace fibio { namespace fibers { namespace detail {
     void mutex_object::lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            if (owner_==this_fiber) {
-                throw lock_error(boost::system::errc::resource_deadlock_would_occur);
-            } else if(!owner_) {
-                // This mutex is not locked
-                // Acquire the mutex
-                owner_=this_fiber;
-                return;
-            }
-            // This mutex is locked
-            // Add this fiber into waiting queue
-            suspended_.push_back(this_fiber);
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (owner_==this_fiber) {
+            throw lock_error(boost::system::errc::resource_deadlock_would_occur);
+        } else if(!owner_) {
+            // This mutex is not locked
+            // Acquire the mutex
+            owner_=this_fiber;
+            return;
         }
-        this_fiber->pause();
+        // This mutex is locked
+        // Add this fiber into waiting queue
+        suspended_.push_back(this_fiber);
+
+        { relock_guard<std::mutex> relock(mtx_); this_fiber->pause(); }
     }
     
     void mutex_object::unlock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            if (owner_!=this_fiber) {
-                // This fiber doesn't own the mutex
-                throw lock_error(boost::system::errc::operation_not_permitted);
-            }
-            if (suspended_.empty()) {
-                // Nobody is waiting
-                owner_.reset();
-                return;
-            }
-            // Set new owner and remove it from suspended queue
-            std::swap(owner_, suspended_.front());
-            suspended_.pop_front();
-            owner_->schedule();
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (owner_!=this_fiber) {
+            // This fiber doesn't own the mutex
+            throw lock_error(boost::system::errc::operation_not_permitted);
         }
-        this_fiber->yield();
+        if (suspended_.empty()) {
+            // Nobody is waiting
+            owner_.reset();
+            return;
+        }
+        // Set new owner and remove it from suspended queue
+        std::swap(owner_, suspended_.front());
+        suspended_.pop_front();
+        owner_->schedule();
+
+        { relock_guard<std::mutex> relock(mtx_); this_fiber->yield(); }
     }
     
     bool mutex_object::try_lock(fiber_ptr_t this_fiber) {
@@ -66,53 +64,51 @@ namespace fibio { namespace fibers { namespace detail {
     
     void recursive_mutex_object::lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            if (owner_==this_fiber) {
-                ++level_;
-                return;
-            } else if(!owner_) {
-                // This mutex is not locked
-                // Acquire the mutex
-                assert(suspended_.empty());
-                assert(level_==0);
-                owner_=this_fiber;
-                level_=1;
-                return;
-            }
-            // This mutex is locked
-            // Add this fiber into waiting queue
-            suspended_.push_back(this_fiber);
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (owner_==this_fiber) {
+            ++level_;
+            return;
+        } else if(!owner_) {
+            // This mutex is not locked
+            // Acquire the mutex
+            assert(suspended_.empty());
+            assert(level_==0);
+            owner_=this_fiber;
+            level_=1;
+            return;
         }
-        this_fiber->pause();
+        // This mutex is locked
+        // Add this fiber into waiting queue
+        suspended_.push_back(this_fiber);
+        
+        { relock_guard<std::mutex> relock(mtx_); this_fiber->pause(); }
     }
 
     void recursive_mutex_object::unlock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            if (owner_!=this_fiber) {
-                // This fiber doesn't own the mutex
-                throw lock_error(boost::system::errc::operation_not_permitted);
-            }
-            --level_;
-            if (level_>0) {
-                // This fiber still owns the mutex
-                return;
-            }
-            if (suspended_.empty()) {
-                // Nobody is waiting
-                owner_.reset();
-                assert(level_==0);
-                return;
-            }
-            // Set new owner and remove it from suspended queue
-            std::swap(owner_, suspended_.front());
-            suspended_.pop_front();
-            level_=1;
-            owner_->schedule();
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (owner_!=this_fiber) {
+            // This fiber doesn't own the mutex
+            throw lock_error(boost::system::errc::operation_not_permitted);
         }
-        this_fiber->yield();
+        --level_;
+        if (level_>0) {
+            // This fiber still owns the mutex
+            return;
+        }
+        if (suspended_.empty()) {
+            // Nobody is waiting
+            owner_.reset();
+            assert(level_==0);
+            return;
+        }
+        // Set new owner and remove it from suspended queue
+        std::swap(owner_, suspended_.front());
+        suspended_.pop_front();
+        level_=1;
+        owner_->schedule();
+        
+        { relock_guard<std::mutex> relock(mtx_); this_fiber->yield(); }
     }
     
     bool recursive_mutex_object::try_lock(fiber_ptr_t this_fiber) {
@@ -135,21 +131,20 @@ namespace fibio { namespace fibers { namespace detail {
 
     void timed_mutex_object::lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            if (owner_==this_fiber) {
-                throw lock_error(boost::system::errc::resource_deadlock_would_occur);
-            } else if(!owner_) {
-                // This mutex is not locked
-                // Acquire the mutex
-                owner_=this_fiber;
-                return;
-            }
-            // This mutex is locked
-            // Add this fiber into waiting queue without attached timer
-            suspended_.push_back({this_fiber, timer_ptr_t()});
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (owner_==this_fiber) {
+            throw lock_error(boost::system::errc::resource_deadlock_would_occur);
+        } else if(!owner_) {
+            // This mutex is not locked
+            // Acquire the mutex
+            owner_=this_fiber;
+            return;
         }
-        this_fiber->pause();
+        // This mutex is locked
+        // Add this fiber into waiting queue without attached timer
+        suspended_.push_back({this_fiber, timer_ptr_t()});
+        
+        { relock_guard<std::mutex> relock(mtx_); this_fiber->pause(); }
     }
 
     bool timed_mutex_object::try_lock(fiber_ptr_t this_fiber) {
@@ -170,30 +165,29 @@ namespace fibio { namespace fibers { namespace detail {
     
     void timed_mutex_object::unlock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            if (owner_!=this_fiber) {
-                // This fiber doesn't own the mutex
-                throw lock_error(boost::system::errc::operation_not_permitted);
-            }
-            if (suspended_.empty()) {
-                // Nobody is waiting
-                owner_.reset();
-                return;
-            }
-            // Set new owner and remove it from suspended queue
-            std::swap(owner_, suspended_.front().f_);
-            timer_ptr_t t=suspended_.front().t_;
-            suspended_.pop_front();
-            if (t) {
-                // Cancel attached timer, the timer handler will schedule new owner
-                t->cancel();
-            } else {
-                // No attached timer, directly schedule new owner
-                owner_->schedule();
-            }
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (owner_!=this_fiber) {
+            // This fiber doesn't own the mutex
+            throw lock_error(boost::system::errc::operation_not_permitted);
         }
-        this_fiber->yield();
+        if (suspended_.empty()) {
+            // Nobody is waiting
+            owner_.reset();
+            return;
+        }
+        // Set new owner and remove it from suspended queue
+        std::swap(owner_, suspended_.front().f_);
+        timer_ptr_t t=suspended_.front().t_;
+        suspended_.pop_front();
+        if (t) {
+            // Cancel attached timer, the timer handler will schedule new owner
+            t->cancel();
+        } else {
+            // No attached timer, directly schedule new owner
+            owner_->schedule();
+        }
+        
+        { relock_guard<std::mutex> relock(mtx_); this_fiber->yield(); }
     }
     
     static inline void timed_mutex_timeout_handler(fiber_ptr_t this_fiber,
@@ -221,86 +215,84 @@ namespace fibio { namespace fibers { namespace detail {
 
     bool timed_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
         CHECK_CALLER(this_fiber);
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            if (owner_==this_fiber) {
-                throw lock_error(boost::system::errc::resource_deadlock_would_occur);
-            } else if(!owner_) {
-                // This mutex is not locked
-                // Acquire the mutex
-                owner_=this_fiber;
-                return true;
-            }
-            // This mutex is locked
-            // Add this fiber into waiting queue
-            timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
-            t->expires_from_now(std::chrono::microseconds(usec));
-            std::shared_ptr<timed_mutex_object> this_mutex=shared_from_this();
-            t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_mutex_timeout_handler,
-                                                                        this_fiber,
-                                                                        this_mutex,
-                                                                        std::placeholders::_1)));
-            suspended_.push_back({this_fiber, t});
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (owner_==this_fiber) {
+            throw lock_error(boost::system::errc::resource_deadlock_would_occur);
+        } else if(!owner_) {
+            // This mutex is not locked
+            // Acquire the mutex
+            owner_=this_fiber;
+            return true;
         }
-        this_fiber->pause();
+        // This mutex is locked
+        // Add this fiber into waiting queue
+        timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
+        t->expires_from_now(std::chrono::microseconds(usec));
+        std::shared_ptr<timed_mutex_object> this_mutex=shared_from_this();
+        t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_mutex_timeout_handler,
+                                                                    this_fiber,
+                                                                    this_mutex,
+                                                                    std::placeholders::_1)));
+        suspended_.push_back({this_fiber, t});
+        
         // This fiber will be resumed when timer triggered/canceled or other called unlock()
+        { relock_guard<std::mutex> relock(mtx_); this_fiber->pause(); }
+
         return owner_==this_fiber;
     }
 
     void timed_recursive_mutex_object::lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            if (owner_==this_fiber) {
-                ++level_;
-                return;
-            } else if(!owner_) {
-                // This mutex is not locked
-                // Acquire the mutex
-                owner_=this_fiber;
-                level_=1;
-                return;
-            }
-            // This mutex is locked
-            // Add this fiber into waiting queue without attached timer
-            suspended_.push_back({this_fiber, timer_ptr_t()});
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (owner_==this_fiber) {
+            ++level_;
+            return;
+        } else if(!owner_) {
+            // This mutex is not locked
+            // Acquire the mutex
+            owner_=this_fiber;
+            level_=1;
+            return;
         }
-        this_fiber->pause();
+        // This mutex is locked
+        // Add this fiber into waiting queue without attached timer
+        suspended_.push_back({this_fiber, timer_ptr_t()});
+
+        { relock_guard<std::mutex> relock(mtx_); this_fiber->pause(); }
     }
 
     void timed_recursive_mutex_object::unlock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            if (owner_!=this_fiber) {
-                // This fiber doesn't own the mutex
-                throw lock_error(boost::system::errc::operation_not_permitted);
-            }
-            --level_;
-            if(level_>0) {
-                // This fiber still owns the mutex
-                return;
-            }
-            if (suspended_.empty()) {
-                // Nobody is waiting
-                owner_.reset();
-                level_=0;
-                return;
-            }
-            // Set new owner and remove it from suspended queue
-            std::swap(owner_, suspended_.front().f_);
-            timer_ptr_t t=suspended_.front().t_;
-            suspended_.pop_front();
-            level_=1;
-            if (t) {
-                // Cancel attached timer, the timer handler will schedule new owner
-                t->cancel();
-            } else {
-                // No attached timer, directly schedule new owner
-                owner_->schedule();
-            }
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (owner_!=this_fiber) {
+            // This fiber doesn't own the mutex
+            throw lock_error(boost::system::errc::operation_not_permitted);
         }
-        this_fiber->yield();
+        --level_;
+        if(level_>0) {
+            // This fiber still owns the mutex
+            return;
+        }
+        if (suspended_.empty()) {
+            // Nobody is waiting
+            owner_.reset();
+            level_=0;
+            return;
+        }
+        // Set new owner and remove it from suspended queue
+        std::swap(owner_, suspended_.front().f_);
+        timer_ptr_t t=suspended_.front().t_;
+        suspended_.pop_front();
+        level_=1;
+        if (t) {
+            // Cancel attached timer, the timer handler will schedule new owner
+            t->cancel();
+        } else {
+            // No attached timer, directly schedule new owner
+            owner_->schedule();
+        }
+
+        { relock_guard<std::mutex> relock(mtx_); this_fiber->yield(); }
     }
     
     bool timed_recursive_mutex_object::try_lock(fiber_ptr_t this_fiber) {
@@ -344,31 +336,30 @@ namespace fibio { namespace fibers { namespace detail {
 
     bool timed_recursive_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
         CHECK_CALLER(this_fiber);
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            if (owner_==this_fiber) {
-                ++level_;
-                return true;
-            } else if(!owner_) {
-                // This mutex is not locked
-                // Acquire the mutex
-                owner_=this_fiber;
-                level_=1;
-                return true;
-            }
-            // This mutex is locked
-            // Add this fiber into waiting queue
-            timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
-            t->expires_from_now(std::chrono::microseconds(usec));
-            std::shared_ptr<timed_recursive_mutex_object> this_mutex=shared_from_this();
-            t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_recursive_mutex_timeout_handler,
-                                                                        this_fiber,
-                                                                        this_mutex,
-                                                                        std::placeholders::_1)));
-            suspended_.push_back({this_fiber, t});
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (owner_==this_fiber) {
+            ++level_;
+            return true;
+        } else if(!owner_) {
+            // This mutex is not locked
+            // Acquire the mutex
+            owner_=this_fiber;
+            level_=1;
+            return true;
         }
-        this_fiber->pause();
+        // This mutex is locked
+        // Add this fiber into waiting queue
+        timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
+        t->expires_from_now(std::chrono::microseconds(usec));
+        std::shared_ptr<timed_recursive_mutex_object> this_mutex=shared_from_this();
+        t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_recursive_mutex_timeout_handler,
+                                                                    this_fiber,
+                                                                    this_mutex,
+                                                                    std::placeholders::_1)));
+        suspended_.push_back({this_fiber, t});
+
         // This fiber will be resumed when timer triggered/canceled or other called unlock()
+        { relock_guard<std::mutex> relock(mtx_); this_fiber->pause(); }
         return owner_==this_fiber;
     }
 }}} // End of namespace fibio::fibers::detail
