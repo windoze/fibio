@@ -59,8 +59,8 @@ namespace fibio { namespace fibers { namespace detail {
         std::deque<suspended_item> suspended_;
     };
     
-    struct timed_recursive_mutex_object : std::enable_shared_from_this<timed_recursive_mutex_object> {
-        timed_recursive_mutex_object()
+    struct recursive_timed_mutex_object : std::enable_shared_from_this<recursive_timed_mutex_object> {
+        recursive_timed_mutex_object()
         : level_(0)
         {}
         

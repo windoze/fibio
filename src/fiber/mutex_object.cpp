@@ -241,7 +241,7 @@ namespace fibio { namespace fibers { namespace detail {
         return owner_==this_fiber;
     }
 
-    void timed_recursive_mutex_object::lock(fiber_ptr_t this_fiber) {
+    void recursive_timed_mutex_object::lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         std::lock_guard<std::mutex> lock(mtx_);
         if (owner_==this_fiber) {
@@ -261,7 +261,7 @@ namespace fibio { namespace fibers { namespace detail {
         { relock_guard<std::mutex> relock(mtx_); this_fiber->pause(); }
     }
 
-    void timed_recursive_mutex_object::unlock(fiber_ptr_t this_fiber) {
+    void recursive_timed_mutex_object::unlock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         std::lock_guard<std::mutex> lock(mtx_);
         if (owner_!=this_fiber) {
@@ -295,7 +295,7 @@ namespace fibio { namespace fibers { namespace detail {
         { relock_guard<std::mutex> relock(mtx_); this_fiber->yield(); }
     }
     
-    bool timed_recursive_mutex_object::try_lock(fiber_ptr_t this_fiber) {
+    bool recursive_timed_mutex_object::try_lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         std::lock_guard<std::mutex> lock(mtx_);
         if (owner_==this_fiber) {
@@ -311,8 +311,8 @@ namespace fibio { namespace fibers { namespace detail {
         return owner_==this_fiber;
     }
     
-    static inline void timed_recursive_mutex_timeout_handler(fiber_ptr_t this_fiber,
-                                                             timed_recursive_mutex_ptr_t this_mutex,
+    static inline void recursive_timed_mutex_timeout_handler(fiber_ptr_t this_fiber,
+                                                             recursive_timed_mutex_ptr_t this_mutex,
                                                              boost::system::error_code ec)
     {
         std::lock_guard<std::mutex> lock(this_mutex->mtx_);
@@ -321,7 +321,7 @@ namespace fibio { namespace fibers { namespace detail {
             // Find and remove this fiber from waiting queue
             auto i=std::find_if(this_mutex->suspended_.begin(),
                                 this_mutex->suspended_.end(),
-                                std::bind(is_this_fiber<timed_recursive_mutex_object::suspended_item>,
+                                std::bind(is_this_fiber<recursive_timed_mutex_object::suspended_item>,
                                           this_fiber,
                                           std::placeholders::_1)
                                 );
@@ -334,7 +334,7 @@ namespace fibio { namespace fibers { namespace detail {
         this_fiber->resume();
     }
 
-    bool timed_recursive_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
+    bool recursive_timed_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
         CHECK_CALLER(this_fiber);
         std::lock_guard<std::mutex> lock(mtx_);
         if (owner_==this_fiber) {
@@ -351,8 +351,8 @@ namespace fibio { namespace fibers { namespace detail {
         // Add this fiber into waiting queue
         timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
         t->expires_from_now(std::chrono::microseconds(usec));
-        std::shared_ptr<timed_recursive_mutex_object> this_mutex=shared_from_this();
-        t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_recursive_mutex_timeout_handler,
+        std::shared_ptr<recursive_timed_mutex_object> this_mutex=shared_from_this();
+        t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(recursive_timed_mutex_timeout_handler,
                                                                     this_fiber,
                                                                     this_mutex,
                                                                     std::placeholders::_1)));
@@ -451,25 +451,25 @@ namespace fibio { namespace fibers {
         return false;
     }
     
-    timed_recursive_mutex::timed_recursive_mutex()
-    : impl_(std::make_shared<detail::timed_recursive_mutex_object>())
+    recursive_timed_mutex::recursive_timed_mutex()
+    : impl_(std::make_shared<detail::recursive_timed_mutex_object>())
     {}
     
-    void timed_recursive_mutex::lock() {
+    void recursive_timed_mutex::lock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
             impl_->lock(detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
-    void timed_recursive_mutex::unlock() {
+    void recursive_timed_mutex::unlock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
             impl_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
-    bool timed_recursive_mutex::try_lock() {
+    bool recursive_timed_mutex::try_lock() {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
             return impl_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
@@ -477,7 +477,7 @@ namespace fibio { namespace fibers {
         return false;
     }
     
-    bool timed_recursive_mutex::try_lock_usec(uint64_t usec) {
+    bool recursive_timed_mutex::try_lock_usec(uint64_t usec) {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
             return impl_->try_lock_usec(detail::fiber_object::current_fiber_->shared_from_this(), usec);

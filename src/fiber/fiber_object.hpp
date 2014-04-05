@@ -62,8 +62,8 @@ namespace fibio { namespace fibers { namespace detail {
     struct recursive_mutex_object;
     typedef std::shared_ptr<recursive_mutex_object> recursive_mutex_ptr_t;
     
-    struct timed_recursive_mutex_object;
-    typedef std::shared_ptr<timed_recursive_mutex_object> timed_recursive_mutex_ptr_t;
+    struct recursive_timed_mutex_object;
+    typedef std::shared_ptr<recursive_timed_mutex_object> recursive_timed_mutex_ptr_t;
     
     struct condition_variable_object;
     typedef std::shared_ptr<condition_variable_object> condition_variable_ptr_t;
