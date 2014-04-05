@@ -17,7 +17,7 @@ namespace fibio { namespace fibers { namespace detail {
     struct mutex_object;
     struct recursive_mutex_object;
     struct timed_mutex_object;
-    struct timed_recursive_mutex_object;
+    struct recursive_timed_mutex_object;
     struct condition_variable_object;
 }}} // End of namespace fibio::fibers::detail
 

@@ -19,52 +19,112 @@
 #include <fibio/fibers/detail/fiber_data.hpp>
 
 namespace fibio { namespace fibers {
-    struct scheduler {
+    /// struct scheduler
+    class scheduler {
+    public:
+        /// constructor
         scheduler();
-        scheduler(std::shared_ptr<detail::scheduler_object>);
         
+        /**
+         * returns the io_service associated with the scheduler
+         */
         boost::asio::io_service &get_io_service();
         
+        /**
+         * starts the scheduler with in a worker thread pool with specific size
+         */
         void start(size_t nthr=1);
+
+        /**
+         * waits until the scheduler object stops
+         */
         void join();
         
+        /**
+         * add work threads into the worker thread pool
+         */
         void add_worker_thread(size_t nthr=1);
         
+        /**
+         * returns the scheduler singleton
+         */
         static scheduler get_instance();
+
+        /**
+         * releases the scheduler singleton
+         */
         static void reset_instance();
         
+    private:
+        scheduler(std::shared_ptr<detail::scheduler_object>);
         std::shared_ptr<detail::scheduler_object> impl_;
+        friend class fiber;
     };
     
-    struct fiber {
+    /// struct fiber
+    /**
+     * manages a separate fiber
+     */
+    class fiber {
+    public:
+        /// fiber id type
         typedef uintptr_t id;
         
+        /// fiber attributes
         struct attributes {
+            // fiber scheduling policy
+            /**
+             * A fiber can be scheduled in two ways:
+             * - normal: the fiber is freely scheduled across all
+             *           worker threads
+             * - stick_with_parent: the fiber always runs in the
+             *                      same worker thread as its parent,
+             *                      this can make sure the fiber and
+             *                      its parent never run concurrently,
+             *                      avoid some synchronizations for
+             *                      shares resources
+             */
             enum scheduling_policy {
-                // scheduled freely in this scheduler
+                /**
+                 * scheduled freely in this scheduler
+                 */
                 normal,
-                // always runs in the same thread with parent
+
+                /**
+                 * always runs in the same thread with parent
+                 */
                 stick_with_parent,
-            };
-            scheduling_policy policy;
+            } policy;
             
+            /// constructor
             constexpr attributes(scheduling_policy p) : policy(p) {}
         };
         
+        /// Constructs new fiber object
+        /**
+         * Creates new fiber object which does not represent a fiber
+         */
+        fiber() = default;
+        
+        /// Move constructor
+        /**
+         * Constructs the fiber object to represent the fiber of
+         * execution that was represented by other. After this
+         * call other no longer represents a fiber of execution.
+         */
+        fiber(fiber &&other) noexcept;
+
+        /**
+         * Creates new fiber object and associates it with a fiber of execution.
+         */
         template <class F>
         explicit fiber(F &&f)
         : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f))))
-        {
-            start();
-        }
+        { start(); }
         
-        template <class F>
-        fiber(attributes attrs, F &&f)
-        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f))))
-        {
-            start(attrs);
-        }
-        
+        /**
+         * Creates new fiber object and associates it with a fiber of execution.
+         */
         template <class F, class Arg, class ...Args>
         fiber(F&& f, Arg&& arg, Args&&... args)
         : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f)),
@@ -72,9 +132,15 @@ namespace fibio { namespace fibers {
                                         detail::decay_copy(std::forward<Args>(args))...)
                 )
         
-        {
-            start();
-        }
+        { start(); }
+        
+        /**
+         * Creates new fiber object and associates it with a fiber of execution, using specific attributes
+         */
+        template <class F>
+        fiber(attributes attrs, F &&f)
+        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f))))
+        { start(attrs); }
         
         template <class F, class Arg, class ...Args>
         fiber(attributes attrs, F&& f, Arg&& arg, Args&&... args)
@@ -82,32 +148,60 @@ namespace fibio { namespace fibers {
                                         detail::decay_copy(std::forward<Arg>(arg)),
                                         detail::decay_copy(std::forward<Args>(args))...)
                 )
-        {
-            start(attrs);
-        }
+        { start(attrs); }
         
-        explicit fiber(fiber &&other) noexcept;
-        explicit fiber(scheduler &s, detail::fiber_data_ptr data);
-        fiber() = default;
-        fiber(const fiber&) = delete;
-        
+        /// Assigns the state of other to `*this` using move semantics.
+        /**
+         * If *this still has an associated running fiber (i.e. `joinable() == true`), `std::terminate()` is called.
+         */
         fiber& operator=(fiber &&other) noexcept;
+
+        /**
+         * checks whether the fiber is joinable, i.e. potentially running in parallel context
+         */
+        bool joinable() const noexcept;
         
+        /**
+         * returns the _id_ of the thread
+         */
+        id get_id() const noexcept;
+        
+        /**
+         * returns the number of concurrent fibers supported by the implementation
+         */
+        static unsigned hardware_concurrency() noexcept;
+        
+        /**
+         * waits for a fiber to finish its execution
+         */
+        void join(bool propagate_exception=false);
+
+        /**
+         * permits the fiber to execute independently
+         */
+        void detach();
+        
+        /**
+         * swaps two fiber objects
+         */
+        void swap(fiber &other) noexcept(true);
+        
+        /**
+         * sets the name of the fiber
+         */
+        void set_name(const std::string &s);
+        
+        /**
+         * returns the name of the fiber
+         */
+        std::string get_name();
+        
+    private:
+        /// non-copyable
+        fiber(const fiber&) = delete;
         void start();
         void start(attributes);
  
-        bool joinable() const noexcept;
-        id get_id() const noexcept;
-        void join(bool propagate_exception=false);
-        void detach();
-        void swap(fiber &other) noexcept(true);
-        
-        static unsigned hardware_concurrency() noexcept;
-
-        void set_name(const std::string &s);
-        std::string get_name();
-        
-    //private:
         detail::fiber_data_ptr data_;
         std::shared_ptr<detail::fiber_object> impl_;
     };
@@ -117,20 +211,39 @@ namespace fibio { namespace fibers {
     namespace this_fiber {
         namespace detail {
             void sleep_usec(uint64_t usec);
+
+            /**
+             * returns the io_service associated with the current fiber
+             */
             boost::asio::io_service &get_io_service();
         }
 
+        /**
+         * reschedule execution of fibers
+         */
         void yield();
         
+        /**
+         * returns the fiber id of the current fiber
+         */
         fiber::id get_id();
         
+        /**
+         * indicates if the current running context is a fiber
+         */
         bool is_a_fiber() noexcept(true);
         
+        /**
+         * stops the execution of the current fiber for a specified time duration
+         */
         template< class Rep, class Period >
         void sleep_for( const std::chrono::duration<Rep,Period>& sleep_duration ) {
             detail::sleep_usec(std::chrono::duration_cast<std::chrono::microseconds>(sleep_duration).count());
         }
         
+        /**
+         * stops the execution of the current fiber until a specified time point
+         */
         template< class Clock, class Duration >
         void sleep_until( const std::chrono::time_point<Clock,Duration>& sleep_time ) {
             detail::sleep_usec(std::chrono::duration_cast<std::chrono::microseconds>(sleep_time - std::chrono::steady_clock::now()).count());
@@ -139,6 +252,7 @@ namespace fibio { namespace fibers {
 }}   // End of namespace fibio::fibers
 
 namespace std {
+    /// specializes the std::swap algorithm for fiber objects
     inline void swap(fibio::fibers::fiber &lhs, fibio::fibers::fiber &rhs) noexcept(true) {
         lhs.swap(rhs);
     }

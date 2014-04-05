@@ -20,7 +20,6 @@
 
 namespace fibio { namespace fibers {
     class shared_mutex {
-    private:
         class state_data {
         public:
             state_data () :
@@ -46,7 +45,7 @@ namespace fibio { namespace fibers {
                 assert( ! exclusive );
                 assert( shared_count>0 );
                 //BOOST_ASSERT( (! upgrade) || (shared_count>1));
-                // if upgraded there are at least 2 threads sharing the mutex,
+                // if upgraded there are at least 2 fibers sharing the mutex,
                 // except when unlock_upgrade_and_lock has decreased the number of readers but has not taken yet exclusive ownership.
             }
             
@@ -123,29 +122,20 @@ namespace fibio { namespace fibers {
                 --shared_count;
             }
             
-            //private:
+        //private:
             unsigned shared_count;
             bool exclusive;
             bool upgrade;
             bool exclusive_waiting_blocked;
         };
         
-        state_data state;
-        mutex state_change;
-        condition_variable shared_cond;
-        condition_variable exclusive_cond;
-        condition_variable upgrade_cond;
-        
-        void release_waiters() {
-            exclusive_cond.notify_one();
-            shared_cond.notify_all();
-        }
-        
     public:
-        shared_mutex(const shared_mutex &)=delete;
+        /// constructor
         shared_mutex(){}
-        ~shared_mutex(){}
         
+        /**
+         * locks the mutex for shared ownership, blocks if the mutex is not available
+         */
         void lock_shared() {
             unique_lock<mutex> lk(state_change);
             while(!state.can_lock_shared()) {
@@ -154,6 +144,9 @@ namespace fibio { namespace fibers {
             state.lock_shared();
         }
         
+        /**
+         * tries to lock the mutex for shared ownership, returns if the mutex is not available
+         */
         bool try_lock_shared() {
             unique_lock<mutex> lk(state_change);
             if(!state.can_lock_shared()) {
@@ -163,11 +156,19 @@ namespace fibio { namespace fibers {
             return true;
         }
         
+        /**
+         * tries to lock the mutex for shared ownership, returns if the mutex has been
+         * unavailable for the specified timeout duration
+         */
         template <class Rep, class Period>
         bool try_lock_shared_for(const std::chrono::duration<Rep, Period>& rel_time) {
             return try_lock_shared_until(std::chrono::steady_clock::now() + rel_time);
         }
         
+        /**
+         * tries to lock the mutex for shared ownership, returns if the mutex has been
+         * unavailable until specified time point has been reached
+         */
         template <class Clock, class Duration>
         bool try_lock_shared_until(const std::chrono::time_point<Clock, Duration>& abs_time) {
             unique_lock<mutex> lk(state_change);
@@ -180,14 +181,17 @@ namespace fibio { namespace fibers {
             return true;
         }
 
+        /**
+         * unlocks the mutex (shared ownership)
+         */
         void unlock_shared() {
             unique_lock<mutex> lk(state_change);
             state.assert_lock_shared();
             state.unlock_shared();
             if (! state.more_shared()) {
                 if (state.upgrade) {
-                    // As there is a thread doing a unlock_upgrade_and_lock that is waiting for ! state.more_shared()
-                    // avoid other threads to lock, lock_upgrade or lock_shared, so only this thread is notified.
+                    // As there is a fiber doing a unlock_upgrade_and_lock that is waiting for ! state.more_shared()
+                    // avoid other fibers to lock, lock_upgrade or lock_shared, so only this fiber is notified.
                     state.upgrade=false;
                     state.exclusive=true;
                     lk.unlock();
@@ -200,6 +204,9 @@ namespace fibio { namespace fibers {
             }
         }
         
+        /**
+         * locks the mutex, blocks if the mutex is not available
+         */
         void lock() {
             unique_lock<mutex> lk(state_change);
             while (state.shared_count || state.exclusive) {
@@ -209,11 +216,33 @@ namespace fibio { namespace fibers {
             state.exclusive=true;
         }
         
+        /**
+         * tries to lock the mutex, returns if the mutex is not available
+         */
+        bool try_lock() {
+            unique_lock<mutex> lk(state_change);
+            if(state.shared_count || state.exclusive) {
+                return false;
+            } else {
+                state.exclusive=true;
+                return true;
+            }
+            
+        }
+        
+        /**
+         * tries to lock the mutex, returns if the mutex has been
+         × unavailable for the specified timeout duration
+         */
         template <class Rep, class Period>
         bool try_lock_for(const std::chrono::duration<Rep, Period>& rel_time) {
             return try_lock_until(std::chrono::steady_clock::now() + rel_time);
         }
         
+        /**
+         * tries to lock the mutex, returns if the mutex has been
+         * unavailable until specified time point has been reached
+         */
         template <class Clock, class Duration>
         bool try_lock_until(const std::chrono::time_point<Clock, Duration>& abs_time) {
             unique_lock<mutex> lk(state_change);
@@ -232,17 +261,9 @@ namespace fibio { namespace fibers {
             return true;
         }
         
-        bool try_lock() {
-            unique_lock<mutex> lk(state_change);
-            if(state.shared_count || state.exclusive) {
-                return false;
-            } else {
-                state.exclusive=true;
-                return true;
-            }
-            
-        }
-        
+        /**
+         * unlocks the mutex
+         */
         void unlock() {
             unique_lock<mutex> lk(state_change);
             state.assert_locked();
@@ -473,6 +494,22 @@ namespace fibio { namespace fibers {
             state.upgrade=true;
             return true;
         }
+
+    private:
+        shared_mutex(const shared_mutex &)=delete;
+        void operator=(const shared_mutex &)=delete;
+        
+        state_data state;
+        mutex state_change;
+        condition_variable shared_cond;
+        condition_variable exclusive_cond;
+        condition_variable upgrade_cond;
+        
+        void release_waiters() {
+            exclusive_cond.notify_one();
+            shared_cond.notify_all();
+        }
+        
     };
     
     template<typename Mutex>

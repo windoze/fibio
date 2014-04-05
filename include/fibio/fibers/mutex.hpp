@@ -15,70 +15,149 @@
 #include <fibio/fibers/detail/forward.hpp>
 
 namespace fibio { namespace fibers {
-    struct mutex {
+    class mutex {
+    public:
+        /// constructor
         mutex();
-        mutex(const mutex&) = delete;
         
+        /**
+         * locks the mutex, blocks if the mutex is not available
+         */
         void lock();
-        void unlock();
+
+        /**
+         * tries to lock the mutex, returns if the mutex is not available
+         */
         bool try_lock();
         
+        /**
+         * unlocks the mutex
+         */
+        void unlock();
+    private:
+        /// non-copyable
+        mutex(const mutex&) = delete;
+        void operator=(const mutex&) = delete;
         std::shared_ptr<detail::mutex_object> impl_;
+        friend class condition_variable;
     };
     
-    struct timed_mutex {
+    class timed_mutex {
+    public:
+        /// constructor
         timed_mutex();
-        timed_mutex(const timed_mutex&) = delete;
-        
+
+        /**
+         * locks the mutex, blocks if the mutex is not available
+         */
         void lock();
-        void unlock();
+
+        /**
+         * tries to lock the mutex, returns if the mutex is not available
+         */
         bool try_lock();
-        
+
+        /**
+         * tries to lock the mutex, returns if the mutex has been
+         * unavailable for the specified timeout duration
+         */
         template<class Rep, class Period>
         bool try_lock_for(const std::chrono::duration<Rep,Period>& timeout_duration ) {
             return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count());
         }
         
+        /**
+         * tries to lock the mutex, returns if the mutex has been
+         * unavailable until specified time point has been reached
+         */
         template< class Clock, class Duration >
         bool try_lock_until(const std::chrono::time_point<Clock,Duration>& timeout_time ) {
             return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::steady_clock::now()).count());
         }
         
+        /**
+         * unlocks the mutex
+         */
+        void unlock();
+    private:
+        /// non-copyable
+        timed_mutex(const timed_mutex&) = delete;
+        void operator=(const timed_mutex&) = delete;
         bool try_lock_usec(uint64_t usec);
         std::shared_ptr<detail::timed_mutex_object> impl_;
     };
     
-    struct recursive_mutex {
+    class recursive_mutex {
+    public:
+        /// constructor
         recursive_mutex();
-        recursive_mutex(const recursive_mutex&) = delete;
-        
+
+        /**
+         * locks the mutex, blocks if the mutex is not available
+         */
         void lock();
-        void unlock();
+
+        /**
+         * tries to lock the mutex, returns if the mutex is not available
+         */
         bool try_lock();
+
+        /**
+         * unlocks the mutex
+         */
+        void unlock();
         
+    private:
+        /// non-copyable
+        recursive_mutex(const recursive_mutex&) = delete;
+        void operator=(const recursive_mutex&) = delete;
         std::shared_ptr<detail::recursive_mutex_object> impl_;
     };
     
-    struct timed_recursive_mutex {
-        timed_recursive_mutex();
-        timed_recursive_mutex(const timed_recursive_mutex&) = delete;
-        
+    class recursive_timed_mutex {
+    public:
+        /// constructor
+        recursive_timed_mutex();
+
+        /**
+         * locks the mutex, blocks if the mutex is not available
+         */
         void lock();
-        void unlock();
+        
+        /**
+         * tries to lock the mutex, returns if the mutex is not available
+         */
         bool try_lock();
         
+        /**
+         * unlocks the mutex
+         */
+        void unlock();
+        
+        /**
+         * tries to lock the mutex, returns if the mutex has been
+         * unavailable for the specified timeout duration
+         */
         template<class Rep, class Period>
         bool try_lock_for(const std::chrono::duration<Rep,Period>& timeout_duration) {
             return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count());
         }
         
+        /**
+         * tries to lock the mutex, returns if the mutex has been
+         * unavailable until specified time point has been reached
+         */
         template<class Clock, class Duration>
         bool try_lock_until(const std::chrono::time_point<Clock,Duration>& timeout_time) {
             return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::steady_clock::now()).count());
         }
         
+    private:
+        /// non-copyable
+        recursive_timed_mutex(const recursive_timed_mutex&) = delete;
+        void operator=(const recursive_timed_mutex&) = delete;
         bool try_lock_usec(uint64_t usec);
-        std::shared_ptr<detail::timed_recursive_mutex_object> impl_;
+        std::shared_ptr<detail::recursive_timed_mutex_object> impl_;
     };
 }}  // End of namespace fibio::fibers
 
@@ -86,7 +165,7 @@ namespace fibio {
     using fibers::mutex;
     using fibers::timed_mutex;
     using fibers::recursive_mutex;
-    using fibers::timed_recursive_mutex;
+    using fibers::recursive_timed_mutex;
     
     using std::lock_guard;
     using std::unique_lock;

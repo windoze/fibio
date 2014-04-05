@@ -15,12 +15,17 @@
 #include <boost/system/error_code.hpp>
 
 namespace fibio { namespace fibers { namespace asio {
+    /// Context object that represents the currently executing fiber.
     class yield_t {
     public:
+        /// constructor
         constexpr yield_t()
         : ec_(0)
         {}
 
+        /**
+         * Return a yield context that sets the specified error_code.
+         */
         yield_t operator[](boost::system::error_code &ec) const {
             yield_t tmp;
             tmp.ec_ = &ec;
@@ -31,6 +36,7 @@ namespace fibio { namespace fibers { namespace asio {
         boost::system::error_code *ec_;
     };
     
+    /// pre-defined yield object
     constexpr yield_t yield;
 }}} // End of namespace fibio::fibers::asio
 

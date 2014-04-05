@@ -61,57 +61,77 @@ namespace fibio { namespace fibers {
         };
     }   // End of namespace fibio::fibers::detail
 
+    /**
+     * A barrier, also known as a rendezvous, is a synchronization point between multiple fibers.
+     * The barrier is configured for a particular number of fibers (`n`), and as fibers reach the
+     * barrier they must wait until all `n` fibers have arrived. Once the n-th fiber has reached
+     * the barrier, all the waiting fibers can proceed, and the barrier is reset.
+     */
     class barrier {
-        static inline unsigned int check_counter(unsigned int count) {
-            if (count == 0)
-                throw fiber_exception(boost::system::errc::invalid_argument,
-                                      "barrier constructor: count cannot be zero.");
-            return count;
-        }
-        
-        struct dummy
-        {};
-        
+        struct dummy {};
     public:
-        barrier(const barrier &)=delete;
-        
+        /**
+         * Construct a barrier for `count` fibers
+         */
         explicit barrier(unsigned int count)
         : m_count(check_counter(count))
         , m_generation(0)
         , fct_(detail::default_barrier_reseter(count))
         {}
         
+        /**
+         * Construct a barrier for `count` threads and a completion function `completion`.
+         */
         template <typename F>
         barrier(unsigned int count,
-                F&& funct,
+                F&& completion,
                 typename std::enable_if<std::is_void<typename std::result_of<F>::type>::value, dummy*>::type=0)
         : m_count(check_counter(count))
         , m_generation(0)
-        , fct_(detail::void_functor_barrier_reseter(count, std::move(funct)))
+        , fct_(detail::void_functor_barrier_reseter(count, std::move(completion)))
         {}
         
+        /**
+         * Construct a barrier for `count` threads and a completion function `completion`.
+         */
         template <typename F>
         barrier(unsigned int count,
-                F&& funct,
+                F&& completion,
                 typename std::enable_if<std::is_same<typename std::result_of<F>::type, unsigned int>::value, dummy*>::type=0)
         : m_count(check_counter(count))
         , m_generation(0)
-        , fct_(std::move(funct))
+        , fct_(std::move(completion))
         {}
         
-        barrier(unsigned int count, void(*funct)()) :
+        /**
+         * Construct a barrier for `count` threads and a completion function `completion`.
+         */
+        barrier(unsigned int count, void(*completion)()) :
         m_count(check_counter(count)), m_generation(0),
-        fct_(funct
-             ? detail::size_completion_function(detail::void_fct_ptr_barrier_reseter(count, funct))
-             : detail::size_completion_function(detail::default_barrier_reseter(count)))
-        {}
-        barrier(unsigned int count, unsigned int(*funct)()) :
-        m_count(check_counter(count)), m_generation(0),
-        fct_(funct
-             ? detail::size_completion_function(funct)
+        fct_(completion
+             ? detail::size_completion_function(detail::void_fct_ptr_barrier_reseter(count, completion))
              : detail::size_completion_function(detail::default_barrier_reseter(count)))
         {}
         
+        /**
+         * Construct a barrier for `count` threads and a completion function `completion`.
+         */
+        barrier(unsigned int count, unsigned int(*completion)()) :
+        m_count(check_counter(count)), m_generation(0),
+        fct_(completion
+             ? detail::size_completion_function(completion)
+             : detail::size_completion_function(detail::default_barrier_reseter(count)))
+        {}
+        
+        /**
+         * Block until count fibers have called `wait` or `count_down_and_wait` on `*this`.
+         * When the count-th fiber calls `wait`, the barrier is reset and all waiting fibers
+         * are unblocked. The reset depends on whether the barrier was constructed with a
+         * completion function or not. If there is no completion function or if the completion
+         * function result is `void`, the reset consists in restoring the original count.
+         * Otherwise the rest consist in assigning the result of the completion function
+         * (which must not be 0).
+         */
         bool wait() {
             unique_lock < mutex > lock(m_mutex);
             unsigned int gen = m_generation;
@@ -129,11 +149,30 @@ namespace fibio { namespace fibers {
             return false;
         }
         
+        /**
+         * Block until count fibers have called `wait` or `count_down_and_wait` on `*this`.
+         * When the count-th fiber calls `wait`, the barrier is reset and all waiting fibers
+         * are unblocked. The reset depends on whether the barrier was constructed with a
+         * completion function or not. If there is no completion function or if the completion
+         * function result is `void`, the reset consists in restoring the original count.
+         * Otherwise the rest consist in assigning the result of the completion function
+         * (which must not be 0).
+         */
         void count_down_and_wait() {
             wait();
         }
         
     private:
+        barrier(const barrier &)=delete;
+        void operator=(const barrier &)=delete;
+        
+        static inline unsigned int check_counter(unsigned int count) {
+            if (count == 0)
+                throw fiber_exception(boost::system::errc::invalid_argument,
+                                      "barrier constructor: count cannot be zero.");
+            return count;
+        }
+        
         mutex m_mutex;
         condition_variable m_cond;
         unsigned int m_count;
