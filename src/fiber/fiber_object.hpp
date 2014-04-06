@@ -16,6 +16,7 @@
 #include <atomic>
 #include <mutex>
 #include <map>
+#include <boost/assert.hpp>
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
@@ -26,20 +27,14 @@
 #include <fibio/fibers/detail/fiber_data.hpp>
 
 #if defined(DEBUG) && !defined(NDEBUG)
-#   define CHECK_CALLER(f) do { if (!f->caller_) assert(false); } while(0)
+#   define CHECK_CALLER(f) do { if (!f->caller_) BOOST_ASSERT(false); } while(0)
 #else
 #   define CHECK_CALLER(f)
 #endif
 
 #if defined(DEBUG) && !defined(NDEBUG)
-#   define CHECK_CURRENT_FIBER assert(::fibio::fibers::detail::fiber_object::current_fiber_)
+#   define CHECK_CURRENT_FIBER BOOST_ASSERT(::fibio::fibers::detail::fiber_object::current_fiber_)
 #else
-/*
-#   define CHECK_CURRENT_FIBER \
-    do if(!::fibio::fibers::detail::fiber_object::current_fiber_) \
-        throw make_error_code(boost::system::errc::no_such_process) \
-    while(0)
- */
 #   define CHECK_CURRENT_FIBER
 #endif
 

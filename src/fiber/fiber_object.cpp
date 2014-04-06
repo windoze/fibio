@@ -8,7 +8,6 @@
 
 #include <memory>
 #include <algorithm>
-#include <system_error>
 #include <fibio/fibers/fiber.hpp>
 #include <fibio/fibers/fss.hpp>
 #include <fibio/fibers/mutex.hpp>
@@ -146,10 +145,18 @@ namespace fibio { namespace fibers { namespace detail {
     
     // Switch out of fiber context
     void fiber_object::pause() {
+        // Pre-condition
+        // Can only pause current running fiber
+        BOOST_ASSERT(current_fiber_==this);
+        
         set_state(BLOCKED);
     }
     
     inline void activate_fiber(fiber_ptr_t this_fiber) {
+        // Pre-condition
+        // Cannot activate current running fiber
+        BOOST_ASSERT(fiber_object::current_fiber_!=this_fiber.get());
+        
         this_fiber->state_=fiber_object::READY;
         this_fiber->one_step();
     }
@@ -164,6 +171,11 @@ namespace fibio { namespace fibers { namespace detail {
     
     // Following functions can only be called inside coroutine
     void fiber_object::yield() {
+        // Pre-condition
+        // Can only pause current running fiber
+        BOOST_ASSERT(current_fiber_==this);
+        BOOST_ASSERT(state_==RUNNING);
+        
         set_state(READY);
     }
 
