@@ -14,9 +14,13 @@
 
 using namespace fibio;
 
+/// A test data structure
 struct data {
+    /// default constructor sets member
     data(int x) : n(x) {}
+    /// move constructor clears source
     data(data &&other) : n(other.n) { other.n=0; }
+    /// copy constructor
     data(const data &other) : n(other.n) {}
     int n=0;
 };
@@ -42,7 +46,8 @@ struct fiber_entry2 {
 };
 
 void ex() {
-    throw std::runtime_error("exception from child fiber");
+    // Throw something, has not to be std::exception
+    throw std::string("exception from child fiber");
 }
 
 int fibio::main(int argc, char *argv[]) {
@@ -56,6 +61,7 @@ int fibio::main(int argc, char *argv[]) {
     data d5(5);
     data d6(6);
     
+    // Plain function as the entry
     // Make a copy, d1 won't change
     fibers.create_fiber(f1, d1);
     // Move, d2.n becomes 0
@@ -64,22 +70,29 @@ int fibio::main(int argc, char *argv[]) {
     fibers.create_fiber(f2, std::ref(d3));
     // Don't compile
     // fibers.push_back(fiber(f2, std::cref(d3)));
+    
+    // Functor as the entry
+    // Make a copy d4 won't change
     fibers.create_fiber(fiber_entry1(), d4);
+    // Move, d5 becomes 0
     fibers.create_fiber(fiber_entry1(), std::move(d5));
+    // Ref, d6 will be changed
     fibers.create_fiber(fiber_entry2(), std::ref(d6));
     
-    // join with rethrow
+    // join with propagation
     fiber fex1(ex);
     try {
         fex1.join(true);
         // joining will throw
         assert(false);
-    } catch(std::exception &e) {
-        assert(std::string(e.what())=="exception from child fiber");
+    } catch(std::string &e) {
+        assert(e=="exception from child fiber");
     }
     
-    // join without rethrow
+    // join without propagation, will cause std::terminate() to be called
+    /*
     fiber fex2(ex);
+    fex2.set_name("ex2");
     try {
         // joining will not throw
         fex2.join();
@@ -87,6 +100,7 @@ int fibio::main(int argc, char *argv[]) {
         // No exception should be thrown
         assert(false);
     }
+     */
     
     fibers.join_all();
     
