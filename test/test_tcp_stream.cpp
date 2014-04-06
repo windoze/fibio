@@ -91,7 +91,7 @@ void ssl_child() {
 }
 
 /**
- * Copy boost/libs/asio/example/cpp03/ssl/*.pem to /tmp before running
+ * Copy boost/libs/asio/example/cpp03/ssl/{ca,dh512,server}.pem to /tmp before running
  */
 void ssl_parent() {
     fiber f(ssl_child);
