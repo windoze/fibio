@@ -52,7 +52,7 @@ namespace fibio { namespace fibers { namespace detail {
         }
 
         timer_ptr_t check_timer=std::make_shared<timer_t>(io_service_);
-        check_timer->expires_from_now(std::chrono::seconds(1));
+        check_timer->expires_from_now(std::chrono::milliseconds(50));
         scheduler_ptr_t pthis(shared_from_this());
         check_timer->async_wait(std::bind(&scheduler_object::on_check_timer, pthis, check_timer, std::placeholders::_1));
         for(size_t i=0; i<nthr; i++) {
