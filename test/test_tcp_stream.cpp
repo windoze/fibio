@@ -90,6 +90,9 @@ void ssl_child() {
     str.close();
 }
 
+/**
+ * Copy boost/libs/asio/example/cpp03/ssl/*.pem to /tmp before running
+ */
 void ssl_parent() {
     fiber f(ssl_child);
     boost::random::mt19937 rng;
