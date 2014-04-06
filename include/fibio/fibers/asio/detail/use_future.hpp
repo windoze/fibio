@@ -50,7 +50,7 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
             if (ec)
                 promise_->set_exception(boost::copy_exception(boost::system::system_error(ec)));
             else
-                promise_->set_value();
+                promise_->set_value(t);
         }
         
         //private:
