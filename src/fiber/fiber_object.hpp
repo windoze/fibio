@@ -16,6 +16,7 @@
 #include <atomic>
 #include <mutex>
 #include <map>
+#include <exception>
 #include <boost/assert.hpp>
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/asio/io_service.hpp>
@@ -139,7 +140,7 @@ namespace fibio { namespace fibers { namespace detail {
         fss_map_t fss_;
         fiber_ptr_t this_ref_;
         std::string name_;
-        std::nested_exception uncaught_exception_;
+        std::exception_ptr uncaught_exception_;
     };
     
     template<typename Lockable>

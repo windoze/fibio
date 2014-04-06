@@ -26,6 +26,7 @@ namespace fibio { namespace fibers { namespace detail {
     , entry_(entry)
     , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1) )
     , caller_(0)
+    , uncaught_exception_(0)
     {}
     
     fiber_object::fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, entry_t entry)
@@ -35,11 +36,16 @@ namespace fibio { namespace fibers { namespace detail {
     , entry_(entry)
     , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1) )
     , caller_(0)
+    , uncaught_exception_(0)
     {}
     
     fiber_object::~fiber_object() {
         if (state_!=STOPPED) {
             // std::thread will call std::terminate if deleting a unstopped thread
+            std::terminate();
+        }
+        if (uncaught_exception_ != std::exception_ptr()) {
+            // There is an uncaught exception not propagated to joiner
             std::terminate();
         }
     }
@@ -65,20 +71,8 @@ namespace fibio { namespace fibers { namespace detail {
         } catch(const boost::coroutines::detail::forced_unwind&) {
             // Boost.Coroutine requirement
             throw;
-        } catch(std::exception &e) {
-            // This exception can be propagated to joiner
-            // HACK: Why there is no way to just create a nested_exception?
-            try {
-                std::throw_with_nested(e);
-            } catch (std::nested_exception &ne) {
-                std::lock_guard<std::mutex> guard(mtx_);
-                uncaught_exception_=ne;
-            }
         } catch(...) {
-            // TODO: Uncaught unknown exception
-            // This is standard action for threads, is this appropriate for fibers?
-            // Is there any way to do stack trace?
-            std::terminate();
+            uncaught_exception_=std::current_exception();
         }
         // Fiber function exits, set state to STOPPED
         c(STOPPED);
@@ -196,16 +190,16 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void propagate_exception(fiber_ptr_t f) {
-        std::nested_exception e;
-        if (f->uncaught_exception_.nested_ptr()) {
+        std::exception_ptr e;
+        if (f->uncaught_exception_ != std::exception_ptr()) {
             // Propagate uncaught exception in f to this fiber
             e=f->uncaught_exception_;
             // Clean uncaught exception in f
-            f->uncaught_exception_=std::nested_exception();
+            f->uncaught_exception_=std::exception_ptr();
         }
         // throw propagated exception
-        if (e.nested_ptr()) {
-            e.rethrow_nested();
+        if (e != std::exception_ptr()) {
+            std::rethrow_exception(e);
         }
     }
     
