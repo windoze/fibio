@@ -63,6 +63,7 @@ namespace fibio { namespace fibers {
     
 //#ifndef NO_VARIADIC_TEMPLATE
 #if 0
+    // FIXME: doesn't compile under GCC 4.8.1
     template<typename Fn, typename ...Args>
     int fiberize(size_t nthr, Fn &&fn, Args&& ...args) {
         int ret;
@@ -99,28 +100,11 @@ namespace fibio { namespace fibers {
         return ret;
     }
 #else
-    inline int fiberize(size_t nthr, std::function<int(int, char *[])> &&fn, int argc, char *argv[]) {
+    inline int fiberize(std::function<int(int, char *[])> &&fn, int argc, char *argv[], size_t nthr=1) {
         int ret;
         try {
             fibio::scheduler sched=fibio::scheduler::get_instance();
             sched.start(nthr);
-            fibio::fiber f([&](){
-                detail::fiberized_std_stream_guard guard;
-                ret=fn(argc, argv);
-            });
-            sched.join();
-        } catch (std::exception& e) {
-            std::cerr << "Exception: " << e.what() << "\n";
-        }
-        fibio::scheduler::reset_instance();
-        return ret;
-    }
-    
-    inline int fiberize(std::function<int(int, char *[])> &&fn, int argc, char *argv[]) {
-        int ret;
-        try {
-            fibio::scheduler sched=fibio::scheduler::get_instance();
-            sched.start();
             fibio::fiber f([&](){
                 detail::fiberized_std_stream_guard guard;
                 ret=fn(argc, argv);
