@@ -26,7 +26,6 @@ namespace fibio { namespace fibers { namespace detail {
     , entry_(entry)
     , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1) )
     , caller_(0)
-    , uncaught_exception_(0)
     {}
     
     fiber_object::fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, entry_t entry)
@@ -36,7 +35,6 @@ namespace fibio { namespace fibers { namespace detail {
     , entry_(entry)
     , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1) )
     , caller_(0)
-    , uncaught_exception_(0)
     {}
     
     fiber_object::~fiber_object() {
