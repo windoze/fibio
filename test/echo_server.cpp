@@ -9,6 +9,7 @@
 #include <iostream>
 #include <chrono>
 #include <atomic>
+#include <boost/asio/basic_waitable_timer.hpp>
 #include <fibio/fiber.hpp>
 #include <fibio/stream/iostream.hpp>
 #include <fibio/fiberize.hpp>
