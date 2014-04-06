@@ -9,15 +9,24 @@
 #include <iostream>
 #include <chrono>
 #include <atomic>
+#include <signal.h>
 #include <boost/asio/basic_waitable_timer.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <fibio/fiber.hpp>
 #include <fibio/stream/iostream.hpp>
 #include <fibio/fiberize.hpp>
+#include <fibio/asio.hpp>
 
 using namespace fibio;
 std::string address("0::0");
 std::atomic<unsigned short> listen_port;
-std::atomic<bool> should_exit(false);
+
+// We don't need atomic or any other kind of synchronization as console and
+// main_watchdog fibers are always running in the same thread with main_fiber
+bool should_exit=false;
+
+// Active connection counter
+// Need to be atomic as this counter will be used across multiple threads
 std::atomic<size_t> connections(0);
 
 typedef boost::asio::basic_waitable_timer<std::chrono::steady_clock> watchdog_timer_t;
@@ -33,70 +42,133 @@ void help_message() {
     std::cout << "help:\tshow this message" << std::endl;
 }
 
+/**
+ * console handler, set the exit flag on "quit" command
+ */
 void console() {
+    // Hello message
     hello(std::cout);
+    
+    // Help message
     help_message();
+    
+    // Flush `std::cout` before getting input
     std::cin.tie(&std::cout);
-    while(std::cin) {
+    
+    // Read a line from `std::cin` and process commands
+    while(!should_exit && std::cin) {
         std::string line;
+        // Command line prompt
         std::cout << "> ";
+        // `std::cout` is automatically flushed before reading as it's tied to std::cout
         std::getline(std::cin, line);
+        // Ignore empty line
         if(line.empty()) continue;
         if(line=="quit") {
+            // Set the exit flag on `quit` command
             break;
         } else if (line=="info") {
+            // Output the number of active connections
             std::cout << "Active connections: " << connections << std::endl;
         } else if (line=="help") {
+            // Show help message
             help_message();
         } else {
             std::cout << "Invalid command" << std::endl;
             help_message();
         }
     }
+    
+    // Set the exit flag
     should_exit=true;
-    std::cout << "Exiting..." << std::endl;
 }
 
+/**
+ * watchdog for servant, close connection on timeout
+ */
 void servant_watchdog(watchdog_timer_t &timer, tcp_stream &s) {
     boost::system::error_code ignore_ec;
     while (s.is_open()) {
         timer.async_wait(asio::yield[ignore_ec]);
-        // close the stream if timeout
+        // close the stream on timeout
         if (timer.expires_from_now() <= std::chrono::seconds(0)) {
             s.close();
         }
     }
 }
 
+/**
+ * connection handler fiber
+ */
 void echo_servant(tcp_stream s) {
-    struct conn_guard {
-        conn_guard() {connections+=1;}
-        ~conn_guard() {connections-=1;}
-    } guard;
+    /**
+     * Active connection counter
+     */
+    struct conn_counter {
+        conn_counter() {connections+=1;}
+        ~conn_counter() {connections-=1;}
+    } counter;
 
+    // Timeout timer
     watchdog_timer_t timer(asio::get_io_service());
+    
+    // Set connection timeout
     timer.expires_from_now(std::chrono::seconds(3));
-    fiber watchdog(fiber::attributes(fiber::attributes::stick_with_parent), servant_watchdog, std::ref(timer), std::ref(s) );
+    
+    // Start watchdog fiber, close connection on timeout
+    fiber watchdog(fiber::attributes(fiber::attributes::stick_with_parent),
+                   servant_watchdog,
+                   std::ref(timer),
+                   std::ref(s) );
+    // Hello message
     hello(s);
+    
+    // Read a line and send it back
     std::string line;
     while (std::getline(s, line)) {
         s << line << std::endl;
-        // Reset the watchdog
+        // Reset timeout timer on input
         timer.expires_from_now(std::chrono::seconds(3));
     }
-    // Join the watchdog fiber, make sure it will not use released stream and timer
+    
+    // Ask watchdog to exit
     timer.expires_from_now(std::chrono::seconds(0));
     timer.cancel();
+    
+    // Make sure watchdog has ended
     watchdog.join();
 }
 
+/**
+ * Watchdog for main fiber, check the exit flag and signals once every second,
+ * close main acceptor when flag is set or received signal
+ */
 void main_watchdog(tcp_stream_acceptor &acc) {
-    while (!should_exit) {
-        this_fiber::sleep_for(std::chrono::seconds(1));
-    }
+    boost::asio::signal_set ss(asio::get_io_service(),
+                               SIGINT,
+                               SIGTERM);
+#ifdef SIGQUIT
+    ss.add(SIGQUIT);
+#endif
+    
+    // Get a future, the future is ready if there is a signal
+    future<int> sig=ss.async_wait(asio::use_future);
+    
+    while(!should_exit
+          && sig.wait_for(std::chrono::seconds(1))!=future_status::ready)
+    {}
+    
+    // Set the exit flag
+    should_exit=true;
+    
+    // Close main acceptor
     acc.close();
 }
 
+/**
+ * main fiber, create acceptor to accept incoming connections,
+ * starts a servant fiber to handle connection
+ */
 int fibio::main(int argc, char *argv[]) {
     if (argc<2) {
         std::cerr << "Usage:" << "\t" << argv[0] << " [address] port" << std::endl;
@@ -108,16 +180,32 @@ int fibio::main(int argc, char *argv[]) {
         address=argv[1];
         listen_port=atoi(argv[2]);
     }
+    
+    // Start more work threads
     scheduler::get_instance().add_worker_thread(3);
-    fiber(console).detach();
+
+    // Start console fiber within same thread as main fiber
+    fiber(fiber::attributes(fiber::attributes::stick_with_parent),
+          console).detach();
+    
+    // Acceptor
     tcp_stream_acceptor acc(address, listen_port);
-    fiber watchdog(fiber::attributes(fiber::attributes::stick_with_parent), main_watchdog, std::ref(acc));
-    while(true) {
+    
+    // Start a watchdog fiber within same thread as main fiber
+    fiber(fiber::attributes(fiber::attributes::stick_with_parent),
+          main_watchdog,
+          std::ref(acc)).detach();
+    
+    // Accept incoming connections
+    while(!should_exit) {
         boost::system::error_code ec;
+        // Wait and accept a new connection
         tcp_stream s=acc(ec);
+        // Stop accepting on error, watchdog closes the acceptor when the exit flag is set
         if(ec) break;
+        // Create a new servant fiber to handle the connection
         fiber(echo_servant, std::move(s)).detach();
     }
-    watchdog.join();
+    std::cout << "Echo server existing..." << std::endl;
     return 0;
 }
