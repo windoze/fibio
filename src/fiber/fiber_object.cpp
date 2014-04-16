@@ -292,30 +292,28 @@ namespace fibio { namespace fibers {
     void fiber::start() {
         impl_=scheduler::get_instance().impl_->make_fiber(data_);
     }
+    
     void fiber::start(attributes attr) {
-        switch(attr.policy) {
-            case attributes::scheduling_policy::normal: {
-                if (detail::fiber_object::current_fiber_) {
-                    // use current scheduler if we're in a fiber
+        if (detail::fiber_object::current_fiber_) {
+            // use current scheduler if we're in a fiber
+            switch(attr.policy) {
+                case attributes::scheduling_policy::normal: {
+                    // Create an isolated fiber
                     impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(data_);
-                } else {
-                    // use default scheduler
-                    impl_=scheduler::get_instance().impl_->make_fiber(data_);
+                    break;
                 }
-                break;
-            }
-            case attributes::scheduling_policy::stick_with_parent: {
-                if (detail::fiber_object::current_fiber_) {
+                case attributes::scheduling_policy::stick_with_parent: {
+                    // Create a fiber shares strand with parent
                     impl_=scheduler::get_instance().impl_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
                                                                       data_);
-                } else {
-                    impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
-                                                                                   data_);
+                    break;
                 }
-                break;
+                default:
+                    break;
             }
-            default:
-                break;
+        } else {
+            // use default scheduler if we're not in a fiber
+            impl_=scheduler::get_instance().impl_->make_fiber(data_);
         }
     }
     
