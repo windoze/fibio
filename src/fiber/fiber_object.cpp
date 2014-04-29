@@ -327,6 +327,7 @@ namespace fibio { namespace fibers {
             // This fiber is still active, std::thread will call std::terminate in the case
             std::terminate();
         }
+        data_=std::move(other.data_);
         impl_=std::move(other.impl_);
         return *this;
     }
