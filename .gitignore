@@ -3,6 +3,9 @@
 *.swp
 *.lock
 
+# Qt Creator
+*.user
+
 # Xcode
 *.pbxuser
 *.mode1v3
