@@ -5,7 +5,9 @@ file(GLOB FIBER_SRC "fiber/*.[ch]pp")
 add_library(fibio ${FIBER_HDR} ${FIBER_SRC})
 target_link_libraries(fibio ${Boost_LIBRARIES})
 
-install (TARGETS fibio DESTINATION lib)
 install (DIRECTORY "${CMAKE_SOURCE_DIR}/include/fibio"
          DESTINATION include
          PATTERN ".*" EXCLUDE)
+install (TARGETS fibio EXPORT fibio-targets DESTINATION lib/fibio)
+install (EXPORT fibio-targets DESTINATION lib/fibio)
+install (FILES fibio-config.cmake DESTINATION lib/fibio)
