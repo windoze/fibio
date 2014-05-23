@@ -189,6 +189,8 @@
 		2D5A309018E95F3600C5EB41 /* use_future.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = use_future.hpp; sourceTree = "<group>"; };
 		2D5A309218E9605E00C5EB41 /* asio.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = asio.hpp; sourceTree = "<group>"; };
 		2D6A7BF318E05C5500AC89EC /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		2D75D679192FAFA600B85950 /* fibio-config.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "fibio-config.cmake"; sourceTree = "<group>"; };
+		2D75D67A192FB00400B85950 /* CPackLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CPackLists.txt; sourceTree = "<group>"; };
 		2D7E685F18CCCD5D00B7C4E5 /* concurrent_queue.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = concurrent_queue.hpp; sourceTree = "<group>"; };
 		2D7E686018CCCD5D00B7C4E5 /* fiber.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = fiber.hpp; sourceTree = "<group>"; };
 		2D7E686218CCCD5D00B7C4E5 /* condition_variable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = condition_variable.hpp; sourceTree = "<group>"; };
@@ -396,6 +398,7 @@
 				2D6A7BF318E05C5500AC89EC /* LICENSE */,
 				2D7E688318CCCD5D00B7C4E5 /* TODO.md */,
 				2D13199C18CF85330086156F /* CMakeLists.txt */,
+				2D75D67A192FB00400B85950 /* CPackLists.txt */,
 				2D7E685C18CCCD5D00B7C4E5 /* include */,
 				2D7E687418CCCD5D00B7C4E5 /* src */,
 				2D13199D18D09B630086156F /* test */,
@@ -492,6 +495,7 @@
 			isa = PBXGroup;
 			children = (
 				2D131A1518D0C9200086156F /* CMakeLists.txt */,
+				2D75D679192FAFA600B85950 /* fibio-config.cmake */,
 				2D7E687518CCCD5D00B7C4E5 /* fiber */,
 			);
 			path = src;
