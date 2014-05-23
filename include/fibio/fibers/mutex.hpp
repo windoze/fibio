@@ -39,7 +39,7 @@ namespace fibio { namespace fibers {
         mutex(const mutex&) = delete;
         void operator=(const mutex&) = delete;
         std::shared_ptr<detail::mutex_object> impl_;
-        friend class condition_variable;
+        friend struct condition_variable;
     };
     
     class timed_mutex {
