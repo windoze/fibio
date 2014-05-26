@@ -61,7 +61,6 @@ Utilities
 * RPC framework
     * Thrift
     * Protocol buffer based
-* Template engine for HTTP server
 * Fiber-local-allocator(?)
 * fiber-local allocated containers(?)
 
