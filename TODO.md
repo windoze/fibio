@@ -53,13 +53,6 @@ Utilities
     * JSON
     * XML
     * BSON
-* Stream with compression
-    * gzip
-        * Client can send compressed request
-        * <del>Client can receive compressed response (DONE)</del>
-        * Server can receive compressed request
-        * Server can send compressed response
-    * deflate
 * Database driver
     * Redis driver
     * MongoDB driver(?)
