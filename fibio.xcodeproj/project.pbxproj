@@ -998,6 +998,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/usr/local/include,
+					"$(SRCROOT)/include",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				WARNING_CFLAGS = "-Wno-deprecated-register";
@@ -1031,6 +1032,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/usr/local/include,
+					"$(SRCROOT)/include",
 				);
 				WARNING_CFLAGS = "-Wno-deprecated-register";
 			};
