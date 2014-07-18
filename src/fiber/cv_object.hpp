@@ -23,7 +23,7 @@ namespace fibio { namespace fibers { namespace detail {
         void notify_one();
         void notify_all();
         
-        std::mutex mtx_;
+        spinlock mtx_;
         struct suspended_item {
             mutex_ptr_t m_;
             fiber_ptr_t f_;

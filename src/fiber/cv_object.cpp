@@ -30,7 +30,7 @@ namespace fibio { namespace fibers { namespace detail {
             throw condition_error(boost::system::errc::operation_not_permitted);
         }
         {
-            std::lock_guard<std::mutex> lock(mtx_);
+            std::lock_guard<spinlock> lock(mtx_);
             // The "suspension of this fiber" is actually happened here, not the pause()
             // as other will see there is a fiber in the waiting queue.
             suspended_.push_back(suspended_item({m, this_fiber, timer_ptr_t()}));
@@ -48,7 +48,7 @@ namespace fibio { namespace fibers { namespace detail {
         if(!ec) {
             // Timeout
             // Timeout handler, find and remove this fiber from waiting queue
-            std::lock_guard<std::mutex> lock(this_cv->mtx_);
+            std::lock_guard<spinlock> lock(this_cv->mtx_);
             ret=cv_status::timeout;
             // Find and remove this fiber from waiting queue
             auto i=std::find_if(this_cv->suspended_.begin(),
@@ -72,7 +72,7 @@ namespace fibio { namespace fibers { namespace detail {
             throw condition_error(boost::system::errc::operation_not_permitted);
         }
         {
-            std::lock_guard<std::mutex> lock(mtx_);
+            std::lock_guard<spinlock> lock(mtx_);
             timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
             suspended_.push_back(suspended_item({m, this_fiber, t}));
             std::shared_ptr<condition_variable_object> this_cv(shared_from_this());
@@ -91,7 +91,7 @@ namespace fibio { namespace fibers { namespace detail {
 
     void condition_variable_object::notify_one() {
         {
-            std::lock_guard<std::mutex> lock(mtx_);
+            std::lock_guard<spinlock> lock(mtx_);
             if (suspended_.empty()) {
                 return;
             }
@@ -116,7 +116,7 @@ namespace fibio { namespace fibers { namespace detail {
     
     void condition_variable_object::notify_all() {
         {
-            std::lock_guard<std::mutex> lock(mtx_);
+            std::lock_guard<spinlock> lock(mtx_);
             while (!suspended_.empty()) {
                 suspended_item p(suspended_.front());
                 suspended_.pop_front();

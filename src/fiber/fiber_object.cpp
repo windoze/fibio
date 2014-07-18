@@ -49,12 +49,12 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void fiber_object::set_name(const std::string &s) {
-        std::lock_guard<std::mutex> lock(mtx_);
+        std::lock_guard<spinlock> lock(mtx_);
         name_=s;
     }
     
     std::string fiber_object::get_name() {
-        std::lock_guard<std::mutex> lock(mtx_);
+        std::lock_guard<spinlock> lock(mtx_);
         return name_;
     }
     
@@ -78,7 +78,7 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void fiber_object::detach() {
-        std::lock_guard<std::mutex> lock(mtx_);
+        std::lock_guard<spinlock> lock(mtx_);
         if (state_!=STOPPED) {
             // Hold a reference to this, make sure detached fiber live till ends
             this_ref_=shared_from_this();
@@ -113,7 +113,7 @@ namespace fibio { namespace fibers { namespace detail {
             cleanup_queue_t temp;
             {
                 // Move joining queue content out
-                std::lock_guard<std::mutex> lock(mtx_);
+                std::lock_guard<spinlock> lock(mtx_);
                 temp.swap(cleanup_queue_);
             }
             // Fiber ended, clean up joining queue
@@ -173,7 +173,7 @@ namespace fibio { namespace fibers { namespace detail {
 
     void fiber_object::join(fiber_ptr_t f) {
         CHECK_CALLER(this);
-        std::lock_guard<std::mutex> lock(f->mtx_);
+        std::lock_guard<spinlock> lock(f->mtx_);
         if (this==f.get()) {
             // The fiber is joining itself
             throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
@@ -184,7 +184,7 @@ namespace fibio { namespace fibers { namespace detail {
             f->cleanup_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
         }
 
-        { relock_guard<std::mutex> relock(f->mtx_); pause(); }
+        { relock_guard<spinlock> relock(f->mtx_); pause(); }
     }
     
     void propagate_exception(fiber_ptr_t f) {
@@ -203,7 +203,7 @@ namespace fibio { namespace fibers { namespace detail {
     
     void fiber_object::join_and_rethrow(fiber_ptr_t f) {
         CHECK_CALLER(this);
-        std::lock_guard<std::mutex> lock(f->mtx_);
+        std::lock_guard<spinlock> lock(f->mtx_);
         if (this==f.get()) {
             // The fiber is joining itself
             throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
@@ -216,7 +216,7 @@ namespace fibio { namespace fibers { namespace detail {
             f->cleanup_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
         }
 
-        { relock_guard<std::mutex> relock(f->mtx_); pause(); }
+        { relock_guard<spinlock> relock(f->mtx_); pause(); }
 
         // Joining completed, propagate exception from joinee
         propagate_exception(f);
@@ -236,7 +236,7 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void fiber_object::add_cleanup_function(std::function<void()> &&f) {
-        std::lock_guard<std::mutex> lock(mtx_);
+        std::lock_guard<spinlock> lock(mtx_);
         cleanup_queue_.push_back(std::move(f));
     }
     

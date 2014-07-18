@@ -14,7 +14,6 @@
 #include <chrono>
 #include <deque>
 #include <atomic>
-#include <mutex>
 #include <map>
 #include <exception>
 #include <boost/assert.hpp>
@@ -26,6 +25,7 @@
 #include <fibio/fibers/exceptions.hpp>
 #include <fibio/fibers/detail/fiber_base.hpp>
 #include <fibio/fibers/detail/fiber_data.hpp>
+#include <fibio/fibers/detail/spinlock.hpp>
 
 #if defined(DEBUG) && !defined(NDEBUG)
 #   define CHECK_CALLER(f) do { if (!f->caller_) BOOST_ASSERT(false); } while(0)
@@ -131,7 +131,7 @@ namespace fibio { namespace fibers { namespace detail {
 
         scheduler_ptr_t sched_;
         strand_ptr_t fiber_strand_;
-        std::mutex mtx_;
+	spinlock mtx_;
         std::atomic<state_t> state_;
         entry_t entry_;
         runner_t runner_;

@@ -24,7 +24,7 @@ namespace fibio { namespace fibers { namespace detail {
         bool try_lock(fiber_ptr_t this_fiber);
         void unlock(fiber_ptr_t this_fiber);
         
-        std::mutex mtx_;
+        spinlock mtx_;
         fiber_ptr_t owner_;
         waiting_queue_t suspended_;
     };
@@ -38,7 +38,7 @@ namespace fibio { namespace fibers { namespace detail {
         bool try_lock(fiber_ptr_t this_fiber);
         void unlock(fiber_ptr_t this_fiber);
         
-        std::mutex mtx_;
+        spinlock mtx_;
         size_t level_;
         fiber_ptr_t owner_;
         waiting_queue_t suspended_;
@@ -50,7 +50,7 @@ namespace fibio { namespace fibers { namespace detail {
         bool try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec);
         void unlock(fiber_ptr_t this_fiber);
         
-        std::mutex mtx_;
+        spinlock mtx_;
         fiber_ptr_t owner_;
         struct suspended_item {
             fiber_ptr_t f_;
@@ -69,7 +69,7 @@ namespace fibio { namespace fibers { namespace detail {
         bool try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec);
         void unlock(fiber_ptr_t this_fiber);
         
-        std::mutex mtx_;
+        spinlock mtx_;
         size_t level_;
         fiber_ptr_t owner_;
         struct suspended_item {
