@@ -45,9 +45,9 @@ void f1(int n) {
 timed_mutex tm;
 
 void child() {
-    bool ret=tm.try_lock_for(std::chrono::seconds(1));
+    bool ret=tm.try_lock_for(std::chrono::milliseconds(10));
     assert(!ret);
-    ret=tm.try_lock_for(std::chrono::seconds(3));
+    ret=tm.try_lock_for(std::chrono::milliseconds(30));
     assert(ret);
     //printf("child()\n");
 }
@@ -55,7 +55,7 @@ void child() {
 void parent() {
     fiber f(child);
     tm.lock();
-    this_fiber::sleep_for(std::chrono::seconds(3));
+    this_fiber::sleep_for(std::chrono::milliseconds(30));
     tm.unlock();
     //printf("parent():1\n");
     f.join();
@@ -67,11 +67,11 @@ int fibio::main(int argc, char *argv[]) {
 
     fiber_group fibers;
     fibers.create_fiber(parent);
-    for (int i=0; i<100; i++) {
+    for (int i=0; i<10; i++) {
         fibers.create_fiber(f, i);
     }
     scheduler::get_instance().add_worker_thread(3);
-    for (int i=0; i<100; i++) {
+    for (int i=0; i<10; i++) {
         fibers.create_fiber(f1, i);
     }
     fibers.join_all();
