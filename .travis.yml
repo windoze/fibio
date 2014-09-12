@@ -23,4 +23,4 @@ install:
   - (cd $BOOST_ROOT; ./bootstrap.sh --with-libraries=atomic,chrono,context,coroutine,iostreams,system,thread)
   - (cd $BOOST_ROOT; ./b2 threading=multi --prefix=$BOOST_ROOT -d0 install)
 
-script: mkdir build && cd build && cmake ../ && make
+script: mkdir build && cd build && cmake ../ && make && make test
