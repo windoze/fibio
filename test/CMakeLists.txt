@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+enable_testing()
+
 add_executable(test_fibers test_fibers.cpp)
 TARGET_LINK_LIBRARIES(test_fibers ${FIBIO_LIBS})
 
@@ -24,3 +26,11 @@ TARGET_LINK_LIBRARIES(test_tcp_stream ${FIBIO_LIBS} ${OPENSSL_LIBRARIES})
 
 add_executable(echo_server echo_server.cpp)
 TARGET_LINK_LIBRARIES(echo_server ${FIBIO_LIBS})
+
+add_test(fibers test_fibers)
+add_test(mutex test_mutex)
+add_test(condition_variable test_cv)
+add_test(concurrent_queue test_cq)
+add_test(future test_future)
+add_test(ASIO test_asio)
+

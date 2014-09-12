@@ -8,7 +8,7 @@ if(APPLE)
 endif(APPLE)
 
 find_package(Threads REQUIRED)
-find_package(Boost 1.55.0 COMPONENTS system coroutine context REQUIRED)
+find_package(Boost 1.55.0 COMPONENTS system thread coroutine context REQUIRED)
 
 INCLUDE_DIRECTORIES(
     ${Boost_INCLUDE_DIRS}
@@ -22,3 +22,5 @@ ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(test)
 
 INCLUDE("CPackLists.txt")
+
+enable_testing()
