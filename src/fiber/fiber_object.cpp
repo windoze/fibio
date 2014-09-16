@@ -20,7 +20,7 @@
 #include <boost/coroutine/stack_allocator.hpp>
 #include <boost/coroutine/stack_context.hpp>
 #include <unordered_map>
-#include <valgrind/valgrind.h>
+#include "valgrind.h"
 #endif  // defined(HAVE_VALGRIND_H)
 
 namespace fibio { namespace fibers { namespace detail {
