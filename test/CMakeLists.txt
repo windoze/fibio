@@ -5,6 +5,9 @@ enable_testing()
 add_executable(test_fibers test_fibers.cpp)
 TARGET_LINK_LIBRARIES(test_fibers ${FIBIO_LIBS})
 
+add_executable(test_fss test_fss.cpp)
+TARGET_LINK_LIBRARIES(test_fss ${FIBIO_LIBS})
+
 add_executable(test_mutex test_mutex.cpp)
 TARGET_LINK_LIBRARIES(test_mutex ${FIBIO_LIBS})
 
@@ -28,6 +31,7 @@ add_executable(echo_server echo_server.cpp)
 TARGET_LINK_LIBRARIES(echo_server ${FIBIO_LIBS})
 
 add_test(fibers test_fibers)
+add_test(fss test_fss)
 add_test(mutex test_mutex)
 add_test(condition_variable test_cv)
 add_test(concurrent_queue test_cq)
