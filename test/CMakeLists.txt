@@ -23,9 +23,13 @@ TARGET_LINK_LIBRARIES(test_future ${FIBIO_LIBS})
 add_executable(test_asio test_asio.cpp)
 TARGET_LINK_LIBRARIES(test_asio ${FIBIO_LIBS})
 
-find_package(OpenSSL)
 add_executable(test_tcp_stream test_tcp_stream.cpp)
-TARGET_LINK_LIBRARIES(test_tcp_stream ${FIBIO_LIBS} ${OPENSSL_LIBRARIES})
+TARGET_LINK_LIBRARIES(test_tcp_stream ${FIBIO_LIBS})
+
+find_package(OpenSSL)
+add_executable(test_ssl_stream test_ssl_stream.cpp)
+TARGET_LINK_LIBRARIES(test_ssl_stream ${FIBIO_LIBS} ${OPENSSL_LIBRARIES})
+file(COPY "ca.pem" "dh512.pem" "server.pem" DESTINATION ${CMAKE_BINARY_DIR}/test)
 
 add_executable(echo_server echo_server.cpp)
 TARGET_LINK_LIBRARIES(echo_server ${FIBIO_LIBS})
@@ -37,4 +41,6 @@ add_test(condition_variable test_cv)
 add_test(concurrent_queue test_cq)
 add_test(future test_future)
 add_test(ASIO test_asio)
+add_test(TCP_stream test_tcp_stream)
+add_test(SSL_stream test_ssl_stream)
 

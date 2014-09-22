@@ -65,6 +65,18 @@
 		2D5A308518E71CD100C5EB41 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15D06718E5C7AB00E64B99 /* libboost_system-mt.a */; };
 		2D5A308F18E95EB200C5EB41 /* use_future.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D5A308E18E95EB200C5EB41 /* use_future.hpp */; };
 		2D5A309118E95F3600C5EB41 /* use_future.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D5A309018E95F3600C5EB41 /* use_future.hpp */; };
+		2D82CD6419CFF71D00B0257D /* libboost_context-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D82CD6119CFF71D00B0257D /* libboost_context-mt.a */; };
+		2D82CD6519CFF71D00B0257D /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D82CD6219CFF71D00B0257D /* libboost_coroutine-mt.a */; };
+		2D82CD6619CFF71D00B0257D /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D82CD6319CFF71D00B0257D /* libboost_system-mt.a */; };
+		2D82CD6719CFF72000B0257D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
+		2D82CD6919CFF73F00B0257D /* test_ssl_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D82CD6819CFF73F00B0257D /* test_ssl_stream.cpp */; };
+		2D82CD7519CFF7A800B0257D /* libboost_context-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D82CD6119CFF71D00B0257D /* libboost_context-mt.a */; };
+		2D82CD7619CFF7A800B0257D /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D82CD6219CFF71D00B0257D /* libboost_coroutine-mt.a */; };
+		2D82CD7719CFF7A800B0257D /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D82CD6319CFF71D00B0257D /* libboost_system-mt.a */; };
+		2D82CD7819CFF7AB00B0257D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
+		2D82CD7A19CFF7BE00B0257D /* test_fss.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D82CD7919CFF7BE00B0257D /* test_fss.cpp */; };
+		2D82CD7E19CFF81B00B0257D /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFDA18E4376E00E64B99 /* libcrypto.dylib */; };
+		2D82CD7F19CFF82500B0257D /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFD818E4375200E64B99 /* libssl.dylib */; };
 		2DD5665018DA1BC6002A259D /* test_fibers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5664E18DA1BC6002A259D /* test_fibers.cpp */; };
 		2DD5666318DB35D3002A259D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
 		2DD5666618DB35E5002A259D /* echo_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5666418DB35E5002A259D /* echo_server.cpp */; };
@@ -118,6 +130,24 @@
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 		2D5A307418E71C0900C5EB41 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		2D82CD5819CFF69500B0257D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		2D82CD6C19CFF77900B0257D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -209,6 +239,16 @@
 		2D7E687C18CCCD5D00B7C4E5 /* scheduler_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = scheduler_object.cpp; sourceTree = "<group>"; };
 		2D7E687D18CCCD5D00B7C4E5 /* scheduler_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = scheduler_object.hpp; sourceTree = "<group>"; };
 		2D7E688318CCCD5D00B7C4E5 /* TODO.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = TODO.md; sourceTree = "<group>"; };
+		2D82CD5A19CFF69500B0257D /* test_ssl_stream */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_ssl_stream; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D82CD6119CFF71D00B0257D /* libboost_context-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_context-mt.a"; path = "../../../../usr/local/lib/libboost_context-mt.a"; sourceTree = "<group>"; };
+		2D82CD6219CFF71D00B0257D /* libboost_coroutine-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_coroutine-mt.a"; path = "../../../../usr/local/lib/libboost_coroutine-mt.a"; sourceTree = "<group>"; };
+		2D82CD6319CFF71D00B0257D /* libboost_system-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_system-mt.a"; path = "../../../../usr/local/libboost_system-mt.a"; sourceTree = "<group>"; };
+		2D82CD6819CFF73F00B0257D /* test_ssl_stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_ssl_stream.cpp; sourceTree = "<group>"; };
+		2D82CD6E19CFF77900B0257D /* test_fss */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_fss; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D82CD7919CFF7BE00B0257D /* test_fss.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_fss.cpp; sourceTree = "<group>"; };
+		2D82CD7B19CFF7DA00B0257D /* ca.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ca.pem; sourceTree = "<group>"; };
+		2D82CD7C19CFF7DA00B0257D /* dh512.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dh512.pem; sourceTree = "<group>"; };
+		2D82CD7D19CFF7DA00B0257D /* server.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = server.pem; sourceTree = "<group>"; };
 		2DD3B6DF18CCF8B7009E1F3E /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		2DD3B6E418CDC3E7009E1F3E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		2DD5664518DA1B99002A259D /* test_fibers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_fibers; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -301,6 +341,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2D82CD5719CFF69500B0257D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D82CD7F19CFF82500B0257D /* libssl.dylib in Frameworks */,
+				2D82CD7E19CFF81B00B0257D /* libcrypto.dylib in Frameworks */,
+				2D82CD6419CFF71D00B0257D /* libboost_context-mt.a in Frameworks */,
+				2D82CD6519CFF71D00B0257D /* libboost_coroutine-mt.a in Frameworks */,
+				2D82CD6619CFF71D00B0257D /* libboost_system-mt.a in Frameworks */,
+				2D82CD6719CFF72000B0257D /* libfibio.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D82CD6B19CFF77900B0257D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D82CD7519CFF7A800B0257D /* libboost_context-mt.a in Frameworks */,
+				2D82CD7619CFF7A800B0257D /* libboost_coroutine-mt.a in Frameworks */,
+				2D82CD7719CFF7A800B0257D /* libboost_system-mt.a in Frameworks */,
+				2D82CD7819CFF7AB00B0257D /* libfibio.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2DD5664218DA1B99002A259D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -329,14 +393,19 @@
 		2D13199D18D09B630086156F /* test */ = {
 			isa = PBXGroup;
 			children = (
+				2D82CD7B19CFF7DA00B0257D /* ca.pem */,
+				2D82CD7C19CFF7DA00B0257D /* dh512.pem */,
+				2D82CD7D19CFF7DA00B0257D /* server.pem */,
 				2D131A1618D0C9E70086156F /* CMakeLists.txt */,
 				2DD5664E18DA1BC6002A259D /* test_fibers.cpp */,
 				2D1319AB18D09B970086156F /* test_mutex.cpp */,
 				2D1319DE18D0A9BD0086156F /* test_cv.cpp */,
 				2D1319EF18D0B19B0086156F /* test_cq.cpp */,
-				2D131A0118D0B47A0086156F /* test_tcp_stream.cpp */,
 				2D15D09C18E6C86F00E64B99 /* test_future.cpp */,
 				2D5A307F18E71C4900C5EB41 /* test_asio.cpp */,
+				2D82CD7919CFF7BE00B0257D /* test_fss.cpp */,
+				2D131A0118D0B47A0086156F /* test_tcp_stream.cpp */,
+				2D82CD6819CFF73F00B0257D /* test_ssl_stream.cpp */,
 				2DD5666418DB35E5002A259D /* echo_server.cpp */,
 			);
 			path = test;
@@ -388,6 +457,9 @@
 		2D7E684718CCCD2D00B7C4E5 = {
 			isa = PBXGroup;
 			children = (
+				2D82CD6119CFF71D00B0257D /* libboost_context-mt.a */,
+				2D82CD6219CFF71D00B0257D /* libboost_coroutine-mt.a */,
+				2D82CD6319CFF71D00B0257D /* libboost_system-mt.a */,
 				2D15CFDA18E4376E00E64B99 /* libcrypto.dylib */,
 				2D15CFD818E4375200E64B99 /* libssl.dylib */,
 				2D15D06418E5C7AB00E64B99 /* libboost_context-mt.a */,
@@ -414,10 +486,12 @@
 				2D1319A218D09B850086156F /* test_mutex */,
 				2D1319D518D0A9A60086156F /* test_cv */,
 				2D1319E618D0B1860086156F /* test_cq */,
-				2D1319F718D0B45A0086156F /* test_tcp_stream */,
 				2D15D08F18E6C83C00E64B99 /* test_future */,
 				2D5A307618E71C0900C5EB41 /* test_asio */,
-				2DD5665A18DB35C3002A259D /* echo_server */,
+                2D82CD6E19CFF77900B0257D /* test_fss */,
+                2D1319F718D0B45A0086156F /* test_tcp_stream */,
+				2D82CD5A19CFF69500B0257D /* test_ssl_stream */,
+                2DD5665A18DB35C3002A259D /* echo_server */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -661,6 +735,40 @@
 			productReference = 2D5A307618E71C0900C5EB41 /* test_asio */;
 			productType = "com.apple.product-type.tool";
 		};
+		2D82CD5919CFF69500B0257D /* test_ssl_stream */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D82CD6019CFF69500B0257D /* Build configuration list for PBXNativeTarget "test_ssl_stream" */;
+			buildPhases = (
+				2D82CD5619CFF69500B0257D /* Sources */,
+				2D82CD5719CFF69500B0257D /* Frameworks */,
+				2D82CD5819CFF69500B0257D /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = test_ssl_stream;
+			productName = test_ssl_stream;
+			productReference = 2D82CD5A19CFF69500B0257D /* test_ssl_stream */;
+			productType = "com.apple.product-type.tool";
+		};
+		2D82CD6D19CFF77900B0257D /* test_fss */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D82CD7219CFF77900B0257D /* Build configuration list for PBXNativeTarget "test_fss" */;
+			buildPhases = (
+				2D82CD6A19CFF77900B0257D /* Sources */,
+				2D82CD6B19CFF77900B0257D /* Frameworks */,
+				2D82CD6C19CFF77900B0257D /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = test_fss;
+			productName = test_fss;
+			productReference = 2D82CD6E19CFF77900B0257D /* test_fss */;
+			productType = "com.apple.product-type.tool";
+		};
 		2DD5664418DA1B99002A259D /* test_fibers */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2DD5664B18DA1B99002A259D /* Build configuration list for PBXNativeTarget "test_fibers" */;
@@ -725,6 +833,8 @@
 				2D15D08E18E6C83C00E64B99 /* test_future */,
 				2D5A307518E71C0900C5EB41 /* test_asio */,
 				2DD5665918DB35C3002A259D /* echo_server */,
+				2D82CD5919CFF69500B0257D /* test_ssl_stream */,
+				2D82CD6D19CFF77900B0257D /* test_fss */,
 			);
 		};
 /* End PBXProject section */
@@ -787,6 +897,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				2D5A308118E71C4900C5EB41 /* test_asio.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D82CD5619CFF69500B0257D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D82CD6919CFF73F00B0257D /* test_ssl_stream.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D82CD6A19CFF77900B0257D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D82CD7A19CFF7BE00B0257D /* test_fss.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1038,6 +1164,50 @@
 			};
 			name = Release;
 		};
+		2D82CD5E19CFF69500B0257D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		2D82CD5F19CFF69500B0257D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		2D82CD7319CFF77900B0257D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+				);
+				PRODUCT_NAME = test_fss;
+			};
+			name = Debug;
+		};
+		2D82CD7419CFF77900B0257D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/lib,
+				);
+				PRODUCT_NAME = test_fss;
+			};
+			name = Release;
+		};
 		2DD5664C18DA1B99002A259D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1156,6 +1326,22 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		2D82CD6019CFF69500B0257D /* Build configuration list for PBXNativeTarget "test_ssl_stream" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D82CD5E19CFF69500B0257D /* Debug */,
+				2D82CD5F19CFF69500B0257D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		2D82CD7219CFF77900B0257D /* Build configuration list for PBXNativeTarget "test_fss" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D82CD7319CFF77900B0257D /* Debug */,
+				2D82CD7419CFF77900B0257D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		2DD5664B18DA1B99002A259D /* Build configuration list for PBXNativeTarget "test_fibers" */ = {
 			isa = XCConfigurationList;
