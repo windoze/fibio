@@ -142,7 +142,7 @@ namespace fibio { namespace fibers { namespace detail {
         }
         // This mutex is locked
         // Add this fiber into waiting queue without attached timer
-        suspended_.push_back({this_fiber, timer_ptr_t()});
+        suspended_.push_back({this_fiber, 0});
         
         { relock_guard<spinlock> relock(mtx_); this_fiber->pause(); }
     }
@@ -177,7 +177,7 @@ namespace fibio { namespace fibers { namespace detail {
         }
         // Set new owner and remove it from suspended queue
         std::swap(owner_, suspended_.front().f_);
-        timer_ptr_t t=suspended_.front().t_;
+        timer_t *t=suspended_.front().t_;
         suspended_.pop_front();
         if (t) {
             // Cancel attached timer, the timer handler will schedule new owner
@@ -226,13 +226,13 @@ namespace fibio { namespace fibers { namespace detail {
         }
         // This mutex is locked
         // Add this fiber into waiting queue
-        timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
-        t->expires_from_now(std::chrono::microseconds(usec));
-        t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_mutex_timeout_handler,
+        timer_t t(this_fiber->get_io_service());
+        t.expires_from_now(std::chrono::microseconds(usec));
+        t.async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_mutex_timeout_handler,
                                                                     this_fiber,
                                                                     this,
                                                                     std::placeholders::_1)));
-        suspended_.push_back({this_fiber, t});
+        suspended_.push_back({this_fiber, &t});
         
         // This fiber will be resumed when timer triggered/canceled or other called unlock()
         { relock_guard<spinlock> relock(mtx_); this_fiber->pause(); }
@@ -255,7 +255,7 @@ namespace fibio { namespace fibers { namespace detail {
         }
         // This mutex is locked
         // Add this fiber into waiting queue without attached timer
-        suspended_.push_back({this_fiber, timer_ptr_t()});
+        suspended_.push_back({this_fiber, 0});
 
         { relock_guard<spinlock> relock(mtx_); this_fiber->pause(); }
     }
@@ -280,7 +280,7 @@ namespace fibio { namespace fibers { namespace detail {
         }
         // Set new owner and remove it from suspended queue
         std::swap(owner_, suspended_.front().f_);
-        timer_ptr_t t=suspended_.front().t_;
+        timer_t *t=suspended_.front().t_;
         suspended_.pop_front();
         level_=1;
         if (t) {
@@ -348,13 +348,13 @@ namespace fibio { namespace fibers { namespace detail {
         }
         // This mutex is locked
         // Add this fiber into waiting queue
-        timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
-        t->expires_from_now(std::chrono::microseconds(usec));
-        t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(recursive_timed_mutex_timeout_handler,
+        timer_t t(this_fiber->get_io_service());
+        t.expires_from_now(std::chrono::microseconds(usec));
+        t.async_wait(this_fiber->get_fiber_strand().wrap(std::bind(recursive_timed_mutex_timeout_handler,
                                                                     this_fiber,
                                                                     this,
                                                                     std::placeholders::_1)));
-        suspended_.push_back({this_fiber, t});
+        suspended_.push_back({this_fiber, &t});
 
         // This fiber will be resumed when timer triggered/canceled or other called unlock()
         { relock_guard<spinlock> relock(mtx_); this_fiber->pause(); }

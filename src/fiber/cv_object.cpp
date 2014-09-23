@@ -33,7 +33,7 @@ namespace fibio { namespace fibers { namespace detail {
             std::lock_guard<spinlock> lock(mtx_);
             // The "suspension of this fiber" is actually happened here, not the pause()
             // as other will see there is a fiber in the waiting queue.
-            suspended_.push_back(suspended_item({m, this_fiber, timer_ptr_t()}));
+            suspended_.push_back(suspended_item({m, this_fiber, 0}));
         }
         fibio_relock_guard lk(m, this_fiber);
         this_fiber->pause();
@@ -41,7 +41,7 @@ namespace fibio { namespace fibers { namespace detail {
     
     static inline void timeout_handler(fiber_ptr_t this_fiber,
                                 condition_variable_object *this_cv,
-                                timer_ptr_t t,
+                                timer_t *t,
                                 cv_status &ret,
                                 boost::system::error_code ec)
     {
@@ -71,17 +71,17 @@ namespace fibio { namespace fibers { namespace detail {
             // This fiber doesn't own the mutex
             throw condition_error(boost::system::errc::operation_not_permitted);
         }
+        timer_t t(this_fiber->get_io_service());
         {
             std::lock_guard<spinlock> lock(mtx_);
-            timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
-            suspended_.push_back(suspended_item({m, this_fiber, t}));
-            t->expires_from_now(std::chrono::microseconds(usec));
-            t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timeout_handler,
-                                                                        this_fiber,
-                                                                        this,
-                                                                        t,
-                                                                        std::ref(ret),
-                                                                        std::placeholders::_1)));
+            suspended_.push_back(suspended_item({m, this_fiber, &t}));
+            t.expires_from_now(std::chrono::microseconds(usec));
+            t.async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timeout_handler,
+                                                                       this_fiber,
+                                                                       this,
+                                                                       &t,
+                                                                       std::ref(ret),
+                                                                       std::placeholders::_1)));
         }
         fibio_relock_guard lk(m, this_fiber);
         this_fiber->pause();
@@ -100,7 +100,7 @@ namespace fibio { namespace fibers { namespace detail {
                 // Cancel attached timer if it's set
                 // Timer handler will reschedule the waiting fiber
                 p.t_->cancel();
-                p.t_.reset();
+                p.t_=0;
             } else {
                 // No timer attached to the waiting fiber, directly schedule it
                 p.f_->resume();

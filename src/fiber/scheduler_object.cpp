@@ -51,10 +51,10 @@ namespace fibio { namespace fibers { namespace detail {
             return;
         }
 
-        timer_ptr_t check_timer=std::make_shared<timer_t>(io_service_);
+        check_timer.reset(new timer_t(io_service_));
         check_timer->expires_from_now(std::chrono::milliseconds(50));
         scheduler_ptr_t pthis(shared_from_this());
-        check_timer->async_wait(std::bind(&scheduler_object::on_check_timer, pthis, check_timer, std::placeholders::_1));
+        check_timer->async_wait(std::bind(&scheduler_object::on_check_timer, pthis, std::placeholders::_1));
         for(size_t i=0; i<nthr; i++) {
             threads_.push_back(std::thread(std::bind(run_in_this_thread, pthis)));
         }
@@ -93,11 +93,11 @@ namespace fibio { namespace fibers { namespace detail {
         p->this_ref_.reset();
     }
     
-    void scheduler_object::on_check_timer(timer_ptr_t check_timer, boost::system::error_code ec) {
+    void scheduler_object::on_check_timer(boost::system::error_code ec) {
         std::lock_guard<std::mutex> guard(mtx_);
         if (fiber_count_>0 || !started_) {
             check_timer->expires_from_now(std::chrono::milliseconds(50));
-            check_timer->async_wait(std::bind(&scheduler_object::on_check_timer, shared_from_this(), check_timer, std::placeholders::_1));
+            check_timer->async_wait(std::bind(&scheduler_object::on_check_timer, shared_from_this(), std::placeholders::_1));
         } else {
             io_service_.stop();
             cv_.notify_one();

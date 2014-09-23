@@ -27,7 +27,7 @@ namespace fibio { namespace fibers { namespace detail {
         struct suspended_item {
             mutex_object *m_;
             fiber_ptr_t f_;
-            timer_ptr_t t_;
+            timer_t *t_;
         };
         std::deque<suspended_item> suspended_;
     };

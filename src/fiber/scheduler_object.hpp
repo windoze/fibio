@@ -28,7 +28,7 @@ namespace fibio { namespace fibers { namespace detail {
         void add_thread(size_t nthr);
         
         void on_fiber_exit(fiber_ptr_t p);
-        void on_check_timer(timer_ptr_t check_timer, boost::system::error_code ec);
+        void on_check_timer(boost::system::error_code ec);
         
         static std::shared_ptr<scheduler_object> get_instance();
         
@@ -38,6 +38,7 @@ namespace fibio { namespace fibers { namespace detail {
         boost::asio::io_service io_service_;
         std::atomic<size_t> fiber_count_;
         std::atomic<bool> started_;
+        timer_ptr_t check_timer;
         
         static std::once_flag instance_inited_;
         static std::shared_ptr<scheduler_object> the_instance_;

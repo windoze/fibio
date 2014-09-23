@@ -54,7 +54,7 @@ namespace fibio { namespace fibers { namespace detail {
         fiber_ptr_t owner_;
         struct suspended_item {
             fiber_ptr_t f_;
-            timer_ptr_t t_;
+            timer_t *t_;
         };
         std::deque<suspended_item> suspended_;
     };
@@ -74,7 +74,7 @@ namespace fibio { namespace fibers { namespace detail {
         fiber_ptr_t owner_;
         struct suspended_item {
             fiber_ptr_t f_;
-            timer_ptr_t t_;
+            timer_t *t_;
         };
         std::deque<suspended_item> suspended_;
     };
