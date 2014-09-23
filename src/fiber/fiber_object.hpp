@@ -50,19 +50,10 @@ namespace fibio { namespace fibers { namespace detail {
     typedef std::shared_ptr<fiber_object> fiber_ptr_t;
     
     struct mutex_object;
-    typedef std::shared_ptr<mutex_object> mutex_ptr_t;
-    
     struct timed_mutex_object;
-    typedef std::shared_ptr<timed_mutex_object> timed_mutex_ptr_t;
-    
     struct recursive_mutex_object;
-    typedef std::shared_ptr<recursive_mutex_object> recursive_mutex_ptr_t;
-    
     struct recursive_timed_mutex_object;
-    typedef std::shared_ptr<recursive_timed_mutex_object> recursive_timed_mutex_ptr_t;
-    
     struct condition_variable_object;
-    typedef std::shared_ptr<condition_variable_object> condition_variable_ptr_t;
     
     typedef std::deque<fiber_ptr_t> waiting_queue_t;
     
@@ -81,7 +72,6 @@ namespace fibio { namespace fibers { namespace detail {
         };
         
         typedef std::deque<std::function<void()>> cleanup_queue_t;
-        //typedef std::function<void()> entry_t;
         typedef fiber_data_ptr entry_t;
         typedef boost::coroutines::coroutine<state_t>::pull_type runner_t;
         typedef boost::coroutines::coroutine<state_t>::push_type caller_t;

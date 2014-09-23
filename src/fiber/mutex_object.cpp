@@ -191,7 +191,7 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     static inline void timed_mutex_timeout_handler(fiber_ptr_t this_fiber,
-                                                   timed_mutex_ptr_t this_mutex,
+                                                   timed_mutex_object *this_mutex,
                                                    boost::system::error_code ec)
     {
         std::lock_guard<spinlock> lock(this_mutex->mtx_);
@@ -228,10 +228,9 @@ namespace fibio { namespace fibers { namespace detail {
         // Add this fiber into waiting queue
         timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
         t->expires_from_now(std::chrono::microseconds(usec));
-        std::shared_ptr<timed_mutex_object> this_mutex=shared_from_this();
         t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_mutex_timeout_handler,
                                                                     this_fiber,
-                                                                    this_mutex,
+                                                                    this,
                                                                     std::placeholders::_1)));
         suspended_.push_back({this_fiber, t});
         
@@ -312,7 +311,7 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     static inline void recursive_timed_mutex_timeout_handler(fiber_ptr_t this_fiber,
-                                                             recursive_timed_mutex_ptr_t this_mutex,
+                                                             recursive_timed_mutex_object *this_mutex,
                                                              boost::system::error_code ec)
     {
         std::lock_guard<spinlock> lock(this_mutex->mtx_);
@@ -351,10 +350,9 @@ namespace fibio { namespace fibers { namespace detail {
         // Add this fiber into waiting queue
         timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
         t->expires_from_now(std::chrono::microseconds(usec));
-        std::shared_ptr<recursive_timed_mutex_object> this_mutex=shared_from_this();
         t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(recursive_timed_mutex_timeout_handler,
                                                                     this_fiber,
-                                                                    this_mutex,
+                                                                    this,
                                                                     std::placeholders::_1)));
         suspended_.push_back({this_fiber, t});
 
@@ -366,7 +364,7 @@ namespace fibio { namespace fibers { namespace detail {
 
 namespace fibio { namespace fibers {
     mutex::mutex()
-    : impl_(std::make_shared<detail::mutex_object>())
+    : impl_(new detail::mutex_object)
     {}
     
     void mutex::lock() {
@@ -392,7 +390,7 @@ namespace fibio { namespace fibers {
     }
     
     timed_mutex::timed_mutex()
-    : impl_(std::make_shared<detail::timed_mutex_object>())
+    : impl_(new detail::timed_mutex_object)
     {}
     
     void timed_mutex::lock() {
@@ -426,7 +424,7 @@ namespace fibio { namespace fibers {
     }
     
     recursive_mutex::recursive_mutex()
-    : impl_(std::make_shared<detail::recursive_mutex_object>())
+    : impl_(new detail::recursive_mutex_object)
     {}
     
     void recursive_mutex::lock() {
@@ -452,7 +450,7 @@ namespace fibio { namespace fibers {
     }
     
     recursive_timed_mutex::recursive_timed_mutex()
-    : impl_(std::make_shared<detail::recursive_timed_mutex_object>())
+    : impl_(new detail::recursive_timed_mutex_object)
     {}
     
     void recursive_timed_mutex::lock() {
@@ -484,4 +482,16 @@ namespace fibio { namespace fibers {
         }
         return false;
     }
+    
+    void mutex::impl_deleter::operator()(detail::mutex_object *p)
+    { delete p; }
+    
+    void timed_mutex::impl_deleter::operator()(detail::timed_mutex_object *p)
+    { delete p; }
+    
+    void recursive_mutex::impl_deleter::operator()(detail::recursive_mutex_object *p)
+    { delete p; }
+    
+    void recursive_timed_mutex::impl_deleter::operator()(detail::recursive_timed_mutex_object *p)
+    { delete p; }
 }}  // End of namespace fibio::fibers

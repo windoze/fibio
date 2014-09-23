@@ -11,7 +11,7 @@
 
 namespace fibio { namespace fibers { namespace detail {
     struct fibio_relock_guard {
-        inline fibio_relock_guard(mutex_ptr_t mtx, fiber_ptr_t f)
+        inline fibio_relock_guard(mutex_object *mtx, fiber_ptr_t f)
         : mtx_(mtx)
         , this_fiber(f)
         { mtx_->unlock(this_fiber); }
@@ -19,11 +19,11 @@ namespace fibio { namespace fibers { namespace detail {
         inline ~fibio_relock_guard()
         { mtx_->lock(this_fiber); }
         
-        mutex_ptr_t mtx_;
+        mutex_object *mtx_;
         fiber_ptr_t this_fiber;
     };
     
-    void condition_variable_object::wait(mutex_ptr_t m, fiber_ptr_t this_fiber) {
+    void condition_variable_object::wait(mutex_object *m, fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         if (this_fiber!=m->owner_) {
             // This fiber doesn't own the mutex
@@ -40,7 +40,7 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     static inline void timeout_handler(fiber_ptr_t this_fiber,
-                                condition_variable_ptr_t this_cv,
+                                condition_variable_object *this_cv,
                                 timer_ptr_t t,
                                 cv_status &ret,
                                 boost::system::error_code ec)
@@ -64,7 +64,7 @@ namespace fibio { namespace fibers { namespace detail {
         this_fiber->resume();
     }
     
-    cv_status condition_variable_object::wait_usec(mutex_ptr_t m, fiber_ptr_t this_fiber, uint64_t usec) {
+    cv_status condition_variable_object::wait_usec(mutex_object *m, fiber_ptr_t this_fiber, uint64_t usec) {
         //CHECK_CALLER(this_fiber);
         cv_status ret=cv_status::no_timeout;
         if (this_fiber!=m->owner_) {
@@ -75,11 +75,10 @@ namespace fibio { namespace fibers { namespace detail {
             std::lock_guard<spinlock> lock(mtx_);
             timer_ptr_t t(std::make_shared<timer_t>(this_fiber->get_io_service()));
             suspended_.push_back(suspended_item({m, this_fiber, t}));
-            std::shared_ptr<condition_variable_object> this_cv(shared_from_this());
             t->expires_from_now(std::chrono::microseconds(usec));
             t->async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timeout_handler,
                                                                         this_fiber,
-                                                                        this_cv,
+                                                                        this,
                                                                         t,
                                                                         std::ref(ret),
                                                                         std::placeholders::_1)));
@@ -140,20 +139,20 @@ namespace fibio { namespace fibers { namespace detail {
 
 namespace fibio { namespace fibers {
     condition_variable::condition_variable()
-    : impl_(std::make_shared<detail::condition_variable_object>())
+    : impl_(new detail::condition_variable_object)
     {}
     
     void condition_variable::wait(std::unique_lock<mutex>& lock) {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            impl_->wait(lock.mutex()->impl_, detail::fiber_object::current_fiber_->shared_from_this());
+            impl_->wait(lock.mutex()->impl_.get(), detail::fiber_object::current_fiber_->shared_from_this());
         }
     }
     
     cv_status condition_variable::wait_usec(std::unique_lock<mutex>& lock, uint64_t usec) {
         CHECK_CURRENT_FIBER;
         if (detail::fiber_object::current_fiber_) {
-            return impl_->wait_usec(lock.mutex()->impl_, detail::fiber_object::current_fiber_->shared_from_this(), usec);
+            return impl_->wait_usec(lock.mutex()->impl_.get(), detail::fiber_object::current_fiber_->shared_from_this(), usec);
         }
         return cv_status::timeout;
     }
@@ -164,6 +163,10 @@ namespace fibio { namespace fibers {
     
     void condition_variable::notify_all() {
         impl_->notify_all();
+    }
+    
+    void condition_variable::impl_deleter::operator()(detail::condition_variable_object *p) {
+        delete p;
     }
     
     struct cleanup_handler {

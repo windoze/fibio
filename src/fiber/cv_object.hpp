@@ -17,15 +17,15 @@
 #include "mutex_object.hpp"
 
 namespace fibio { namespace fibers { namespace detail {
-    struct condition_variable_object : std::enable_shared_from_this<condition_variable_object> {
-        void wait(mutex_ptr_t m, fiber_ptr_t this_fiber);
-        cv_status wait_usec(mutex_ptr_t m, fiber_ptr_t this_fiber, uint64_t usec);
+    struct condition_variable_object/* : std::enable_shared_from_this<condition_variable_object> */{
+        void wait(mutex_object *m, fiber_ptr_t this_fiber);
+        cv_status wait_usec(mutex_object *m, fiber_ptr_t this_fiber, uint64_t usec);
         void notify_one();
         void notify_all();
         
         spinlock mtx_;
         struct suspended_item {
-            mutex_ptr_t m_;
+            mutex_object *m_;
             fiber_ptr_t f_;
             timer_ptr_t t_;
         };

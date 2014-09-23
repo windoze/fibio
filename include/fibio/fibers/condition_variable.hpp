@@ -106,7 +106,10 @@ namespace fibio { namespace fibers {
         condition_variable(const condition_variable&) = delete;
         void operator=(const condition_variable&) = delete;
         cv_status wait_usec(std::unique_lock<mutex>& lock, uint64_t usec);
-        std::shared_ptr<detail::condition_variable_object> impl_;
+        struct impl_deleter {
+            void operator()(detail::condition_variable_object *p);
+        };
+        std::unique_ptr<detail::condition_variable_object, impl_deleter> impl_;
     };
 
     /**

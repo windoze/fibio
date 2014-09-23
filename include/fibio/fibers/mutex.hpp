@@ -38,7 +38,10 @@ namespace fibio { namespace fibers {
         /// non-copyable
         mutex(const mutex&) = delete;
         void operator=(const mutex&) = delete;
-        std::shared_ptr<detail::mutex_object> impl_;
+        struct impl_deleter {
+            void operator()(detail::mutex_object *p);
+        };
+        std::unique_ptr<detail::mutex_object, impl_deleter> impl_;
         friend struct condition_variable;
     };
     
@@ -84,7 +87,10 @@ namespace fibio { namespace fibers {
         timed_mutex(const timed_mutex&) = delete;
         void operator=(const timed_mutex&) = delete;
         bool try_lock_usec(uint64_t usec);
-        std::shared_ptr<detail::timed_mutex_object> impl_;
+        struct impl_deleter {
+            void operator()(detail::timed_mutex_object *p);
+        };
+        std::unique_ptr<detail::timed_mutex_object, impl_deleter> impl_;
     };
     
     class recursive_mutex {
@@ -111,7 +117,10 @@ namespace fibio { namespace fibers {
         /// non-copyable
         recursive_mutex(const recursive_mutex&) = delete;
         void operator=(const recursive_mutex&) = delete;
-        std::shared_ptr<detail::recursive_mutex_object> impl_;
+        struct impl_deleter {
+            void operator()(detail::recursive_mutex_object *p);
+        };
+        std::unique_ptr<detail::recursive_mutex_object, impl_deleter> impl_;
     };
     
     class recursive_timed_mutex {
@@ -157,7 +166,10 @@ namespace fibio { namespace fibers {
         recursive_timed_mutex(const recursive_timed_mutex&) = delete;
         void operator=(const recursive_timed_mutex&) = delete;
         bool try_lock_usec(uint64_t usec);
-        std::shared_ptr<detail::recursive_timed_mutex_object> impl_;
+        struct impl_deleter {
+            void operator()(detail::recursive_timed_mutex_object *p);
+        };
+        std::unique_ptr<detail::recursive_timed_mutex_object, impl_deleter> impl_;
     };
 }}  // End of namespace fibio::fibers
 

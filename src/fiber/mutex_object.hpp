@@ -19,7 +19,7 @@ namespace fibio { namespace fibers { namespace detail {
         return f==si.f_;
     }
 
-    struct mutex_object : std::enable_shared_from_this<mutex_object> {
+    struct mutex_object/* : std::enable_shared_from_this<mutex_object>*/ {
         void lock(fiber_ptr_t this_fiber);
         bool try_lock(fiber_ptr_t this_fiber);
         void unlock(fiber_ptr_t this_fiber);
@@ -29,7 +29,7 @@ namespace fibio { namespace fibers { namespace detail {
         waiting_queue_t suspended_;
     };
     
-    struct recursive_mutex_object : std::enable_shared_from_this<recursive_mutex_object> {
+    struct recursive_mutex_object/* : std::enable_shared_from_this<recursive_mutex_object>*/ {
         recursive_mutex_object()
         : level_(0)
         {}
@@ -44,7 +44,7 @@ namespace fibio { namespace fibers { namespace detail {
         waiting_queue_t suspended_;
     };
     
-    struct timed_mutex_object : std::enable_shared_from_this<timed_mutex_object> {
+    struct timed_mutex_object/* : std::enable_shared_from_this<timed_mutex_object>*/ {
         void lock(fiber_ptr_t this_fiber);
         bool try_lock(fiber_ptr_t this_fiber);
         bool try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec);
@@ -59,7 +59,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::deque<suspended_item> suspended_;
     };
     
-    struct recursive_timed_mutex_object : std::enable_shared_from_this<recursive_timed_mutex_object> {
+    struct recursive_timed_mutex_object/* : std::enable_shared_from_this<recursive_timed_mutex_object>*/ {
         recursive_timed_mutex_object()
         : level_(0)
         {}
