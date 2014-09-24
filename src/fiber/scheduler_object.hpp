@@ -38,7 +38,7 @@ namespace fibio { namespace fibers { namespace detail {
         boost::asio::io_service io_service_;
         std::atomic<size_t> fiber_count_;
         std::atomic<bool> started_;
-        timer_ptr_t check_timer;
+        std::unique_ptr<timer_t> check_timer;
         
         static std::once_flag instance_inited_;
         static std::shared_ptr<scheduler_object> the_instance_;

@@ -41,7 +41,6 @@
 
 namespace fibio { namespace fibers { namespace detail {
     typedef boost::asio::basic_waitable_timer<std::chrono::steady_clock> timer_t;
-    typedef std::unique_ptr<timer_t> timer_ptr_t;
     
     struct scheduler_object;
     typedef std::shared_ptr<scheduler_object> scheduler_ptr_t;
