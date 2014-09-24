@@ -70,7 +70,7 @@ namespace fibio { namespace fibers { namespace detail {
     
     __thread fiber_object *fiber_object::current_fiber_=0;
     
-    fiber_object::fiber_object(scheduler_ptr_t sched, entry_t entry)
+    fiber_object::fiber_object(scheduler_ptr_t sched, fiber_data_base *entry)
     : sched_(sched)
     , fiber_strand_(std::make_shared<boost::asio::strand>(sched_->io_service_))
     , state_(READY)
@@ -81,7 +81,7 @@ namespace fibio { namespace fibers { namespace detail {
     , caller_(0)
     {}
     
-    fiber_object::fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, entry_t entry)
+    fiber_object::fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, fiber_data_base *entry)
     : sched_(sched)
     , fiber_strand_(strand)
     , state_(READY)
@@ -345,7 +345,7 @@ namespace fibio { namespace fibers { namespace detail {
 
 namespace fibio { namespace fibers {
     void fiber::start() {
-        impl_=scheduler::get_instance().impl_->make_fiber(data_);
+        impl_=scheduler::get_instance().impl_->make_fiber(data_.release());
     }
     
     void fiber::start(attributes attr) {
@@ -354,13 +354,13 @@ namespace fibio { namespace fibers {
             switch(attr.policy) {
                 case attributes::scheduling_policy::normal: {
                     // Create an isolated fiber
-                    impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(data_);
+                    impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(data_.release());
                     break;
                 }
                 case attributes::scheduling_policy::stick_with_parent: {
                     // Create a fiber shares strand with parent
                     impl_=scheduler::get_instance().impl_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
-                                                                      data_);
+                                                                      data_.release());
                     break;
                 }
                 default:
@@ -368,7 +368,7 @@ namespace fibio { namespace fibers {
             }
         } else {
             // use default scheduler if we're not in a fiber
-            impl_=scheduler::get_instance().impl_->make_fiber(data_);
+            impl_=scheduler::get_instance().impl_->make_fiber(data_.release());
         }
     }
     

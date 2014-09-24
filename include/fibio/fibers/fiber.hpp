@@ -202,7 +202,7 @@ namespace fibio { namespace fibers {
         void start();
         void start(attributes);
  
-        detail::fiber_data_ptr data_;
+        std::unique_ptr<detail::fiber_data_base> data_;
         std::shared_ptr<detail::fiber_object> impl_;
     };
     

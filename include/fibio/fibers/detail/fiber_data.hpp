@@ -71,13 +71,11 @@ namespace fibio { namespace fibers { namespace detail {
     { return std::forward<T>(t); }
 
     /// fiber_data_base
-    struct fiber_data_base : std::enable_shared_from_this<fiber_data_base>
+    struct fiber_data_base
     {
         virtual ~fiber_data_base(){}
         virtual void run()=0;
     };
-    
-    typedef std::shared_ptr<fiber_data_base> fiber_data_ptr;
     
     /// fiber_data
     template<typename F, class... ArgTypes>
@@ -110,10 +108,10 @@ namespace fibio { namespace fibers { namespace detail {
      * wrap entry function and arguments into a tuple
      */
     template<typename F, class... ArgTypes>
-    inline fiber_data_ptr make_fiber_data(F&& f, ArgTypes&&... args)
+    inline fiber_data_base *make_fiber_data(F&& f, ArgTypes&&... args)
     {
-        return std::make_shared<fiber_data<typename std::remove_reference<F>::type, ArgTypes...>>
-        (std::forward<F>(f), std::forward<ArgTypes>(args)...);
+        return new fiber_data<typename std::remove_reference<F>::type, ArgTypes...>(std::forward<F>(f),
+                                                                                    std::forward<ArgTypes>(args)...);
     }
 }}} // End of namespace fibio::fibers::detail
 #endif

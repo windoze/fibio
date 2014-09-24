@@ -71,13 +71,12 @@ namespace fibio { namespace fibers { namespace detail {
         };
         
         typedef std::deque<std::function<void()>> cleanup_queue_t;
-        typedef fiber_data_ptr entry_t;
         typedef boost::coroutines::coroutine<state_t>::pull_type runner_t;
         typedef boost::coroutines::coroutine<state_t>::push_type caller_t;
         typedef std::shared_ptr<boost::asio::strand> strand_ptr_t;
         
-        fiber_object(scheduler_ptr_t sched, entry_t entry);
-        fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, entry_t entry);
+        fiber_object(scheduler_ptr_t sched, fiber_data_base *entry);
+        fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, fiber_data_base *entry);
         ~fiber_object();
         
         void set_name(const std::string &s);
@@ -122,7 +121,7 @@ namespace fibio { namespace fibers { namespace detail {
         strand_ptr_t fiber_strand_;
 	spinlock mtx_;
         std::atomic<state_t> state_;
-        entry_t entry_;
+        std::unique_ptr<fiber_data_base> entry_;
         runner_t runner_;
         caller_t *caller_;
         cleanup_queue_t cleanup_queue_;
