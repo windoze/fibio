@@ -221,4 +221,23 @@ namespace fibio { namespace fibers {
         {}
     };
 }}  // End of namespace fibio::fibers
+
+namespace fibio {
+    using fibers::fiber_exception;
+    using fibers::condition_error;
+    using fibers::lock_error;
+    using fibers::fiber_resource_error;
+    using fibers::invalid_argument;
+    using fibers::fiber_interrupted;
+    using fibers::future_errc;
+    using fibers::future_category;
+    using fibers::future_error;
+    using fibers::future_uninitialized;
+    using fibers::future_already_retrieved;
+    using fibers::broken_promise;
+    using fibers::promise_already_satisfied;
+    using fibers::promise_uninitialized;
+    using fibers::packaged_task_uninitialized;
+}   // End of namespace fibio
+
 #endif
