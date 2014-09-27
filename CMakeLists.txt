@@ -8,7 +8,7 @@ if(APPLE)
 endif(APPLE)
 
 find_package(Threads REQUIRED)
-find_package(Boost 1.55.0 COMPONENTS system thread coroutine context REQUIRED)
+find_package(Boost 1.56.0 COMPONENTS system thread coroutine context REQUIRED)
 
 IF((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
     add_definitions(-DHAVE_VALGRIND_H)

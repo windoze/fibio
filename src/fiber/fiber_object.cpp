@@ -16,36 +16,33 @@
 #include "fiber_object.hpp"
 #include "scheduler_object.hpp"
 
+#define HAVE_VALGRIND_H
 #ifdef HAVE_VALGRIND_H
+#include <unordered_map>
 #include <boost/coroutine/stack_allocator.hpp>
 #include <boost/coroutine/stack_context.hpp>
-#include <unordered_map>
 #include "valgrind.h"
 #endif  // defined(HAVE_VALGRIND_H)
 
 namespace fibio { namespace fibers { namespace detail {
+#ifdef BOOST_USE_SEGMENTED_STACKS
+#   define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_segmented_stack_allocator
+#else
+#   define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_standard_stack_allocator
+#endif
+
     // Define a fibio_stack_allocator, use valgrind_stack_allocator when building
     //  with valgrind support
 #ifdef HAVE_VALGRIND_H
     // Wraps boost::coroutine::stack_allocator, and if Valgrind is installed
     // will register stacks, so that Valgrind is not confused.
+    template<typename traitsT>
     class valgrind_stack_allocator {
-        boost::coroutines::stack_allocator allocator;
+        typedef traitsT traits_type;
+        BOOST_COROUTINE_STACK_ALLOCATOR<traitsT> allocator;
         std::unordered_map<void*, unsigned> stack_ids;
         
     public:
-        static inline bool is_stack_unbound()
-        { return boost::coroutines::stack_allocator::is_stack_unbound(); }
-        
-        static inline std::size_t maximum_stacksize()
-        { return boost::coroutines::stack_allocator::maximum_stacksize(); }
-        
-        static inline std::size_t default_stacksize()
-        { return boost::coroutines::stack_allocator::default_stacksize(); }
-        
-        static inline std::size_t minimum_stacksize()
-        { return boost::coroutines::stack_allocator::minimum_stacksize(); }
-        
         void inline allocate( boost::coroutines::stack_context &sc, std::size_t size) {
             allocator.allocate(sc, size);
             auto res = stack_ids.insert(std::make_pair(sc.sp,
@@ -62,10 +59,10 @@ namespace fibio { namespace fibers { namespace detail {
             allocator.deallocate(sc);
         }
     };
-    typedef valgrind_stack_allocator fibio_stack_allocator;
+    typedef valgrind_stack_allocator<boost::coroutines::stack_traits> fibio_stack_allocator;
 #else  // defined(HAVE_VALGRIND_H)
     // Use default stack allocator when building w/o valgrind support
-    typedef boost::coroutines::stack_allocator fibio_stack_allocator;
+    typedef BOOST_COROUTINE_STACK_ALLOCATOR<boost::coroutines::stack_traits> fibio_stack_allocator;
 #endif  // !defined(HAVE_VALGRIND_H)
     
     __thread fiber_object *fiber_object::current_fiber_=0;
