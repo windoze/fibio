@@ -8,12 +8,12 @@ before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test --yes
   - sudo add-apt-repository ppa:kalakris/cmake --yes
   - sudo apt-get update -qq
-    # Download boost 1.55 and extract the source archive
-  - wget --no-verbose --output-document=boost_1_55_0.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2/download
+    # Download boost 1.5 and extract the source archive
+  - wget --no-verbose --output-document=boost_1_56_0.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.56.0/boost_1_56_0.tar.bz2/download
   - export BOOST_ROOT="$TRAVIS_BUILD_DIR/../boost"
   - export CMAKE_MODULE_PATH="$BOOST_ROOT"
   - mkdir -p $BOOST_ROOT
-  - tar jxf boost_1_55_0.tar.bz2 --strip-components=1 -C $BOOST_ROOT
+  - tar jxf boost_1_56_0.tar.bz2 --strip-components=1 -C $BOOST_ROOT
 
 install: 
     # Install GNU GCC 4.8 required by use of C++11
