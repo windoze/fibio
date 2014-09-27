@@ -45,17 +45,19 @@ void f1(int n) {
 timed_mutex tm;
 
 void child() {
+    this_fiber::yield();
     bool ret=tm.try_lock_for(std::chrono::milliseconds(10));
     assert(!ret);
-    ret=tm.try_lock_for(std::chrono::milliseconds(30));
+    ret=tm.try_lock_for(std::chrono::seconds(2));
     assert(ret);
+    tm.unlock();
     //printf("child()\n");
 }
 
 void parent() {
     fiber f(child);
     tm.lock();
-    this_fiber::sleep_for(std::chrono::milliseconds(30));
+    this_fiber::sleep_for(std::chrono::seconds(1));
     tm.unlock();
     //printf("parent():1\n");
     f.join();
