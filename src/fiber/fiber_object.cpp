@@ -16,7 +16,6 @@
 #include "fiber_object.hpp"
 #include "scheduler_object.hpp"
 
-#define HAVE_VALGRIND_H
 #ifdef HAVE_VALGRIND_H
 #include <unordered_map>
 #include <boost/coroutine/stack_allocator.hpp>
