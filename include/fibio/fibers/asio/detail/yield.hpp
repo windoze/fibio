@@ -103,7 +103,7 @@ namespace boost { namespace asio {
             // Wait until async op completed
             fibio::fibers::detail::get_current_fiber_ptr()->pause();
             if (!out_ec_ && ec_)
-                throw_exception(boost::system::system_error(ec_));
+                BOOST_THROW_EXCEPTION(boost::system::system_error(ec_));
             return value_;
         }
         
@@ -131,7 +131,7 @@ namespace boost { namespace asio {
             // Wait until async op completed
             fibio::fibers::detail::get_current_fiber_ptr()->pause();
             if (!out_ec_ && ec_)
-                throw_exception(boost::system::system_error(ec_));
+                BOOST_THROW_EXCEPTION(boost::system::system_error(ec_));
         }
         
     private:

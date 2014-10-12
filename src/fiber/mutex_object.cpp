@@ -14,7 +14,7 @@ namespace fibio { namespace fibers { namespace detail {
         CHECK_CALLER(this_fiber);
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_==this_fiber) {
-            throw lock_error(boost::system::errc::resource_deadlock_would_occur);
+            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::resource_deadlock_would_occur));
         } else if(!owner_) {
             // This mutex is not locked
             // Acquire the mutex
@@ -33,7 +33,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_!=this_fiber) {
             // This fiber doesn't own the mutex
-            throw lock_error(boost::system::errc::operation_not_permitted);
+            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::operation_not_permitted));
         }
         if (suspended_.empty()) {
             // Nobody is waiting
@@ -89,7 +89,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_!=this_fiber) {
             // This fiber doesn't own the mutex
-            throw lock_error(boost::system::errc::operation_not_permitted);
+            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::operation_not_permitted));
         }
         --level_;
         if (level_>0) {
@@ -133,7 +133,7 @@ namespace fibio { namespace fibers { namespace detail {
         CHECK_CALLER(this_fiber);
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_==this_fiber) {
-            throw lock_error(boost::system::errc::resource_deadlock_would_occur);
+            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::resource_deadlock_would_occur));
         } else if(!owner_) {
             // This mutex is not locked
             // Acquire the mutex
@@ -168,7 +168,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_!=this_fiber) {
             // This fiber doesn't own the mutex
-            throw lock_error(boost::system::errc::operation_not_permitted);
+            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::operation_not_permitted));
         }
         if (suspended_.empty()) {
             // Nobody is waiting
@@ -217,7 +217,7 @@ namespace fibio { namespace fibers { namespace detail {
         CHECK_CALLER(this_fiber);
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_==this_fiber) {
-            throw lock_error(boost::system::errc::resource_deadlock_would_occur);
+            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::resource_deadlock_would_occur));
         } else if(!owner_) {
             // This mutex is not locked
             // Acquire the mutex
@@ -265,7 +265,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_!=this_fiber) {
             // This fiber doesn't own the mutex
-            throw lock_error(boost::system::errc::operation_not_permitted);
+            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::operation_not_permitted));
         }
         --level_;
         if(level_>0) {

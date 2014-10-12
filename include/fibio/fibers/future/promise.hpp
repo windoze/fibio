@@ -140,11 +140,9 @@ namespace fibio { namespace fibers {
             //      exception is thrown if *this has no shared state or get_future
             //      has already been called.
             if ( obtained_)
-                boost::throw_exception(
-                                       future_already_retrieved() );
+                BOOST_THROW_EXCEPTION(future_already_retrieved());
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             obtained_ = true;
             return future< R >( future_);
         }
@@ -157,8 +155,7 @@ namespace fibio { namespace fibers {
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_value( value);
         }
         
@@ -171,8 +168,7 @@ namespace fibio { namespace fibers {
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_value( boost::move( value) );
         }
 #else
@@ -184,8 +180,7 @@ namespace fibio { namespace fibers {
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_value( boost::move( value) );
         }
 #endif
@@ -198,8 +193,7 @@ namespace fibio { namespace fibers {
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_exception( p);
         }
     };
@@ -321,11 +315,9 @@ namespace fibio { namespace fibers {
             //      exception is thrown if *this has no shared state or get_future
             //      has already been called.
             if ( obtained_)
-                boost::throw_exception(
-                                       future_already_retrieved() );
+                BOOST_THROW_EXCEPTION(future_already_retrieved());
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             obtained_ = true;
             return future< R & >( future_);
         }
@@ -338,8 +330,7 @@ namespace fibio { namespace fibers {
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_value( value);
         }
         
@@ -351,8 +342,7 @@ namespace fibio { namespace fibers {
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_exception( p);
         }
     };
@@ -478,11 +468,9 @@ namespace fibio { namespace fibers {
             //      exception is thrown if *this has no shared state or get_future
             //      has already been called. 
             if ( obtained_)
-                boost::throw_exception(
-                                       future_already_retrieved() );
+                BOOST_THROW_EXCEPTION(future_already_retrieved());
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             obtained_ = true;
             return future< void >( future_);
         }
@@ -495,8 +483,7 @@ namespace fibio { namespace fibers {
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_value();
         }
         
@@ -508,8 +495,7 @@ namespace fibio { namespace fibers {
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
             if ( ! future_)
-                boost::throw_exception(
-                                       promise_uninitialized() );
+                BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_exception( p);
         }
     };

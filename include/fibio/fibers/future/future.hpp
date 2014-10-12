@@ -139,8 +139,7 @@ namespace fibio { namespace fibers {
             //      detect the case when valid == false before the call and throw a
             //      future_error with an error condition of future_errc::no_state
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             ptr_t tmp;
             tmp.swap( state_);
             return tmp->get();
@@ -151,8 +150,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             state_->wait();
         }
         
@@ -162,8 +160,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_for( timeout_duration);
         }
         
@@ -172,8 +169,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
     };
@@ -287,8 +283,7 @@ namespace fibio { namespace fibers {
             //      detect the case when valid == false before the call and throw a
             //      future_error with an error condition of future_errc::no_state
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             ptr_t tmp;
             tmp.swap( state_);
             return tmp->get();
@@ -299,8 +294,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             state_->wait();
         }
         
@@ -310,8 +304,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_for( timeout_duration);
         }
         
@@ -320,8 +313,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
     };
@@ -435,8 +427,7 @@ namespace fibio { namespace fibers {
             //      detect the case when valid == false before the call and throw a
             //      future_error with an error condition of future_errc::no_state
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             ptr_t tmp;
             tmp.swap( state_);
             tmp->get();
@@ -447,8 +438,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             state_->wait();
         }
         
@@ -458,8 +448,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_for( timeout_duration);
         }
         
@@ -468,8 +457,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
     };
@@ -623,8 +611,7 @@ namespace fibio { namespace fibers {
             //      detect the case when valid == false before the call and throw a
             //      future_error with an error condition of future_errc::no_state
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->get();
         }
         
@@ -633,8 +620,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             state_->wait();
         }
         
@@ -644,8 +630,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_for( timeout_duration);
         }
         
@@ -654,8 +639,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
     };
@@ -803,8 +787,7 @@ namespace fibio { namespace fibers {
             //      detect the case when valid == false before the call and throw a
             //      future_error with an error condition of future_errc::no_state
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->get();
         }
         
@@ -813,8 +796,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             state_->wait();
         }
         
@@ -824,8 +806,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_for( timeout_duration);
         }
         
@@ -834,8 +815,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
     };
@@ -989,8 +969,7 @@ namespace fibio { namespace fibers {
             //      detect the case when valid == false before the call and throw a
             //      future_error with an error condition of future_errc::no_state
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             state_->get();
         }
         
@@ -999,8 +978,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             state_->wait();
         }
         
@@ -1010,8 +988,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_for( timeout_duration);
         }
         
@@ -1020,8 +997,7 @@ namespace fibio { namespace fibers {
             //TODO: blocks until the result becomes available or timeout
             //      valid() == true after the call
             if ( ! valid() )
-                boost::throw_exception(
-                                       future_uninitialized() );
+                BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
     };
@@ -1043,8 +1019,7 @@ namespace fibio { namespace fibers {
         //      detect the case when valid == false before the call and throw a
         //      future_error with an error condition of future_errc::no_state
         if ( ! valid() )
-            boost::throw_exception(
-                                   future_uninitialized() );
+            BOOST_THROW_EXCEPTION(future_uninitialized());
         return shared_future< R >( boost::move( * this) );
     }
     
@@ -1059,8 +1034,7 @@ namespace fibio { namespace fibers {
         //      detect the case when valid == false before the call and throw a
         //      future_error with an error condition of future_errc::no_state
         if ( ! valid() )
-            boost::throw_exception(
-                                   future_uninitialized() );
+            BOOST_THROW_EXCEPTION(future_uninitialized());
         return shared_future< R & >( boost::move( * this) );
     }
     
@@ -1075,8 +1049,7 @@ namespace fibio { namespace fibers {
         //      detect the case when valid == false before the call and throw a
         //      future_error with an error condition of future_errc::no_state
         if ( ! valid() )
-            boost::throw_exception(
-                                   future_uninitialized() );
+            BOOST_THROW_EXCEPTION(future_uninitialized());
         return shared_future< void >( boost::move( * this) );
     }
 

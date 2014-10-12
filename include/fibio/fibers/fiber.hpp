@@ -217,6 +217,7 @@ namespace fibio { namespace fibers {
              */
             boost::asio::io_service &get_io_service();
         }
+        
 
         /**
          * reschedule execution of fibers
@@ -248,6 +249,16 @@ namespace fibio { namespace fibers {
         void sleep_until( const std::chrono::time_point<Clock,Duration>& sleep_time ) {
             detail::sleep_usec(std::chrono::duration_cast<std::chrono::microseconds>(sleep_time - std::chrono::steady_clock::now()).count());
         }
+
+        /**
+         * get the name of current fiber
+         */
+        std::string get_name();
+
+        /**
+         * set the name of current fiber
+         */
+        void set_name(const std::string &name);
     }   // End of namespace this_fiber
 }}   // End of namespace fibio::fibers
 
@@ -267,6 +278,8 @@ namespace fibio {
         using fibers::this_fiber::is_a_fiber;
         using fibers::this_fiber::sleep_for;
         using fibers::this_fiber::sleep_until;
+        using fibers::this_fiber::get_name;
+        using fibers::this_fiber::set_name;
     }
     namespace asio {
         using fibers::this_fiber::detail::get_io_service;

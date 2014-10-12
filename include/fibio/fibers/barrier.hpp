@@ -168,8 +168,8 @@ namespace fibio { namespace fibers {
         
         static inline unsigned int check_counter(unsigned int count) {
             if (count == 0)
-                throw fiber_exception(boost::system::errc::invalid_argument,
-                                      "barrier constructor: count cannot be zero.");
+                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::invalid_argument,
+                                      "barrier constructor: count cannot be zero."));
             return count;
         }
         

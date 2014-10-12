@@ -60,7 +60,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: store the value and make the future ready
             //      notify all waiters
             if (ready_)
-                boost::throw_exception(promise_already_satisfied() );
+                BOOST_THROW_EXCEPTION(promise_already_satisfied() );
             value_ = value;
             mark_ready_and_notify_();
         }
@@ -71,7 +71,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: store the value and make the future ready
             //      notify all waiters
             if (ready_)
-                boost::throw_exception(promise_already_satisfied() );
+                BOOST_THROW_EXCEPTION(promise_already_satisfied() );
             value_ = boost::move( value);
             mark_ready_and_notify_();
         }
@@ -81,7 +81,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: store the value and make the future ready
             //      notify all waiters
             if (ready_)
-                boost::throw_exception(promise_already_satisfied() );
+                BOOST_THROW_EXCEPTION(promise_already_satisfied() );
             value_ = boost::move( value);
             mark_ready_and_notify_();
         }
@@ -92,7 +92,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      done = true, notify all waiters
             if (ready_)
-                boost::throw_exception(promise_already_satisfied());
+                BOOST_THROW_EXCEPTION(promise_already_satisfied());
             except_ = except;
             mark_ready_and_notify_();
         }
@@ -298,7 +298,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: store the value and make the future ready
             //      notify all waiters
             if (ready_)
-                boost::throw_exception(promise_already_satisfied() );
+                BOOST_THROW_EXCEPTION(promise_already_satisfied() );
             std::lock_guard<std::mutex> lock(state_mtx_);
             value_ = & value;
             mark_ready_and_notify_();
@@ -309,7 +309,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      done = true, notify all waiters
             if (ready_)
-                boost::throw_exception(promise_already_satisfied() );
+                BOOST_THROW_EXCEPTION(promise_already_satisfied() );
             std::lock_guard<std::mutex> lock(state_mtx_);
             except_ = except;
             mark_ready_and_notify_();
@@ -492,7 +492,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: store the value and make the future ready
             //      notify all waiters
             if (ready_)
-                boost::throw_exception(promise_already_satisfied() );
+                BOOST_THROW_EXCEPTION(promise_already_satisfied() );
             std::lock_guard<std::mutex> lock(state_mtx_);
             mark_ready_and_notify_();
         }
@@ -502,7 +502,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      done = true, notify all waiters
             if (ready_)
-                boost::throw_exception(promise_already_satisfied() );
+                BOOST_THROW_EXCEPTION(promise_already_satisfied() );
             std::lock_guard<std::mutex> lock(state_mtx_);
             except_ = except;
             mark_ready_and_notify_();

@@ -302,11 +302,9 @@ namespace fibio { namespace fibers {
             //TODO: returns a future which shares the same shared state as *this
             //      get_future can be called only once for each packaged_task
             if ( obtained_)
-                boost::throw_exception(
-                                       future_already_retrieved() );
+                BOOST_THROW_EXCEPTION(future_already_retrieved());
             if ( ! valid() )
-                boost::throw_exception(
-                                       packaged_task_uninitialized() );
+                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
             obtained_ = true;
             return future< R >( task_);
         }
@@ -319,8 +317,7 @@ namespace fibio { namespace fibers {
             //      the shared state is made ready and any threads waiting for
             //      this are unblocked
             if ( ! valid() )
-                boost::throw_exception(
-                                       packaged_task_uninitialized() );
+                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
             task_->run();
         }
         
@@ -331,8 +328,7 @@ namespace fibio { namespace fibers {
             //      equivalent to *this = packaged_task(std::move(f)), where f is
             //      the stored task
             if ( ! valid() )
-                boost::throw_exception(
-                                       packaged_task_uninitialized() );
+                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
             obtained_ = false;
             task_->reset();
         }
@@ -634,11 +630,9 @@ namespace fibio { namespace fibers {
             //TODO: returns a future which shares the same shared state as *this
             //      get_future can be called only once for each packaged_task
             if ( obtained_)
-                boost::throw_exception(
-                                       future_already_retrieved() );
+                BOOST_THROW_EXCEPTION(future_already_retrieved());
             if ( ! valid() )
-                boost::throw_exception(
-                                       packaged_task_uninitialized() );
+                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
             obtained_ = true;
             return future< void >( task_);
         }
@@ -651,8 +645,7 @@ namespace fibio { namespace fibers {
             //      the shared state is made ready and any threads waiting for
             //      this are unblocked
             if ( ! valid() )
-                boost::throw_exception(
-                                       packaged_task_uninitialized() );
+                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
             task_->run();
         }
         
@@ -663,8 +656,7 @@ namespace fibio { namespace fibers {
             //      equivalent to *this = packaged_task(std::move(f)), where f is
             //      the stored task
             if ( ! valid() )
-                boost::throw_exception(
-                                       packaged_task_uninitialized() );
+                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
             obtained_ = false;
             task_->reset();
         }

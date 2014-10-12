@@ -228,7 +228,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(f->mtx_);
         if (this==f.get()) {
             // The fiber is joining itself
-            throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
+            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::resource_deadlock_would_occur));
         } else if (f->state_==STOPPED) {
             // f is already stopped, do nothing
             return;
@@ -334,7 +334,7 @@ namespace fibio { namespace fibers { namespace detail {
     fiber_base::ptr_t get_current_fiber_ptr() {
         if(!fiber_object::current_fiber_) {
             // Not a fiber
-            throw fiber_exception(boost::system::errc::no_such_process);
+            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
         }
         return std::static_pointer_cast<fiber_base>(fiber_object::current_fiber_->shared_from_this());
     }
@@ -403,13 +403,13 @@ namespace fibio { namespace fibers {
     
     void fiber::join(bool propagate_exception) {
         if (!impl_) {
-            throw fiber_exception(boost::system::errc::no_such_process);
+            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
         }
         if (impl_.get()==detail::fiber_object::current_fiber_) {
-            throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
+            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::resource_deadlock_would_occur));
         }
         if (!joinable()) {
-            throw invalid_argument();
+            BOOST_THROW_EXCEPTION(invalid_argument());
         }
         if (detail::fiber_object::current_fiber_) {
             if (propagate_exception) {
@@ -422,7 +422,7 @@ namespace fibio { namespace fibers {
     
     void fiber::detach() {
         if (!joinable()) {
-            throw fiber_exception(boost::system::errc::no_such_process);
+            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
         }
         detail::fiber_ptr_t this_fiber=impl_;
         impl_->get_fiber_strand().post(std::bind(&detail::fiber_object::detach, impl_));
@@ -442,7 +442,7 @@ namespace fibio { namespace fibers {
             if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                 ::fibio::fibers::detail::fiber_object::current_fiber_->yield();
             } else {
-                throw fiber_exception(boost::system::errc::no_such_process);
+                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
             }
         }
         
@@ -459,7 +459,7 @@ namespace fibio { namespace fibers {
                 if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                     ::fibio::fibers::detail::fiber_object::current_fiber_->sleep_usec(usec);
                 } else {
-                    throw fiber_exception(boost::system::errc::no_such_process);
+                    BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
                 }
             }
             
@@ -467,9 +467,23 @@ namespace fibio { namespace fibers {
                 if (::fibio::fibers::detail::fiber_object::current_fiber_) {
                     return ::fibio::fibers::detail::fiber_object::current_fiber_->get_io_service();
                 }
-                throw fiber_exception(boost::system::errc::no_such_process);
+                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
             }
         }   // End of namespace detail
+        
+        std::string get_name() {
+            if (::fibio::fibers::detail::fiber_object::current_fiber_) {
+                return ::fibio::fibers::detail::fiber_object::current_fiber_->get_name();
+            }
+            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+        }
+        
+        void set_name(const std::string &name) {
+            if (!::fibio::fibers::detail::fiber_object::current_fiber_) {
+                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+            }
+            ::fibio::fibers::detail::fiber_object::current_fiber_->set_name(name);
+        }
     }   // End of namespace this_fiber
 }}  // End of namespace fibio::fibers
 
