@@ -799,7 +799,7 @@
 		2D7E684818CCCD2D00B7C4E5 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = 0d0a.com;
 			};
 			buildConfigurationList = 2D7E684B18CCCD2D00B7C4E5 /* Build configuration list for PBXProject "fibio" */;
