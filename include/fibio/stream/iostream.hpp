@@ -169,9 +169,10 @@ namespace fibio { namespace stream {
             return s;
         }
         
-        void accept(stream_type &s) {
+        boost::system::error_code accept(stream_type &s) {
             boost::system::error_code ec;
             accept(s, ec);
+            return ec;
         }
         
         void accept(stream_type &s, boost::system::error_code &ec)
@@ -183,8 +184,8 @@ namespace fibio { namespace stream {
         stream_type operator()(boost::system::error_code &ec)
         { return accept(ec); }
         
-        void operator()(stream_type &s)
-        { accept(s); }
+        boost::system::error_code operator()(stream_type &s)
+        { return accept(s); }
         
         void operator()(stream_type &s, boost::system::error_code &ec)
         { accept(s, ec); }

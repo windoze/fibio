@@ -22,7 +22,7 @@ using namespace fibio;
 // Certificates are copied from ASIO SSL example
 void ssl_child() {
     this_fiber::sleep_for(std::chrono::seconds(1));
-    ssl::context ctx(ssl::context::sslv23);
+    ssl::context ctx(ssl::context::tlsv1_client);
     boost::system::error_code ec;
     ctx.load_verify_file("ca.pem", ec);
     assert(!ec);
@@ -57,7 +57,7 @@ void ssl_parent() {
 
     boost::system::error_code ec;
     
-    ssl::context ctx(ssl::context::sslv23);
+    ssl::context ctx(ssl::context::tlsv1_server);
     ctx.set_options(ssl::context::default_workarounds
                     | ssl::context::no_sslv2
                     | ssl::context::single_dh_use);
@@ -72,7 +72,7 @@ void ssl_parent() {
     ssl::tcp_stream str(ctx);
     
     ssl::tcp_stream_acceptor acc("127.0.0.1", 23457);
-    acc.accept(str, ec);
+    ec=acc(str);
     assert(!ec);
     std::string line;
     std::getline(str, line);

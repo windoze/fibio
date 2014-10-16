@@ -41,22 +41,10 @@ namespace fibio { namespace stream {
         void close()
         { acc_.close(); }
         
-        stream_type accept(boost::asio::ssl::context &ctx) {
-            stream_type s(ctx);
+        boost::system::error_code accept(stream_type &s) {
             boost::system::error_code ec;
-            async_accept(s, ec);
-            return s;
-        }
-        
-        stream_type accept(boost::asio::ssl::context &ctx, boost::system::error_code &ec) {
-            stream_type s(ctx);
-            async_accept(s, ec);
-            return s;
-        }
-        
-        void accept(stream_type &s) {
-            boost::system::error_code ec;
-            async_accept(s, ec);
+            accept(s, ec);
+            return ec;
         }
         
         void accept(stream_type &s, boost::system::error_code &ec) {
@@ -65,14 +53,8 @@ namespace fibio { namespace stream {
             s.streambuf().async_handshake(boost::asio::ssl::stream_base::server, asio::yield[ec]);
         }
         
-        stream_type operator()()
-        { return accept(); }
-        
-        stream_type operator()(boost::system::error_code &ec)
-        { return accept(ec); }
-        
-        void operator()(stream_type &s)
-        { accept(s); }
+        boost::system::error_code operator()(stream_type &s)
+        { return accept(s); }
         
         void operator()(stream_type &s, boost::system::error_code &ec)
         { accept(s, ec); }
