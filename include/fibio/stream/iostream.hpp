@@ -36,10 +36,19 @@ namespace fibio { namespace stream {
         };
     }
     
+    // Closable stream
+    class fibierized_iostream_base : public std::iostream {
+    public:
+        typedef std::iostream base_type;
+        using base_type::base_type;
+        virtual bool is_open() const=0;
+        virtual void close()=0;
+    };
+    
     template<typename Stream>
     class fiberized_iostream
     : public detail::iostream_base<Stream>
-    , public std::iostream
+    , public fibierized_iostream_base
     {
         typedef fiberized_streambuf<Stream> streambuf_t;
         typedef detail::iostream_base<Stream> streambase_t;
@@ -49,20 +58,20 @@ namespace fibio { namespace stream {
 
         fiberized_iostream()
         : streambase_t()
-        , std::iostream(&(this->sbuf_))
+        , fibierized_iostream_base(&(this->sbuf_))
         {}
         
         // For SSL stream, construct with ssl::context
         template<typename Arg>
         fiberized_iostream(Arg &arg)
         : streambase_t(arg)
-        , std::iostream(&(this->sbuf_))
+        , fibierized_iostream_base(&(this->sbuf_))
         {}
         
         // Movable
         fiberized_iostream(fiberized_iostream &&src)//=default;
         : streambase_t(std::move(src))
-        , std::iostream(&(this->sbuf_))
+        , fibierized_iostream_base(&(this->sbuf_))
         {}
         
         // Non-copyable
