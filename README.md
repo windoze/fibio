@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/windoze/fibio.svg?branch=master)](https://travis-ci.org/windoze/fibio)
+[![Build Status](https://travis-ci.org/windoze/fibio.svg?branch=http)](https://travis-ci.org/windoze/fibio)
 
 Fiberized.IO
 ============
 
-Fiberized.IO is a fast and simple framework without compromises.
+Fiberized.IO is a fast and simple networking framework without compromises.
 
 * <B>Fast</B><BR/>Asynchronous I/O under the hood for maximum speed and throughtput.
 * <B>Simple</B><BR/>Fiber based programming model for concise and intuitive development.
@@ -11,23 +11,28 @@ Fiberized.IO is a fast and simple framework without compromises.
 
 Read the [Wiki](https://github.com/windoze/fibio/wiki) for manuals and references
 
-The echo server example
+The HTTP server example
 -----------------------
 <pre><code>
-#include &lt;iostream&gt;
-#include &lt;fibio/fiber.hpp&gt;
-#include &lt;fibio/stream/iostream.hpp&gt;
 #include &lt;fibio/fiberize.hpp&gt;
+#include &lt;fibio/http_server.hpp&gt;
 
-using namespace fibio;
+using namespace fibio::http;
+
+bool handler(server::request &req, server::response &resp, server::connection &conn) {
+    resp.body_stream() << "<HTML><BODY><H1>" << req.params["p"] << "</H1></BODY></HTML>";
+    return true;
+}
 
 int fibio::main(int argc, char *argv[]) {
-    tcp_stream_acceptor acc(atoi(argv[1]));
-    while(1) {
-        fiber([](tcp_stream s){
-            s &lt;&lt; s.rdbuf();
-        }, acc()).detach();
-    }
-    return 0;
+    server svr(server::settings{
+        route({
+            {path_matches("/*p"), handler},
+        }),
+        "0.0.0.0",
+        23456,
+    });
+    svr.start();
+    svr.join();
 }
 </code></pre>
