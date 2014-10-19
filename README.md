@@ -20,7 +20,7 @@ The HTTP server example
 using namespace fibio::http;
 
 bool handler(server::request &req, server::response &resp, server::connection &conn) {
-    resp.body_stream() &lt;&lt; "&lt;HTML&gt;&lt;BODY&gt;&lt;H1&gt;" &lt;&lt; req.params["p"] &lt;&lt; "&lt;/H1&gt;&lt;/BODY&gt;&lt;/HTML&gt;";
+    resp.body_stream() &lt;&lt; "&lt;HTML&gt;&lt;BODY&gt;&lt;H1&gt;" &lt;&lt; req.params["p"] &lt;&lt; "&lt;/H1&gt;&lt;/BODY&gt;&lt;/HTML&gt;" &lt;&lt; std::endl;
     return true;
 }
 
