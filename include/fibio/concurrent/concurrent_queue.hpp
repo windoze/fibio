@@ -392,8 +392,8 @@ namespace fibio { namespace concurrent {
             
             iterator(iterator &&other)
             : queue_(other.queue_)
-            , popped_(other.popped_)
             , value_(std::move(other.value_))
+            , popped_(other.popped_)
             {}
 
             iterator(const iterator &other)=delete;

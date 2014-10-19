@@ -169,8 +169,8 @@ namespace fibio { namespace http {
             : host_(host)
             , acceptor_(addr.c_str(), port)
             , default_request_handler_(std::move(default_request_handler))
-            , active_connection_(0)
             , arg_(arg)
+            , active_connection_(0)
             {}
 
             server_engine(unsigned short port, const std::string &host)
