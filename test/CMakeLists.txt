@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 enable_testing()
 
+file(COPY "ca.pem" "dh512.pem" "server.pem" DESTINATION ${CMAKE_BINARY_DIR}/test)
+
 add_executable(test_fibers test_fibers.cpp)
 TARGET_LINK_LIBRARIES(test_fibers ${FIBIO_LIBS})
 
@@ -26,10 +28,14 @@ TARGET_LINK_LIBRARIES(test_asio ${FIBIO_LIBS})
 add_executable(test_tcp_stream test_tcp_stream.cpp)
 TARGET_LINK_LIBRARIES(test_tcp_stream ${FIBIO_LIBS})
 
-find_package(OpenSSL)
 add_executable(test_ssl_stream test_ssl_stream.cpp)
-TARGET_LINK_LIBRARIES(test_ssl_stream ${FIBIO_LIBS} ${OPENSSL_LIBRARIES})
-file(COPY "ca.pem" "dh512.pem" "server.pem" DESTINATION ${CMAKE_BINARY_DIR}/test)
+TARGET_LINK_LIBRARIES(test_ssl_stream ${FIBIO_LIBS})
+
+add_executable(test_http_client test_http_server.cpp)
+TARGET_LINK_LIBRARIES(test_http_client ${FIBIO_LIBS})
+
+add_executable(test_http_server test_http_server.cpp)
+TARGET_LINK_LIBRARIES(test_http_server ${FIBIO_LIBS})
 
 add_executable(echo_server echo_server.cpp)
 TARGET_LINK_LIBRARIES(echo_server ${FIBIO_LIBS})
@@ -43,4 +49,6 @@ add_test(future test_future)
 add_test(ASIO test_asio)
 add_test(TCP_stream test_tcp_stream)
 add_test(SSL_stream test_ssl_stream)
+add_test(http_client test_http_client)
+add_test(http_server test_http_server)
 

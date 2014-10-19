@@ -43,7 +43,26 @@ TODO List for auxiliary libraries
 Protocol
 --------
 
-* HTTP support moved to a separated library at [fibio-http](https://github.com/windoze/fibio-http)
+* HTTP
+    * HTTP client
+        * Cookie
+        * Chunked response
+    * HTTP server framework
+        * Chunked resquest (File upload, etc.)
+        * Session store
+        * WebSocket
+        * RESTful service
+    * <del>HTTP request router for HTTP server (DONE)</del>
+    * Connection pool
+    * HTTPS support
+    * Template engine for HTTP server
+    * Stream with compression
+        * gzip
+            * Client can send compressed request
+            * <del>Client can receive compressed response (DONE)</del>
+            * Server can receive compressed request
+            * Server can send compressed response
+        * deflate
 * SMTP client to send mail
 
 Utilities
