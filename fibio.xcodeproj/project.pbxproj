@@ -88,9 +88,6 @@
 		2DACAAB519F3AB9A004F6780 /* test_http_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAAA019F3AB19004F6780 /* test_http_client.cpp */; };
 		2DACAAC119F3ABBB004F6780 /* test_http_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAAA119F3AB19004F6780 /* test_http_server.cpp */; };
 		2DACAAC219F3AC23004F6780 /* libboost_iostreams-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAA419F3AB48004F6780 /* libboost_iostreams-mt.a */; };
-		2DACAAC619F3AC23004F6780 /* libboost_context-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAC319F3AC23004F6780 /* libboost_context-mt.a */; };
-		2DACAAC719F3AC23004F6780 /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAC419F3AC23004F6780 /* libboost_coroutine-mt.a */; };
-		2DACAAC819F3AC23004F6780 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAC519F3AC23004F6780 /* libboost_system-mt.a */; };
 		2DACAAC919F3AC2F004F6780 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAA819F3AB60004F6780 /* libz.dylib */; };
 		2DACAACA19F3AC39004F6780 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFDA18E4376E00E64B99 /* libcrypto.dylib */; };
 		2DACAACB19F3AC3F004F6780 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFD818E4375200E64B99 /* libssl.dylib */; };
@@ -99,16 +96,19 @@
 		2DACAACE19F3AC56004F6780 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFDA18E4376E00E64B99 /* libcrypto.dylib */; };
 		2DACAACF19F3AC5C004F6780 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAA819F3AB60004F6780 /* libz.dylib */; };
 		2DACAAD019F3AC5F004F6780 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFD818E4375200E64B99 /* libssl.dylib */; };
-		2DACAAD119F3AC77004F6780 /* libboost_context-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAC319F3AC23004F6780 /* libboost_context-mt.a */; };
-		2DACAAD219F3AC77004F6780 /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAC419F3AC23004F6780 /* libboost_coroutine-mt.a */; };
 		2DACAAD319F3AC77004F6780 /* libboost_iostreams-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAA419F3AB48004F6780 /* libboost_iostreams-mt.a */; };
-		2DACAAD419F3AC77004F6780 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAC519F3AC23004F6780 /* libboost_system-mt.a */; };
 		2DACAAD519F3AE37004F6780 /* ca.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7B19CFF7DA00B0257D /* ca.pem */; };
 		2DACAAD619F3AE37004F6780 /* dh512.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7C19CFF7DA00B0257D /* dh512.pem */; };
 		2DACAAD719F3AE37004F6780 /* server.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7D19CFF7DA00B0257D /* server.pem */; };
 		2DACAAD819F3AE57004F6780 /* ca.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7B19CFF7DA00B0257D /* ca.pem */; };
 		2DACAAD919F3AE57004F6780 /* dh512.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7C19CFF7DA00B0257D /* dh512.pem */; };
 		2DACAADA19F3AE57004F6780 /* server.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7D19CFF7DA00B0257D /* server.pem */; };
+		2DACAADB19F3C27F004F6780 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967719D1C0B80068AAB3 /* libboost_system-mt.a */; };
+		2DACAADC19F3C281004F6780 /* libboost_context-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967519D1C0B80068AAB3 /* libboost_context-mt.a */; };
+		2DACAADD19F3C287004F6780 /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967619D1C0B80068AAB3 /* libboost_coroutine-mt.a */; };
+		2DACAADE19F3C28E004F6780 /* libboost_context-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967519D1C0B80068AAB3 /* libboost_context-mt.a */; };
+		2DACAADF19F3C290004F6780 /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967619D1C0B80068AAB3 /* libboost_coroutine-mt.a */; };
+		2DACAAE019F3C294004F6780 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967719D1C0B80068AAB3 /* libboost_system-mt.a */; };
 		2DD5665018DA1BC6002A259D /* test_fibers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5664E18DA1BC6002A259D /* test_fibers.cpp */; };
 		2DD5666318DB35D3002A259D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
 		2DD5666618DB35E5002A259D /* echo_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5666418DB35E5002A259D /* echo_server.cpp */; };
@@ -342,9 +342,6 @@
 		2DACAAA819F3AB60004F6780 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		2DACAAAE19F3AB87004F6780 /* test_http_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_http_client; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DACAABA19F3ABAE004F6780 /* test_http_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_http_server; sourceTree = BUILT_PRODUCTS_DIR; };
-		2DACAAC319F3AC23004F6780 /* libboost_context-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_context-mt.a"; path = "/usr/local/lib/libboost_context-mt.a"; sourceTree = "<group>"; };
-		2DACAAC419F3AC23004F6780 /* libboost_coroutine-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_coroutine-mt.a"; path = "/usr/local/lib/libboost_coroutine-mt.a"; sourceTree = "<group>"; };
-		2DACAAC519F3AC23004F6780 /* libboost_system-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_system-mt.a"; path = "/usr/local/lib/libboost_system-mt.a"; sourceTree = "<group>"; };
 		2DD3B6DF18CCF8B7009E1F3E /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		2DD3B6E418CDC3E7009E1F3E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		2DD5664518DA1B99002A259D /* test_fibers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_fibers; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -467,10 +464,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2DACAAC619F3AC23004F6780 /* libboost_context-mt.a in Frameworks */,
-				2DACAAC719F3AC23004F6780 /* libboost_coroutine-mt.a in Frameworks */,
-				2DACAAC819F3AC23004F6780 /* libboost_system-mt.a in Frameworks */,
+				2DACAADC19F3C281004F6780 /* libboost_context-mt.a in Frameworks */,
+				2DACAADD19F3C287004F6780 /* libboost_coroutine-mt.a in Frameworks */,
 				2DACAAC219F3AC23004F6780 /* libboost_iostreams-mt.a in Frameworks */,
+				2DACAADB19F3C27F004F6780 /* libboost_system-mt.a in Frameworks */,
 				2DACAAC919F3AC2F004F6780 /* libz.dylib in Frameworks */,
 				2DACAACA19F3AC39004F6780 /* libcrypto.dylib in Frameworks */,
 				2DACAACB19F3AC3F004F6780 /* libssl.dylib in Frameworks */,
@@ -482,10 +479,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2DACAAD119F3AC77004F6780 /* libboost_context-mt.a in Frameworks */,
-				2DACAAD219F3AC77004F6780 /* libboost_coroutine-mt.a in Frameworks */,
-				2DACAAD419F3AC77004F6780 /* libboost_system-mt.a in Frameworks */,
+				2DACAADE19F3C28E004F6780 /* libboost_context-mt.a in Frameworks */,
+				2DACAADF19F3C290004F6780 /* libboost_coroutine-mt.a in Frameworks */,
 				2DACAAD319F3AC77004F6780 /* libboost_iostreams-mt.a in Frameworks */,
+				2DACAAE019F3C294004F6780 /* libboost_system-mt.a in Frameworks */,
 				2DACAACF19F3AC5C004F6780 /* libz.dylib in Frameworks */,
 				2DACAACE19F3AC56004F6780 /* libcrypto.dylib in Frameworks */,
 				2DACAAD019F3AC5F004F6780 /* libssl.dylib in Frameworks */,
@@ -587,16 +584,13 @@
 		2D7E684718CCCD2D00B7C4E5 = {
 			isa = PBXGroup;
 			children = (
-				2DACAAC319F3AC23004F6780 /* libboost_context-mt.a */,
-				2DACAAC419F3AC23004F6780 /* libboost_coroutine-mt.a */,
-				2DACAAC519F3AC23004F6780 /* libboost_system-mt.a */,
-				2DACAAA819F3AB60004F6780 /* libz.dylib */,
-				2DACAAA419F3AB48004F6780 /* libboost_iostreams-mt.a */,
 				2D42967519D1C0B80068AAB3 /* libboost_context-mt.a */,
 				2D42967619D1C0B80068AAB3 /* libboost_coroutine-mt.a */,
+				2DACAAA419F3AB48004F6780 /* libboost_iostreams-mt.a */,
 				2D42967719D1C0B80068AAB3 /* libboost_system-mt.a */,
 				2D15CFDA18E4376E00E64B99 /* libcrypto.dylib */,
 				2D15CFD818E4375200E64B99 /* libssl.dylib */,
+				2DACAAA819F3AB60004F6780 /* libz.dylib */,
 				2DD3B6DF18CCF8B7009E1F3E /* .gitignore */,
 				2DD3B6E418CDC3E7009E1F3E /* README.md */,
 				2D6A7BF318E05C5500AC89EC /* LICENSE */,
@@ -1512,9 +1506,7 @@
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1533,9 +1525,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1557,9 +1547,7 @@
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1578,9 +1566,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1732,6 +1718,7 @@
 				2DACAAB419F3AB87004F6780 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		2DACAABE19F3ABAE004F6780 /* Build configuration list for PBXNativeTarget "test_http_server" */ = {
 			isa = XCConfigurationList;
@@ -1740,6 +1727,7 @@
 				2DACAAC019F3ABAE004F6780 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		2DD5664B18DA1B99002A259D /* Build configuration list for PBXNativeTarget "test_fibers" */ = {
 			isa = XCConfigurationList;
