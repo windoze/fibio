@@ -60,7 +60,7 @@ namespace fibio { namespace http {
                                        server::request_handler_type default_handler=stock_handler{http_status_code::NOT_FOUND});
     
     template<typename... Rule>
-    inline server::request_handler_type route(Rule&&... r) {
+    inline server::request_handler_type route(const Rule&... r) {
         return route(routing_table_type(routing_table_type{r...}));
     }
     
