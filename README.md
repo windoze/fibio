@@ -26,10 +26,7 @@ bool handler(server::request &req, server::response &resp, server::connection &c
 
 int fibio::main(int argc, char *argv[]) {
     server svr(server::settings{
-        route({
-            {path_matches("/*p"), handler},
-        }),
-        "0.0.0.0",
+        route(path_matches("/*p") >> handler),
         23456,
     });
     svr.start();
