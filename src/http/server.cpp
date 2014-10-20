@@ -82,7 +82,7 @@ namespace fibio { namespace http {
                     watchdog_timer_->async_wait(asio::yield[ignore_ec]);
                     // close the stream if timeout
                     auto dur=watchdog_timer_->expires_from_now();
-                std::chrono::seconds s=std::chrono::duration_cast<std::chrono::seconds>(dur);
+                    std::chrono::seconds s=std::chrono::duration_cast<std::chrono::seconds>(dur);
                     if (s <= std::chrono::seconds(0)) {
                         stream().close();
                     }
@@ -92,7 +92,7 @@ namespace fibio { namespace http {
             bool recv(request &req) {
                 bool ret=false;
                 if (bad()) return false;
-                if(read_timeout_>std::chrono::seconds(0)) {
+                if(read_timeout_>NO_TIMEOUT) {
                     // Set read timeout
                     watchdog_timer_->expires_from_now(read_timeout_);
                 }
@@ -103,7 +103,7 @@ namespace fibio { namespace http {
             bool send(response &resp) {
                 bool ret=false;
                 if (bad()) return false;
-                if(write_timeout_>std::chrono::seconds(0)) {
+                if(write_timeout_>NO_TIMEOUT) {
                     // Set write timeout
                     watchdog_timer_->expires_from_now(write_timeout_);
                 }
@@ -221,7 +221,7 @@ namespace fibio { namespace http {
             }
             
             void servant(connection_type c) {
-                if (read_timeout_>std::chrono::seconds(0) || write_timeout_>std::chrono::seconds(0)) {
+                if (read_timeout_>NO_TIMEOUT || write_timeout_>NO_TIMEOUT) {
                     c.start_watchdog();
                 }
                 request req;
@@ -254,9 +254,9 @@ namespace fibio { namespace http {
             acceptor_type acceptor_;
             server::request_handler_type default_request_handler_;
             promise<void> exit_signal_;
-            timeout_type read_timeout_=std::chrono::seconds(0);
-            timeout_type write_timeout_=std::chrono::seconds(0);
-            unsigned max_keep_alive_=DEFAULT_KEEP_ALIVE_REQ_PER_CONNECTION;
+            timeout_type read_timeout_=DEFAULT_TIMEOUT;
+            timeout_type write_timeout_=DEFAULT_TIMEOUT;
+            unsigned max_keep_alive_=DEFAULT_MAX_KEEP_ALIVE;
             arg_type arg_;
             
             std::unique_ptr<fiber> watchdog_;

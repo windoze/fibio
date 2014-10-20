@@ -31,7 +31,12 @@ namespace fibio { namespace http {
     /**
      * Routing table
      */
-    typedef std::list<std::pair<match_type, server::request_handler_type>> routing_table_type;
+    typedef std::pair<match_type, server::request_handler_type> routing_rule_type;
+    typedef std::list<routing_rule_type> routing_table_type;
+    
+    inline routing_rule_type operator >> (match_type &&m, server::request_handler_type &&h) {
+        return routing_rule_type{std::move(m), std::move(h)};
+    }
     
     /**
      * Stock response with specific status code, can be used with http server or routing table
@@ -53,7 +58,12 @@ namespace fibio { namespace http {
      */
     server::request_handler_type route(const routing_table_type &table,
                                        server::request_handler_type default_handler=stock_handler{http_status_code::NOT_FOUND});
-
+    
+    template<typename... Rule>
+    inline server::request_handler_type route(Rule&&... r) {
+        return route(routing_table_type(routing_table_type{r...}));
+    }
+    
     /**
      * Match any request
      */

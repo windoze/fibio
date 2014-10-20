@@ -165,20 +165,17 @@ bool handler(server::request &req, server::response &resp, server::connection &c
 }
 
 void http_server() {
-    server svr(server::settings{route({
-        {path_matches("/")
-            || path_matches("/index.html")
-            || path_matches("/index.htm"), handler},
-        {GET("/test1/:id/test2"), handler},
-        {POST("/test2/*p"), handler},
-        {path_matches("/test3/*p") && url_(iends_with{".html"}), handler},
-        {path_matches("/test3/*"), stock_handler{http_status_code::FORBIDDEN}},
-        {!method_is(http_method::GET), stock_handler{http_status_code::BAD_REQUEST}}
-    }, stock_handler{http_status_code::NOT_FOUND}),
-        "127.0.0.1",
+    server svr(server::settings{
+        route((path_matches("/")
+               || path_matches("/index.html")
+               || path_matches("/index.htm")) >> handler,
+              GET("/test1/:id/test2") >> handler,
+              POST("/test2/*p") >> handler,
+              (path_matches("/test3/*p") && url_(iends_with{".html"})) >> handler,
+              path_matches("/test3/*") >> stock_handler{http_status_code::FORBIDDEN},
+              !method_is(http_method::GET) >> stock_handler{http_status_code::BAD_REQUEST}),
         23456,
-        std::chrono::seconds(60),
-        std::chrono::seconds(60)
+        "127.0.0.1",
     });
     svr.start();
     {
@@ -311,20 +308,16 @@ void https_server() {
     ctx.use_tmp_dh_file("dh512.pem", ec);
     assert(!ec);
     server svr(server::settings{ctx,
-        route({
-            {path_matches("/")
-                || path_matches("/index.html")
-                || path_matches("/index.htm"), handler},
-            {GET("/test1/:id/test2"), handler},
-            {POST("/test2/*p"), handler},
-            {path_matches("/test3/*p") && url_(iends_with{".html"}), handler},
-            {path_matches("/test3/*"), stock_handler{http_status_code::FORBIDDEN}},
-            {!method_is(http_method::GET), stock_handler{http_status_code::BAD_REQUEST}}
-        }, stock_handler{http_status_code::NOT_FOUND}),
-        "127.0.0.1",
+        route((path_matches("/")
+               || path_matches("/index.html")
+               || path_matches("/index.htm")) >> handler,
+              GET("/test1/:id/test2") >> handler,
+              POST("/test2/*p") >> handler,
+              (path_matches("/test3/*p") && url_(iends_with{".html"})) >> handler,
+              path_matches("/test3/*") >> stock_handler{http_status_code::FORBIDDEN},
+              !method_is(http_method::GET) >> stock_handler{http_status_code::BAD_REQUEST}),
         23457,
-        std::chrono::seconds(60),
-        std::chrono::seconds(60)
+        "127.0.0.1"
     });
     svr.start();
     {

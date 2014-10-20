@@ -19,7 +19,9 @@
 #include <fibio/http/server/response.hpp>
 
 namespace fibio { namespace http {
-    constexpr unsigned DEFAULT_KEEP_ALIVE_REQ_PER_CONNECTION=100;
+    constexpr unsigned DEFAULT_MAX_KEEP_ALIVE=100;
+    constexpr timeout_type DEFAULT_TIMEOUT=std::chrono::seconds(60);
+    constexpr timeout_type NO_TIMEOUT=std::chrono::seconds(0);
     
     struct server {
         typedef fibio::http::server_request request;
@@ -31,11 +33,11 @@ namespace fibio { namespace http {
         
         struct settings {
             settings(request_handler_type h=[](request &, response &, connection &)->bool{ return false; },
-                     const std::string &a="0.0.0.0",
                      unsigned short p=80,
-                     timeout_type r=std::chrono::seconds(0),
-                     timeout_type w=std::chrono::seconds(0),
-                     unsigned m=DEFAULT_KEEP_ALIVE_REQ_PER_CONNECTION)
+                     const std::string &a="0.0.0.0",
+                     timeout_type r=DEFAULT_TIMEOUT,
+                     timeout_type w=DEFAULT_TIMEOUT,
+                     unsigned m=DEFAULT_MAX_KEEP_ALIVE)
             : address(a)
             , port(p)
             , default_request_handler(h)
@@ -45,16 +47,16 @@ namespace fibio { namespace http {
             , ctx(0)
             {
                 // read and write timeout must be set or unset at same time
-                assert(!((r==std::chrono::seconds(0)) ^ (w==std::chrono::seconds(0))));
+                assert(!((r==NO_TIMEOUT) ^ (w==NO_TIMEOUT)));
             }
                      
             settings(ssl::context &context,
                      request_handler_type h=[](request &, response &, connection &)->bool{ return false; },
-                     const std::string &a="0.0.0.0",
                      unsigned short p=443,
-                     timeout_type r=std::chrono::seconds(0),
-                     timeout_type w=std::chrono::seconds(0),
-                     unsigned m=DEFAULT_KEEP_ALIVE_REQ_PER_CONNECTION)
+                     const std::string &a="0.0.0.0",
+                     timeout_type r=DEFAULT_TIMEOUT,
+                     timeout_type w=DEFAULT_TIMEOUT,
+                     unsigned m=DEFAULT_MAX_KEEP_ALIVE)
             : address(a)
             , port(p)
             , default_request_handler(h)
@@ -64,7 +66,7 @@ namespace fibio { namespace http {
             , ctx(&context)
             {
                 // read and write timeout must be set or unset at same time
-                assert(!((r==std::chrono::seconds(0)) ^ (w==std::chrono::seconds(0))));
+                assert(!((r==NO_TIMEOUT) ^ (w==NO_TIMEOUT)));
             }
 
             std::string address;
