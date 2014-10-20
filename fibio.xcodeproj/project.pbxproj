@@ -20,15 +20,8 @@
 		2D131A0318D0B47A0086156F /* test_tcp_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D131A0118D0B47A0086156F /* test_tcp_stream.cpp */; };
 		2D15D01018E579E700E64B99 /* cv_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D7E687618CCCD5D00B7C4E5 /* cv_object.cpp */; };
 		2D15D02318E5804400E64B99 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
-		2D15D08818E6C71D00E64B99 /* shared_state.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D15D08718E6C71D00E64B99 /* shared_state.hpp */; };
-		2D15D08A18E6C7BD00E64B99 /* future_status.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D15D08918E6C7BD00E64B99 /* future_status.hpp */; };
 		2D15D09818E6C84800E64B99 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
 		2D15D09E18E6C86F00E64B99 /* test_future.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D15D09C18E6C86F00E64B99 /* test_future.cpp */; };
-		2D15D0A418E6D05D00E64B99 /* shared_state_object.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D15D0A318E6D05D00E64B99 /* shared_state_object.hpp */; };
-		2D15D0A618E6D0CA00E64B99 /* task_base.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D15D0A518E6D0CA00E64B99 /* task_base.hpp */; };
-		2D15D0A818E6D17700E64B99 /* task_object.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D15D0A718E6D17700E64B99 /* task_object.hpp */; };
-		2D15D0AA18E6D21600E64B99 /* packaged_task.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D15D0A918E6D21600E64B99 /* packaged_task.hpp */; };
-		2D15D0AC18E6DB5100E64B99 /* promise.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D15D0AB18E6DB5100E64B99 /* promise.hpp */; };
 		2D42967819D1C0B80068AAB3 /* libboost_context-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967519D1C0B80068AAB3 /* libboost_context-mt.a */; };
 		2D42967919D1C0B80068AAB3 /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967619D1C0B80068AAB3 /* libboost_coroutine-mt.a */; };
 		2D42967A19D1C0B80068AAB3 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967719D1C0B80068AAB3 /* libboost_system-mt.a */; };
@@ -63,12 +56,8 @@
 		2D42969719D1C6340068AAB3 /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967619D1C0B80068AAB3 /* libboost_coroutine-mt.a */; };
 		2D42969819D1C6340068AAB3 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D42967719D1C0B80068AAB3 /* libboost_system-mt.a */; };
 		2D5A306918E6E21600C5EB41 /* future.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D5A306718E6E21600C5EB41 /* future.cpp */; };
-		2D5A306E18E710C300C5EB41 /* yield.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D5A306D18E710C300C5EB41 /* yield.hpp */; };
-		2D5A307118E7162D00C5EB41 /* fiber_base.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D5A307018E7162D00C5EB41 /* fiber_base.hpp */; };
 		2D5A308118E71C4900C5EB41 /* test_asio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D5A307F18E71C4900C5EB41 /* test_asio.cpp */; };
 		2D5A308218E71CC000C5EB41 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
-		2D5A308F18E95EB200C5EB41 /* use_future.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D5A308E18E95EB200C5EB41 /* use_future.hpp */; };
-		2D5A309118E95F3600C5EB41 /* use_future.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D5A309018E95F3600C5EB41 /* use_future.hpp */; };
 		2D82CD6719CFF72000B0257D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
 		2D82CD6919CFF73F00B0257D /* test_ssl_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D82CD6819CFF73F00B0257D /* test_ssl_stream.cpp */; };
 		2D82CD7819CFF7AB00B0257D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
@@ -112,7 +101,6 @@
 		2DD5665018DA1BC6002A259D /* test_fibers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5664E18DA1BC6002A259D /* test_fibers.cpp */; };
 		2DD5666318DB35D3002A259D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
 		2DD5666618DB35E5002A259D /* echo_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5666418DB35E5002A259D /* echo_server.cpp */; };
-		2DED5A0018EDA8C3006E5FA8 /* fiberize.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DED59FF18EDA8C3006E5FA8 /* fiberize.hpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -816,18 +804,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2D5A307118E7162D00C5EB41 /* fiber_base.hpp in Headers */,
-				2D15D0A618E6D0CA00E64B99 /* task_base.hpp in Headers */,
-				2D15D0AA18E6D21600E64B99 /* packaged_task.hpp in Headers */,
-				2D15D0A818E6D17700E64B99 /* task_object.hpp in Headers */,
-				2D15D0A418E6D05D00E64B99 /* shared_state_object.hpp in Headers */,
-				2D15D0AC18E6DB5100E64B99 /* promise.hpp in Headers */,
-				2D5A306E18E710C300C5EB41 /* yield.hpp in Headers */,
-				2D5A309118E95F3600C5EB41 /* use_future.hpp in Headers */,
-				2D15D08A18E6C7BD00E64B99 /* future_status.hpp in Headers */,
-				2D15D08818E6C71D00E64B99 /* shared_state.hpp in Headers */,
-				2DED5A0018EDA8C3006E5FA8 /* fiberize.hpp in Headers */,
-				2D5A308F18E95EB200C5EB41 /* use_future.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1222,10 +1198,6 @@
 		2D1319A918D09B850086156F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1233,10 +1205,6 @@
 		2D1319AA18D09B850086156F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1245,10 +1213,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1257,10 +1221,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1268,10 +1228,6 @@
 		2D1319DC18D0A9A60086156F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1279,10 +1235,6 @@
 		2D1319DD18D0A9A60086156F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1290,10 +1242,6 @@
 		2D1319ED18D0B1860086156F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1301,10 +1249,6 @@
 		2D1319EE18D0B1860086156F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1312,10 +1256,6 @@
 		2D1319FE18D0B45A0086156F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1323,10 +1263,6 @@
 		2D1319FF18D0B45A0086156F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1334,10 +1270,6 @@
 		2D15D09618E6C83C00E64B99 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1345,10 +1277,6 @@
 		2D15D09718E6C83C00E64B99 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1356,10 +1284,6 @@
 		2D5A307D18E71C0900C5EB41 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1367,10 +1291,6 @@
 		2D5A307E18E71C0900C5EB41 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1410,6 +1330,7 @@
 					/usr/local/include,
 					"$(SRCROOT)/include",
 				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				ONLY_ACTIVE_ARCH = YES;
 				WARNING_CFLAGS = "-Wno-deprecated-register";
 			};
@@ -1444,6 +1365,7 @@
 					/usr/local/include,
 					"$(SRCROOT)/include",
 				);
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				WARNING_CFLAGS = "-Wno-deprecated-register";
 			};
 			name = Release;
@@ -1451,10 +1373,6 @@
 		2D82CD5E19CFF69500B0257D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1462,10 +1380,6 @@
 		2D82CD5F19CFF69500B0257D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1473,10 +1387,6 @@
 		2D82CD7319CFF77900B0257D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = test_fss;
 			};
 			name = Debug;
@@ -1484,10 +1394,6 @@
 		2D82CD7419CFF77900B0257D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = test_fss;
 			};
 			name = Release;
@@ -1506,7 +1412,6 @@
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1525,7 +1430,6 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1547,7 +1451,6 @@
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1566,7 +1469,6 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1577,10 +1479,6 @@
 		2DD5664C18DA1B99002A259D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1588,10 +1486,6 @@
 		2DD5664D18DA1B99002A259D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1599,10 +1493,6 @@
 		2DD5666118DB35C3002A259D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1610,10 +1500,6 @@
 		2DD5666218DB35C3002A259D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/local/lib,
-				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
