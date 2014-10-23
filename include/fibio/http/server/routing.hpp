@@ -65,9 +65,9 @@ namespace fibio { namespace http {
     }
     
     /**
-     * Match any request
+     * Match all request
      */
-    extern const match_type any;
+    extern const match_type all;
 
     /**
      * Match HTTP method
@@ -121,7 +121,7 @@ namespace fibio { namespace http {
     }
     
     // Match path pattern and extract parameters into match_info
-    match_type path_matches(const std::string &tmpl);
+    match_type path_(const std::string &tmpl);
     
     // Convenience
     match_type GET(const std::string &pattern);
