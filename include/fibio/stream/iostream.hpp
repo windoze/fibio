@@ -240,16 +240,28 @@ namespace fibio { namespace stream {
         auto i=access_point.find(':');
         // TODO: IPv4 and IPv6
         std::string addr("0::0");
-        uint16_t port=0;
+        std::string port;
         if(i==access_point.npos) {
             // Assume arg contains only port
-            // TODO: IPv4 and IPv6
-            port=boost::lexical_cast<uint16_t>(access_point);
+            port=access_point;
         } else {
             addr.assign(access_point.begin(), access_point.begin()+i);
-            port=boost::lexical_cast<uint16_t>(std::string(access_point.begin()+i+1, access_point.end()));
+            port.assign(access_point.begin()+i+1, access_point.end());
         }
-        return boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(addr), port);
+        boost::system::error_code ec;
+        boost::asio::ip::address a=boost::asio::ip::address::from_string(addr, ec);
+        if (ec) {
+            // Address is *not* an IP address
+            boost::asio::ip::tcp::resolver r(asio::get_io_service());
+            boost::asio::ip::tcp::resolver::query q(addr, port);
+            boost::asio::ip::tcp::resolver::iterator i=r.async_resolve(q, asio::yield[ec]);
+            if(ec) {
+                BOOST_THROW_EXCEPTION(boost::system::system_error(ec, "Resolving address failed"));
+            }
+            return i->endpoint();
+        } else {
+            return boost::asio::ip::tcp::endpoint(a, boost::lexical_cast<uint16_t>(port));
+        }
     }
     
     template<>
@@ -266,53 +278,54 @@ namespace fibio { namespace stream {
         typedef typename traits_type::arg_type arg_type;
 
         template<typename std::enable_if<std::is_move_constructible<Stream>::value>::type* = nullptr >
-        listener(const std::string &access_point) {
-            add_endpoint(make_endpoint<endpoint_type>(access_point));
-        }
+        listener(const std::string &access_point)
+        : ep_(make_endpoint<endpoint_type>(access_point))
+        {}
         
+        // For SSL, arg type is ssl::context
         template<typename Arg>
         listener(Arg &arg, const std::string &access_point)
         : arg_(&arg)
-        {
-            add_endpoint(make_endpoint<endpoint_type>(access_point));
-        }
+        , ep_(make_endpoint<endpoint_type>(access_point))
+        {}
         
+        // Start and join, other fiber may stop the listener
         template<typename F>
         void operator()(F f) {
-            for(auto &i : endpoints_) {
-                i.second.first = new fiber(&listener::acceptor_fiber<F>,
-                                           this,
-                                           std::cref(i.first),
-                                           &(i.second.second),
-                                           f);
-            }
-            for(auto &i : endpoints_) {
-                i.second.first->join();
-                delete i.second.first;
-            }
-            endpoints_.clear();
+            start(f);
+            join();
         }
         
-        void close() {
-            for(auto &i : endpoints_) {
-                i.second.second.set_value();
+        // Start listener
+        template<typename F>
+        void start(F f) {
+            if(!stop_signal_) {
+                stop_signal_.reset(new promise<void>);
+                if(!acceptor_fiber_) {
+                    acceptor_fiber_.reset(new fiber(&listener::acceptor_fiber<F>,
+                                                    this,
+                                                    ep_,
+                                                    stop_signal_.get(),
+                                                    f));
+                }
+            }
+        }
+        
+        void stop() {
+            if(stop_signal_) {
+                stop_signal_->set_value();
+            }
+        }
+        
+        void join() {
+            if (acceptor_fiber_) {
+                acceptor_fiber_->join();
+                acceptor_fiber_.reset();
+                stop_signal_.reset();
             }
         }
         
     private:
-        typedef std::pair<fiber *, promise<void>> handler_type;
-        typedef std::map<endpoint_type, handler_type> endpoint_map;
-        
-        void add_endpoint(const endpoint_type &ep) {
-            auto i=endpoints_.find(ep);
-            if (i==endpoints_.end()) {
-                endpoints_.emplace(std::pair<endpoint_type, handler_type>{
-                    ep,
-                    handler_type{nullptr, promise<void>()}
-                });
-            }
-        }
-        
         template<typename F>
         void acceptor_fiber(const endpoint_type & e, promise<void> *p, F f) {
             acceptor_type acc(e);
@@ -338,8 +351,10 @@ namespace fibio { namespace stream {
             acc.close();
         }
         
-        endpoint_map endpoints_;
-        arg_type *arg_;
+        arg_type *arg_=nullptr;
+        endpoint_type ep_;
+        std::unique_ptr<fiber> acceptor_fiber_;
+        std::unique_ptr<promise<void>> stop_signal_;
     };
     
     // listeners
