@@ -228,14 +228,17 @@ namespace fibio { namespace http {
                 int count=0;
                 while(c.recv(req)) {
                     response resp;
+                    req.raw_stream_=&(c.stream());
+                    resp.raw_stream_=&(c.stream());
                     // Set default attributes for response
                     resp.status_code=http_status_code::OK;
                     resp.version=req.version;
                     resp.keep_alive=req.keep_alive;
                     if(count>=max_keep_alive_) resp.keep_alive=false;
-                    if(!default_request_handler_(req, resp, c.stream())) {
+                    if(!default_request_handler_(req, resp)) {
                         break;
                     }
+                    resp.body_stream().flush();
                     c.send(resp);
                     // Make sure we consumed all parts of the request
                     req.drop_body();

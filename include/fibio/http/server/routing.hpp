@@ -43,8 +43,7 @@ namespace fibio { namespace http {
      */
     struct stock_handler{
         bool operator()(server::request &,
-                        server::response &resp,
-                        server::connection &) const
+                        server::response &resp) const
         {
             resp.status_code=m;
             return true;

@@ -26,13 +26,11 @@ namespace fibio { namespace http {
     struct server {
         typedef fibio::http::server_request request;
         typedef fibio::http::server_response response;
-        typedef std::istream connection;
         typedef std::function<bool(request &req,
-                                   response &resp,
-                                   connection &conn)> request_handler_type;
+                                   response &resp)> request_handler_type;
         
         struct settings {
-            settings(request_handler_type h=[](request &, response &, connection &)->bool{ return false; },
+            settings(request_handler_type h=[](request &, response &)->bool{ return false; },
                      unsigned short p=80,
                      const std::string &a="0.0.0.0",
                      timeout_type r=DEFAULT_TIMEOUT,
@@ -51,7 +49,7 @@ namespace fibio { namespace http {
             }
                      
             settings(ssl::context &context,
-                     request_handler_type h=[](request &, response &, connection &)->bool{ return false; },
+                     request_handler_type h=[](request &, response &)->bool{ return false; },
                      unsigned short p=443,
                      const std::string &a="0.0.0.0",
                      timeout_type r=DEFAULT_TIMEOUT,

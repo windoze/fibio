@@ -19,10 +19,12 @@ namespace fibio { namespace http {
 
         server_response(const server_response &other)
         : common::response(other)
+        , raw_stream_(other.raw_stream_)
         {}
 
         server_response &operator=(const server_response &other) {
             common::response::operator=(other);
+            raw_stream_=other.raw_stream_;
             return *this;
         }
         
@@ -33,6 +35,10 @@ namespace fibio { namespace http {
         void set_content_type(const std::string &);
         
         const std::string &get_body() const;
+        
+        inline std::ostream &raw_stream() const {
+            return *raw_stream_;
+        }
         
         std::ostream &body_stream();
         
@@ -46,6 +52,8 @@ namespace fibio { namespace http {
         bool write(std::ostream &os);
         
         boost::interprocess::basic_ovectorstream<std::string> raw_body_stream_;
+        
+        std::ostream *raw_stream_=nullptr;
     };
 
     inline std::ostream &operator<<(std::ostream &os, server_response &resp) {

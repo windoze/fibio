@@ -26,6 +26,10 @@ namespace fibio { namespace http {
             return content_length>0 && body_stream_.get();
         }
         
+        inline std::istream &raw_stream() const {
+            return *raw_stream_;
+        }
+        
         inline std::istream &body_stream() {
             // TODO: Throw if body stream is not setup
             return *(body_stream_.get());
@@ -39,6 +43,8 @@ namespace fibio { namespace http {
     //private:
         std::unique_ptr<boost::iostreams::restriction<std::istream>> restriction_;
         std::unique_ptr<std::istream> body_stream_;
+        
+        std::istream *raw_stream_=nullptr;
     };
 
     inline std::istream &operator>>(std::istream &is, server_request &v) {

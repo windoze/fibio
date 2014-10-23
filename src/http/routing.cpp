@@ -48,16 +48,15 @@ namespace fibio { namespace http {
     {
         struct handler {
             bool operator()(server::request &req,
-                            server::response &resp,
-                            server::connection &conn)
+                            server::response &resp)
             {
                 parse_url(req.url, req.parsed_url);
                 for(auto &e : routing_table_) {
                     if(e.first(req)) {
-                        return e.second(req, resp, conn);
+                        return e.second(req, resp);
                     }
                 }
-                return default_handler_(req, resp, conn);
+                return default_handler_(req, resp);
             }
             
             routing_table_type routing_table_;
@@ -72,18 +71,17 @@ namespace fibio { namespace http {
     {
         struct handler {
             bool operator()(server::request &req,
-                            server::response &resp,
-                            server::connection &conn)
+                            server::response &resp)
             {
                 parse_url(req.url, req.parsed_url);
                 for(auto &e : routing_table_) {
                     if(e.first(req)) {
-                        return e.second(req, resp, conn);
+                        return e.second(req, resp);
                     } else {
                         req.params.clear();
                     }
                 }
-                return default_handler_(req, resp, conn);
+                return default_handler_(req, resp);
             }
             
             routing_table_type routing_table_;

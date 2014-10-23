@@ -123,7 +123,7 @@ void the_url_client() {
     assert(resp.status_code==http_status_code::OK);
 }
 
-bool handler(server::request &req, server::response &resp, server::connection &c) {
+bool handler(server::request &req, server::response &resp) {
     resp.headers.insert({"Header1", "Value1"});
     // Write all headers back in a table
     resp.set_content_type("text/html");
