@@ -8,7 +8,6 @@
 
 #include <iostream>
 #include <chrono>
-#include <atomic>
 #include <signal.h>
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/asio/signal_set.hpp>
@@ -19,7 +18,7 @@
 
 using namespace fibio;
 std::string address("0::0");
-std::atomic<unsigned short> listen_port;
+unsigned short listen_port;
 
 // We don't need atomic or any other kind of synchronization as console and
 // main_watchdog fibers are always running in the same thread with main_fiber
@@ -100,7 +99,7 @@ void servant_watchdog(watchdog_timer_t &timer, tcp_stream &s) {
 /**
  * connection handler fiber
  */
-void echo_servant(tcp_stream s) {
+void echo_servant(tcp_stream &s) {
     /**
      * Active connection counter
      */
@@ -116,6 +115,8 @@ void echo_servant(tcp_stream s) {
     timer.expires_from_now(std::chrono::seconds(3));
     
     // Start watchdog fiber, close connection on timeout
+    // ASIO sockets are *not* thread-safe, watchdog must not run in
+    // different thread with handler
     fiber watchdog(fiber::attributes(fiber::attributes::stick_with_parent),
                    servant_watchdog,
                    std::ref(timer),
@@ -141,9 +142,9 @@ void echo_servant(tcp_stream s) {
 
 /**
  * Watchdog for main fiber, check the exit flag and signals once every second,
- * close main acceptor when flag is set or received signal
+ * close main listener when flag is set or received signal
  */
-void main_watchdog(tcp_stream_acceptor &acc) {
+void signal_watchdog(tcp_listener &l) {
     boost::asio::signal_set ss(asio::get_io_service(),
                                SIGINT,
                                SIGTERM);
@@ -161,8 +162,8 @@ void main_watchdog(tcp_stream_acceptor &acc) {
     // Set the exit flag
     should_exit=true;
     
-    // Close main acceptor
-    acc.close();
+    // Close main listener
+    l.close();
 }
 
 /**
@@ -184,28 +185,18 @@ int fibio::main(int argc, char *argv[]) {
     // Start more work threads
     scheduler::get_instance().add_worker_thread(3);
 
-    // Start console fiber within same thread as main fiber
-    fiber(fiber::attributes(fiber::attributes::stick_with_parent),
-          console).detach();
+    // Start console
+    fiber(console).detach();
     
-    // Acceptor
-    tcp_stream_acceptor acc(address, listen_port);
+    // Listener
+    tcp_listener l(address, listen_port);
+
+    // Start watchdog
+    fiber(signal_watchdog,
+          std::ref(l)).detach();
     
-    // Start a watchdog fiber within same thread as main fiber
-    fiber(fiber::attributes(fiber::attributes::stick_with_parent),
-          main_watchdog,
-          std::ref(acc)).detach();
-    
-    // Accept incoming connections
-    while(!should_exit) {
-        boost::system::error_code ec;
-        // Wait and accept a new connection
-        tcp_stream s=acc(ec);
-        // Stop accepting on error, watchdog closes the acceptor when the exit flag is set
-        if(ec) break;
-        // Create a new servant fiber to handle the connection
-        fiber(echo_servant, std::move(s)).detach();
-    }
+    l(echo_servant);
+
     std::cout << "Echo server existing..." << std::endl;
     return 0;
 }
