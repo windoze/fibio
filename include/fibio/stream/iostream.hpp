@@ -289,6 +289,10 @@ namespace fibio { namespace stream {
         , ep_(make_endpoint<endpoint_type>(access_point))
         {}
         
+        endpoint_type endpoint() const {
+            return ep_;
+        }
+        
         // Start and join, other fiber may stop the listener
         template<typename F>
         void operator()(F f) {
