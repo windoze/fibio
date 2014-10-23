@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/windoze/fibio.svg?branch=http)](https://travis-ci.org/windoze/fibio)
+[![Build Status](https://travis-ci.org/windoze/fibio.svg?branch=master)](https://travis-ci.org/windoze/fibio)
 
 Fiberized.IO
 ============
