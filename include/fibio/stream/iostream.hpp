@@ -295,9 +295,14 @@ namespace fibio { namespace stream {
         
         // Start and join, other fiber may stop the listener
         template<typename F>
-        void operator()(F f) {
-            start(f);
-            join();
+        boost::system::error_code operator()(F f) {
+            try {
+                start(f);
+                join();
+            } catch(boost::system::system_error &e) {
+                return e.code();
+            }
+            return boost::system::error_code();
         }
         
         // Start listener

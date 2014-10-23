@@ -83,6 +83,15 @@ namespace fibio { namespace http {
         void start();
         void stop();
         void join();
+        boost::system::error_code operator()() {
+            try {
+                start();
+                join();
+            } catch(boost::system::system_error &e) {
+                return e.code();
+            }
+            return boost::system::error_code();
+        }
         struct impl;
     private:
         impl *engine_;

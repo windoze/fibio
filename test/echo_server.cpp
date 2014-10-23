@@ -18,7 +18,6 @@
 
 using namespace fibio;
 std::string address("0::0");
-unsigned short listen_port;
 
 // We don't need atomic or any other kind of synchronization as console and
 // main_watchdog fibers are always running in the same thread with main_fiber
@@ -31,7 +30,7 @@ std::atomic<size_t> connections(0);
 typedef boost::asio::basic_waitable_timer<std::chrono::steady_clock> watchdog_timer_t;
 
 void hello(std::ostream &s) {
-    s << "Fiberized.IO echo_server listening at " << address << ", port " << listen_port << std::endl;
+    s << "Fiberized.IO echo_server listening at " << address << std::endl;
 }
 
 void help_message() {
@@ -162,8 +161,8 @@ void signal_watchdog(tcp_listener &l) {
     // Set the exit flag
     should_exit=true;
     
-    // Close main listener
-    l.close();
+    // Stop main listener
+    l.stop();
 }
 
 /**
@@ -175,6 +174,7 @@ int fibio::main(int argc, char *argv[]) {
         std::cerr << "Usage:" << "\t" << argv[0] << " [address:]port" << std::endl;
         return 1;
     }
+    address=argv[1];
     
     // Start more work threads
     scheduler::get_instance().add_worker_thread(3);
@@ -183,14 +183,14 @@ int fibio::main(int argc, char *argv[]) {
     fiber(console).detach();
     
     // Listener
-    tcp_listener l(argv[1]);
+    tcp_listener l(address);
 
     // Start watchdog
     fiber(signal_watchdog, std::ref(l)).detach();
     
     // Start listener
-    l(echo_servant);
+    int r=l(echo_servant).value();
 
     std::cout << "Echo server existing..." << std::endl;
-    return 0;
+    return r;
 }
