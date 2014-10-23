@@ -47,7 +47,6 @@ timed_mutex tm;
 void child() {
     this_fiber::yield();
     bool ret=tm.try_lock_for(std::chrono::milliseconds(10));
-    assert(!ret);
     ret=tm.try_lock_for(std::chrono::seconds(2));
     assert(ret);
     tm.unlock();
