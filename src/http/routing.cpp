@@ -123,7 +123,7 @@ namespace fibio { namespace http {
         return matcher{v};
     }
     
-    match_type path_matches(const std::string &tmpl) {
+    match_type path_(const std::string &tmpl) {
         struct matcher {
             typedef std::list<std::string> components_type;
             typedef components_type::const_iterator component_iterator;
@@ -183,14 +183,14 @@ namespace fibio { namespace http {
     }
     
     match_type GET(const std::string &pattern) {
-        return method_is(http_method::GET) && path_matches(pattern);
+        return method_is(http_method::GET) && path_(pattern);
     }
     
     match_type POST(const std::string &pattern) {
-        return method_is(http_method::POST) && path_matches(pattern);
+        return method_is(http_method::POST) && path_(pattern);
     }
     
     match_type PUT(const std::string &pattern) {
-        return method_is(http_method::PUT) && path_matches(pattern);
+        return method_is(http_method::PUT) && path_(pattern);
     }
 }}  // End of namespace fibio::http
