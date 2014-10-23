@@ -142,6 +142,11 @@ namespace fibio { namespace stream {
         return is;
     }
 
+    // streams
+    typedef fiberized_iostream<boost::asio::ip::tcp::socket> tcp_stream;
+    typedef fiberized_iostream<boost::asio::posix::stream_descriptor> posix_stream;
+    typedef fiberized_iostream<boost::asio::local::stream_protocol::socket> local_stream;
+    
     template<typename Stream>
     struct stream_acceptor {
         typedef Stream stream_type;
@@ -157,6 +162,10 @@ namespace fibio { namespace stream {
         stream_acceptor(unsigned short port_num)
         : acc_(asio::get_io_service(),
                endpoint_type(boost::asio::ip::address(), port_num))
+        {}
+        
+        stream_acceptor(const endpoint_type &ep)
+        : acc_(asio::get_io_service(), ep)
         {}
         
         stream_acceptor(stream_acceptor &&other)
@@ -206,26 +215,66 @@ namespace fibio { namespace stream {
         acceptor_type acc_;
     };
     
+    // acceptors
+    typedef stream_acceptor<tcp_stream> tcp_stream_acceptor;
+    typedef stream_acceptor<local_stream> local_stream_acceptor;
+    
+    template<typename Stream>
+    struct stream_traits {
+        typedef Stream stream_type;
+        typedef typename stream_type::stream_type socket_type;
+        typedef stream_acceptor<stream_type> acceptor_type;
+        typedef typename acceptor_type::endpoint_type endpoint_type;
+        // HACK:
+        typedef int arg_type;
+        static std::unique_ptr<stream_type> construct(arg_type *arg) {
+            return std::unique_ptr<stream_type>(new stream_type());
+        }
+    };
+    
+    template<typename R>
+    R make_endpoint(const std::string &access_point) {}
+    
+    template<>
+    inline boost::asio::ip::tcp::endpoint make_endpoint<boost::asio::ip::tcp::endpoint>(const std::string &access_point) {
+        auto i=access_point.find(':');
+        // TODO: IPv4 and IPv6
+        std::string addr("0::0");
+        uint16_t port=0;
+        if(i==access_point.npos) {
+            // Assume arg contains only port
+            // TODO: IPv4 and IPv6
+            port=boost::lexical_cast<uint16_t>(access_point);
+        } else {
+            addr.assign(access_point.begin(), access_point.begin()+i);
+            port=boost::lexical_cast<uint16_t>(std::string(access_point.begin()+i+1, access_point.end()));
+        }
+        return boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(addr), port);
+    }
+    
+    template<>
+    inline boost::asio::local::stream_protocol::endpoint make_endpoint<boost::asio::local::stream_protocol::endpoint>(const std::string &access_point) {
+        return boost::asio::local::stream_protocol::endpoint(access_point);
+    }
+    
     template<typename Stream>
     struct listener {
-        typedef stream_acceptor<Stream> acceptor_type;
         typedef Stream stream_type;
+        typedef stream_traits<Stream> traits_type;
+        typedef typename traits_type::acceptor_type acceptor_type;
+        typedef typename traits_type::endpoint_type endpoint_type;
+        typedef typename traits_type::arg_type arg_type;
 
-        listener(const std::string &addr, const std::string &port) {
-            add_endpoint(addr, port);
+        template<typename std::enable_if<std::is_move_constructible<Stream>::value>::type* = nullptr >
+        listener(const std::string &access_point) {
+            add_endpoint(make_endpoint<endpoint_type>(access_point));
         }
         
-        listener(const std::string &addr, uint16_t port) {
-            add_endpoint(addr, boost::lexical_cast<std::string>(port));
-        }
-        
-        listener(const std::string &addr_port) {
-            add_endpoint(addr_port);
-        }
-        
-        listener(uint16_t port) {
-            add_one_endpoint("0::0", port);
-            add_one_endpoint("0.0.0.0", port);
+        template<typename Arg>
+        listener(Arg &arg, const std::string &access_point)
+        : arg_(&arg)
+        {
+            add_endpoint(make_endpoint<endpoint_type>(access_point));
         }
         
         template<typename F>
@@ -251,62 +300,22 @@ namespace fibio { namespace stream {
         }
         
     private:
-        typedef std::pair<std::string, uint16_t> endpoint_type;
         typedef std::pair<fiber *, promise<void>> handler_type;
         typedef std::map<endpoint_type, handler_type> endpoint_map;
         
-        void add_one_endpoint(const std::string &addr, uint16_t port) {
-            auto i=endpoints_.find(endpoint_type{addr, port});
+        void add_endpoint(const endpoint_type &ep) {
+            auto i=endpoints_.find(ep);
             if (i==endpoints_.end()) {
                 endpoints_.emplace(std::pair<endpoint_type, handler_type>{
-                    endpoint_type{addr, port},
+                    ep,
                     handler_type{nullptr, promise<void>()}
                 });
             }
         }
         
-        void add_endpoint(const std::string &addr, const std::string &port) {
-            // Check if addr is an IP address
-            boost::system::error_code ec;
-            boost::asio::ip::address::from_string(addr, ec);
-            if(!ec) {
-                // This is an IP address
-                add_one_endpoint(addr, boost::lexical_cast<uint16_t>(port));
-            } else {
-                // This is a host name, need resolving
-                boost::asio::ip::tcp::resolver r(asio::get_io_service());
-                boost::asio::ip::tcp::resolver::query q(addr, port);
-                boost::system::error_code ec;
-                boost::asio::ip::tcp::resolver::iterator i=r.async_resolve(q, asio::yield[ec]);
-                if (ec) {
-                    // TODO: Error
-                    return;
-                }
-                // Hostname may resolve to multiple addresses
-                while(i!=boost::asio::ip::tcp::resolver::iterator()) {
-                    add_one_endpoint(i->endpoint().address().to_string(),
-                                     i->endpoint().port());
-                    ++i;
-                }
-            }
-        }
-
-        void add_endpoint(const std::string &addr_port) {
-            auto i=addr_port.find(':');
-            if(i==addr_port.npos) {
-                // Assume arg contains only port
-                // TODO: IPv4 and IPv6
-                add_one_endpoint("0::0", boost::lexical_cast<uint16_t>(addr_port));
-                add_one_endpoint("0.0.0.0", boost::lexical_cast<uint16_t>(addr_port));
-            } else {
-                add_endpoint(std::string(addr_port.begin(), addr_port.begin()+i),
-                             std::string(addr_port.begin()+i+1, addr_port.end()));
-            }
-        }
-        
         template<typename F>
         void acceptor_fiber(const endpoint_type & e, promise<void> *p, F f) {
-            acceptor_type acc(e.first, e.second);
+            acceptor_type acc(e);
             boost::system::error_code ec;
             fiber watchdog(fiber::attributes(fiber::attributes::stick_with_parent),
                            &listener::acceptor_watchdog_fiber,
@@ -314,9 +323,12 @@ namespace fibio { namespace stream {
                            p,
                            std::ref(acc));
             while(!ec) {
-                fiber([f](stream_type s){
-                    f(s);
-                }, acc(ec)).detach();
+                std::unique_ptr<stream_type> s(traits_type::construct(arg_));
+                acc(*s, ec);
+                if(ec) break;
+                fiber([f](std::unique_ptr<stream_type> str){
+                    f(*str);
+                }, std::move(s)).detach();
             }
             watchdog.join();
         }
@@ -327,19 +339,12 @@ namespace fibio { namespace stream {
         }
         
         endpoint_map endpoints_;
+        arg_type *arg_;
     };
-    
-    // streams
-    typedef fiberized_iostream<boost::asio::ip::tcp::socket> tcp_stream;
-    typedef fiberized_iostream<boost::asio::posix::stream_descriptor> posix_stream;
-    typedef fiberized_iostream<boost::asio::local::stream_protocol::socket> local_stream;
-
-    // acceptors
-    typedef stream_acceptor<tcp_stream> tcp_stream_acceptor;
-    typedef stream_acceptor<local_stream> local_stream_acceptor;
     
     // listeners
     typedef listener<tcp_stream> tcp_listener;
+    typedef listener<local_stream> local_listener;
 }}  // End of namespace fibio::stream
 
 namespace fibio {
@@ -349,6 +354,7 @@ namespace fibio {
     using stream::tcp_stream_acceptor;
     using stream::local_stream_acceptor;
     using stream::tcp_listener;
+    using stream::local_listener;
 }
 
 #endif

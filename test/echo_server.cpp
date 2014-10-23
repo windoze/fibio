@@ -171,15 +171,9 @@ void signal_watchdog(tcp_listener &l) {
  * starts a servant fiber to handle connection
  */
 int fibio::main(int argc, char *argv[]) {
-    if (argc<2) {
-        std::cerr << "Usage:" << "\t" << argv[0] << " [address] port" << std::endl;
+    if (argc!=2) {
+        std::cerr << "Usage:" << "\t" << argv[0] << " [address:]port" << std::endl;
         return 1;
-    }
-    if (argc==2) {
-        listen_port=atoi(argv[1]);
-    } else if (argc==3) {
-        address=argv[1];
-        listen_port=atoi(argv[2]);
     }
     
     // Start more work threads
@@ -189,12 +183,12 @@ int fibio::main(int argc, char *argv[]) {
     fiber(console).detach();
     
     // Listener
-    tcp_listener l(address, listen_port);
+    tcp_listener l(argv[1]);
 
     // Start watchdog
-    fiber(signal_watchdog,
-          std::ref(l)).detach();
+    fiber(signal_watchdog, std::ref(l)).detach();
     
+    // Start listener
     l(echo_servant);
 
     std::cout << "Echo server existing..." << std::endl;
