@@ -11,6 +11,22 @@ Fiberized.IO is a fast and simple networking framework without compromises.
 
 Read the [Wiki](https://github.com/windoze/fibio/wiki) for manuals and references
 
+The echo server example
+-----------------------
+```
+#include <fibio/fiberize.hpp>
+#include <fibio/iostream.hpp>
+ 
+using namespace fibio;
+ 
+int fibio::main(int argc, char *argv[]) {
+    return tcp_listener(7)([](tcp_stream &s){
+        s << s.rdbuf();
+    }).value();
+}
+```
+
+
 The HTTP server example
 -----------------------
 <pre><code>
@@ -26,7 +42,7 @@ bool handler(server::request &req, server::response &resp, server::connection &c
 
 int fibio::main(int argc, char *argv[]) {
     server svr(server::settings{
-        route(path_matches("/*p") >> handler),
+        route(path_("/*p") >> handler),
         23456,
     });
     svr.start();
