@@ -38,10 +38,46 @@ namespace fibio { namespace stream {
             {}
             streambuf_t sbuf_;
         };
+        template<typename R>
+        R make_endpoint(const std::string &access_point) {}
+        
+        template<>
+        inline boost::asio::ip::tcp::endpoint make_endpoint<boost::asio::ip::tcp::endpoint>(const std::string &access_point) {
+            auto i=access_point.find(':');
+            // TODO: IPv4 and IPv6
+            std::string addr("0::0");
+            std::string port;
+            if(i==access_point.npos) {
+                // Assume arg contains only port
+                port=access_point;
+            } else {
+                addr.assign(access_point.begin(), access_point.begin()+i);
+                port.assign(access_point.begin()+i+1, access_point.end());
+            }
+            boost::system::error_code ec;
+            boost::asio::ip::address a=boost::asio::ip::address::from_string(addr, ec);
+            if (ec) {
+                // Address is *not* an IP address
+                boost::asio::ip::tcp::resolver r(asio::get_io_service());
+                boost::asio::ip::tcp::resolver::query q(addr, port);
+                boost::asio::ip::tcp::resolver::iterator i=r.async_resolve(q, asio::yield[ec]);
+                if(ec) {
+                    BOOST_THROW_EXCEPTION(boost::system::system_error(ec, "Resolving address failed"));
+                }
+                return i->endpoint();
+            } else {
+                return boost::asio::ip::tcp::endpoint(a, boost::lexical_cast<uint16_t>(port));
+            }
+        }
+        
+        template<>
+        inline boost::asio::local::stream_protocol::endpoint make_endpoint<boost::asio::local::stream_protocol::endpoint>(const std::string &access_point) {
+            return boost::asio::local::stream_protocol::endpoint(access_point);
+        }
     }
     
     // Closable stream
-    class fiberized_iostream_base : public std::iostream {
+    class closable_stream : public std::iostream {
     public:
         typedef std::iostream base_type;
         using base_type::base_type;
@@ -52,7 +88,7 @@ namespace fibio { namespace stream {
     template<typename Stream>
     class fiberized_iostream
     : public detail::iostream_base<Stream>
-    , public fiberized_iostream_base
+    , public closable_stream
     {
         typedef fiberized_streambuf<Stream> streambuf_t;
         typedef detail::iostream_base<Stream> streambase_t;
@@ -62,20 +98,20 @@ namespace fibio { namespace stream {
 
         fiberized_iostream()
         : streambase_t()
-        , fiberized_iostream_base(&(this->sbuf_))
+        , closable_stream(&(this->sbuf_))
         {}
         
         // For SSL stream, construct with ssl::context
         template<typename Arg>
         fiberized_iostream(Arg &arg)
         : streambase_t(arg)
-        , fiberized_iostream_base(&(this->sbuf_))
+        , closable_stream(&(this->sbuf_))
         {}
         
         // Movable
         fiberized_iostream(fiberized_iostream &&src)//=default;
         : streambase_t(std::move(src))
-        , fiberized_iostream_base(&(this->sbuf_))
+        , closable_stream(&(this->sbuf_))
         {}
         
         // Non-copyable
@@ -232,43 +268,6 @@ namespace fibio { namespace stream {
         }
     };
     
-    template<typename R>
-    R make_endpoint(const std::string &access_point) {}
-    
-    template<>
-    inline boost::asio::ip::tcp::endpoint make_endpoint<boost::asio::ip::tcp::endpoint>(const std::string &access_point) {
-        auto i=access_point.find(':');
-        // TODO: IPv4 and IPv6
-        std::string addr("0::0");
-        std::string port;
-        if(i==access_point.npos) {
-            // Assume arg contains only port
-            port=access_point;
-        } else {
-            addr.assign(access_point.begin(), access_point.begin()+i);
-            port.assign(access_point.begin()+i+1, access_point.end());
-        }
-        boost::system::error_code ec;
-        boost::asio::ip::address a=boost::asio::ip::address::from_string(addr, ec);
-        if (ec) {
-            // Address is *not* an IP address
-            boost::asio::ip::tcp::resolver r(asio::get_io_service());
-            boost::asio::ip::tcp::resolver::query q(addr, port);
-            boost::asio::ip::tcp::resolver::iterator i=r.async_resolve(q, asio::yield[ec]);
-            if(ec) {
-                BOOST_THROW_EXCEPTION(boost::system::system_error(ec, "Resolving address failed"));
-            }
-            return i->endpoint();
-        } else {
-            return boost::asio::ip::tcp::endpoint(a, boost::lexical_cast<uint16_t>(port));
-        }
-    }
-    
-    template<>
-    inline boost::asio::local::stream_protocol::endpoint make_endpoint<boost::asio::local::stream_protocol::endpoint>(const std::string &access_point) {
-        return boost::asio::local::stream_protocol::endpoint(access_point);
-    }
-    
     template<typename Stream>
     struct listener {
         typedef Stream stream_type;
@@ -279,14 +278,14 @@ namespace fibio { namespace stream {
 
         template<typename std::enable_if<std::is_move_constructible<Stream>::value>::type* = nullptr >
         listener(const std::string &access_point)
-        : ep_(make_endpoint<endpoint_type>(access_point))
+        : ep_(detail::make_endpoint<endpoint_type>(access_point))
         {}
         
         // For SSL, arg type is ssl::context
         template<typename Arg>
         listener(Arg &arg, const std::string &access_point)
         : arg_(&arg)
-        , ep_(make_endpoint<endpoint_type>(access_point))
+        , ep_(detail::make_endpoint<endpoint_type>(access_point))
         {}
         
         endpoint_type endpoint() const {

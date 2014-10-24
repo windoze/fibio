@@ -43,8 +43,7 @@ namespace fibio { namespace http {
         std::string server_;
         std::string port_;
         ssl::context *ctx_;
-        //stream::tcp_stream stream_;
-        stream::fiberized_iostream_base *stream_;
+        stream::closable_stream *stream_;
         bool auto_decompress_=false;
     };
     
