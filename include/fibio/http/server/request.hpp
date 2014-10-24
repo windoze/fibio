@@ -12,7 +12,7 @@
 #include <memory>
 #include <string>
 #include <boost/iostreams/restrict.hpp>
-#include <fibio/http/common/request.hpp>
+#include <fibio/http/common/cookie.hpp>
 
 namespace fibio { namespace http {
     struct server_request : common::request {

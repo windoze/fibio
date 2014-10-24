@@ -7,7 +7,7 @@
 //
 
 #include <iostream>
-#include <fibio/http/common/common_types.hpp>
+#include <fibio/http/common/cookie.hpp>
 
 using namespace fibio::http::common;
 
@@ -70,7 +70,37 @@ void test() {
     }
 }
 
+void test_cookie_jar() {
+    {
+        cookie_jar jar;
+        response resp;
+        cookie c("lu=Rg3vHJZnehYLjVg7qi3bZjzg; Expires=Sat, 15-Jan-2050 21:47:38 GMT; Domain=.example.com");
+        resp.headers.insert({"Set-Cookie", c.to_string()});
+        // This will save the cookie into cookie jar
+        jar.save_cookie("http://www.example.com/", resp);
+        {
+            request req;
+            // This will load cookie from jar into request
+            jar.load_cookie("http://www.example.com", req);
+            assert(req.headers.find("Cookie")!=req.headers.end());
+        }
+        {
+            request req;
+            // This will load cookie from jar into request
+            jar.load_cookie("http://test.example.com/test/tes/te/t", req);
+            assert(req.headers.find("Cookie")!=req.headers.end());
+        }
+        {
+            request req;
+            // This will load cookie from jar into request
+            jar.load_cookie("http://www.example1.com", req);
+            assert(req.headers.find("Cookie")==req.headers.end());
+        }
+    }
+}
+
 int main() {
     test();
+    test_cookie_jar();
     return 0;
 }

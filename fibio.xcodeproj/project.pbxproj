@@ -273,6 +273,7 @@
 		2D5A308E18E95EB200C5EB41 /* use_future.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = use_future.hpp; sourceTree = "<group>"; };
 		2D5A309018E95F3600C5EB41 /* use_future.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = use_future.hpp; sourceTree = "<group>"; };
 		2D5A309218E9605E00C5EB41 /* asio.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = asio.hpp; sourceTree = "<group>"; };
+		2D650CCD19FAB30500977AB2 /* cookie.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = cookie.hpp; sourceTree = "<group>"; };
 		2D6A7BF318E05C5500AC89EC /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		2D75D679192FAFA600B85950 /* fibio-config.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "fibio-config.cmake"; sourceTree = "<group>"; };
 		2D75D67A192FB00400B85950 /* CPackLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CPackLists.txt; sourceTree = "<group>"; };
@@ -762,6 +763,7 @@
 				2DACAA6219F3AAD6004F6780 /* content_type.hpp */,
 				2DACAA6319F3AAD6004F6780 /* request.hpp */,
 				2DACAA6419F3AAD6004F6780 /* response.hpp */,
+				2D650CCD19FAB30500977AB2 /* cookie.hpp */,
 				2DACAA6519F3AAD6004F6780 /* string_pred.hpp */,
 				2DACAA6619F3AAD6004F6780 /* url_codec.hpp */,
 			);
@@ -1693,6 +1695,7 @@
 				2D86E78619FA4A0E009B5623 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		2DACAAB219F3AB87004F6780 /* Build configuration list for PBXNativeTarget "test_http_client" */ = {
 			isa = XCConfigurationList;

@@ -21,6 +21,7 @@
 #include <fibio/http/common/request.hpp>
 #include <fibio/http/common/response.hpp>
 #include <fibio/http/common/url_codec.hpp>
+#include <fibio/http/common/cookie.hpp>
 #include "url_parser.hpp"
 
 namespace fibio { namespace http { namespace common {
@@ -822,5 +823,43 @@ namespace fibio { namespace http { namespace common {
         for (auto i=range.first; i!=range.second; ++i) {
             cookies.insert(cookie::from_string(i->second));
         }
+    }
+    
+    //////////////////////////////////////////////////////////////////////////////////////////
+    // cookie_jar
+    //////////////////////////////////////////////////////////////////////////////////////////
+    
+    void cookie_jar::save_cookie(const std::string &full_url, const response &resp) {
+        common::parsed_url_type purl;
+        common::parse_url(full_url, purl);
+        
+        common::cookie_map cookies;
+        common::parse_cookie(resp.headers, cookies, true);
+        
+        for (auto &c : cookies) {
+            if (c.second.effective(purl)) {
+                // Save effective cookie only
+                add_cookie(c.second);
+            }
+        }
+    }
+    
+    void cookie_jar::load_cookie(const std::string &full_url, request &req) {
+        common::parsed_url_type purl;
+        common::parse_url(full_url, purl);
+        
+        for (auto &v : storage_) {
+            if (common::is_subdomain(purl.host, v.first)) {
+                for (auto &p : v.second) {
+                    if (p.second.effective(purl)) {
+                        req.headers.insert({"Cookie", p.second.to_string()});
+                    }
+                }
+            }
+        }
+    }
+    
+    void cookie_jar::add_cookie(const common::cookie &c) {
+        storage_.insert({c.domain, common::cookie_map()}).first->second[c.name]=c;
     }
 }}} // End of namespace fibio::http::common
