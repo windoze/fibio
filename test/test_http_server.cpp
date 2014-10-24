@@ -169,8 +169,8 @@ void http_server() {
         route((path_("/")
                || path_("/index.html")
                || path_("/index.htm")) >> handler,
-              GET("/test1/:id/test2") >> handler,
-              POST("/test2/*p") >> handler,
+              get_("/test1/:id/test2") >> handler,
+              post_("/test2/*p") >> handler,
               (path_("/test3/*p") && url_(iends_with{".html"})) >> handler,
               path_("/test3/*") >> stock_handler{http_status_code::FORBIDDEN},
               !method_is(http_method::GET) >> stock_handler{http_status_code::BAD_REQUEST}),
@@ -311,8 +311,8 @@ void https_server() {
         route((path_("/")
                || path_("/index.html")
                || path_("/index.htm")) >> handler,
-              GET("/test1/:id/test2") >> handler,
-              POST("/test2/*p") >> handler,
+              get_("/test1/:id/test2") >> handler,
+              post_("/test2/*p") >> handler,
               (path_("/test3/*p") && url_(iends_with{".html"})) >> handler,
               path_("/test3/*") >> stock_handler{http_status_code::FORBIDDEN},
               !method_is(http_method::GET) >> stock_handler{http_status_code::BAD_REQUEST}),
