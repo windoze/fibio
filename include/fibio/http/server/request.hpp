@@ -22,6 +22,8 @@ namespace fibio { namespace http {
         
         bool read(std::istream &is);
         
+        const common::cookie_map &cookies();
+        
         inline bool has_body() const {
             return content_length>0 && body_stream_.get();
         }
@@ -43,6 +45,7 @@ namespace fibio { namespace http {
     //private:
         std::unique_ptr<boost::iostreams::restriction<std::istream>> restriction_;
         std::unique_ptr<std::istream> body_stream_;
+        std::unique_ptr<common::cookie_map> cookies_;
         
         std::istream *raw_stream_=nullptr;
     };

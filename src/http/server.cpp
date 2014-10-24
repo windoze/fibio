@@ -303,6 +303,14 @@ namespace fibio { namespace http {
         return true;
     }
     
+    const common::cookie_map &server_request::cookies() {
+        if (!cookies_) {
+            cookies_.reset(new common::cookie_map);
+            common::parse_cookie(headers, *cookies_, false);
+        }
+        return *cookies_;
+    }
+    
     void server_request::drop_body() {
         // Discard body content iff body stream exists
         if (body_stream_) {
@@ -332,6 +340,10 @@ namespace fibio { namespace http {
     
     std::ostream &server_response::body_stream() {
         return raw_body_stream_;
+    }
+    
+    void server_response::set_cookie(const common::cookie &c) {
+        headers.insert({c.name, c.to_string()});
     }
     
     size_t server_response::get_content_length() const {

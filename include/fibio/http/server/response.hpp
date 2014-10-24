@@ -30,6 +30,8 @@ namespace fibio { namespace http {
         
         void clear();
         
+        void set_cookie(const common::cookie &c);
+        
         size_t get_content_length() const;
         
         void set_content_type(const std::string &);
