@@ -175,6 +175,8 @@ namespace fibio { namespace http { namespace common {
     
     typedef std::map<std::string, cookie> cookie_map;
     
+    bool is_subdomain(const std::string &sd, const std::string &d);
+    
     void parse_cookie(const header_map &h, cookie_map &cookies, bool set);
     
     typedef std::chrono::steady_clock::duration timeout_type;
