@@ -9,6 +9,8 @@
 #ifndef fibio_http_url_codec_hpp
 #define fibio_http_url_codec_hpp
 
+#include <ostream>
+
 namespace fibio { namespace http {
     namespace detail {
         inline bool hex_digit_to_int(char c, int &ret) {
@@ -40,6 +42,18 @@ namespace fibio { namespace http {
             }
             return false;
         }
+
+        template<typename Iterator>
+        struct url_decoded {
+            Iterator begin_;
+            Iterator end_;
+        };
+        
+        template<typename Iterator>
+        struct url_encoded {
+            Iterator begin_;
+            Iterator end_;
+        };
     }   // End of namespace detail
     
     template<typename Iterator, typename OutputIterator>
@@ -75,6 +89,22 @@ namespace fibio { namespace http {
         return url_decode(std::begin(c), std::end(c), out);
     }
     
+    template<typename Iterator>
+    std::ostream &operator<<(std::ostream &os, detail::url_decoded<Iterator> &&v) {
+        url_decode(v.begin_, v.end_, std::ostreambuf_iterator<char>(os));
+        return os;
+    }
+
+    template<typename Iterator>
+    detail::url_decoded<Iterator> url_decode(Iterator begin, Iterator end) {
+        return detail::url_decoded<Iterator>{begin, end};
+    }
+    
+    template<typename Container>
+    detail::url_decoded<typename Container::const_iterator> url_decode(const Container &c) {
+        return detail::url_decoded<typename Container::const_iterator>{std::begin(c), std::end(c)};
+    }
+
     template<typename Iterator, typename OutputIterator>
     bool url_encode(Iterator in_begin,
                     Iterator in_end,
@@ -100,6 +130,22 @@ namespace fibio { namespace http {
     template<typename Container, typename OutputIterator>
     bool url_encode(const Container &c, OutputIterator out) {
         return url_encode(std::begin(c), std::end(c), out);
+    }
+    
+    template<typename Iterator>
+    std::ostream &operator<<(std::ostream &os, detail::url_encoded<Iterator> &&v) {
+        url_encode(v.begin_, v.end_, std::ostreambuf_iterator<char>(os));
+        return os;
+    }
+
+    template<typename Iterator>
+    detail::url_encoded<Iterator> url_encode(Iterator begin, Iterator end) {
+        return detail::url_encoded<Iterator>{begin, end};
+    }
+
+    template<typename Container>
+    detail::url_encoded<typename Container::const_iterator> url_encode(const Container &c) {
+        return detail::url_encoded<typename Container::const_iterator>{std::begin(c), std::end(c)};
     }
 }}  // End of namespace fibio::http
 
