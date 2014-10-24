@@ -53,6 +53,7 @@ namespace fibio { namespace http {
         struct url_encoded {
             Iterator begin_;
             Iterator end_;
+            bool process_slash;
         };
     }   // End of namespace detail
     
@@ -108,13 +109,14 @@ namespace fibio { namespace http {
     template<typename Iterator, typename OutputIterator>
     bool url_encode(Iterator in_begin,
                     Iterator in_end,
-                    OutputIterator out)
+                    OutputIterator out,
+                    bool process_slash=true)
     {
         for (Iterator i = in_begin; i != in_end; ++i) {
             typename std::iterator_traits<Iterator>::value_type c = (*i);
             
             // Keep alphanumeric and other accepted characters intact
-            if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~' || (!process_slash && (c=='/'))) {
                 *out++=c;
                 continue;
             } else {
@@ -128,24 +130,24 @@ namespace fibio { namespace http {
     }
     
     template<typename Container, typename OutputIterator>
-    bool url_encode(const Container &c, OutputIterator out) {
-        return url_encode(std::begin(c), std::end(c), out);
+    bool url_encode(const Container &c, OutputIterator out, bool process_slash=true) {
+        return url_encode(std::begin(c), std::end(c), out, process_slash);
     }
     
     template<typename Iterator>
     std::ostream &operator<<(std::ostream &os, detail::url_encoded<Iterator> &&v) {
-        url_encode(v.begin_, v.end_, std::ostreambuf_iterator<char>(os));
+        url_encode(v.begin_, v.end_, std::ostreambuf_iterator<char>(os), v.process_slash);
         return os;
     }
 
     template<typename Iterator>
-    detail::url_encoded<Iterator> url_encode(Iterator begin, Iterator end) {
-        return detail::url_encoded<Iterator>{begin, end};
+    detail::url_encoded<Iterator> url_encode(Iterator begin, Iterator end, bool process_slash=true) {
+        return detail::url_encoded<Iterator>{begin, end, process_slash};
     }
 
     template<typename Container>
-    detail::url_encoded<typename Container::const_iterator> url_encode(const Container &c) {
-        return detail::url_encoded<typename Container::const_iterator>{std::begin(c), std::end(c)};
+    detail::url_encoded<typename Container::const_iterator> url_encode(const Container &c, bool process_slash=true) {
+        return detail::url_encoded<typename Container::const_iterator>{std::begin(c), std::end(c), process_slash};
     }
 }}  // End of namespace fibio::http
 

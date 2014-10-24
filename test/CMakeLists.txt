@@ -37,6 +37,9 @@ TARGET_LINK_LIBRARIES(test_http_client ${FIBIO_LIBS})
 add_executable(test_http_server test_http_server.cpp)
 TARGET_LINK_LIBRARIES(test_http_server ${FIBIO_LIBS})
 
+add_executable(test_cookie test_cookie.cpp)
+TARGET_LINK_LIBRARIES(test_cookie ${FIBIO_LIBS})
+
 add_executable(echo_server echo_server.cpp)
 TARGET_LINK_LIBRARIES(echo_server ${FIBIO_LIBS})
 
@@ -51,4 +54,5 @@ add_test(TCP_stream test_tcp_stream)
 add_test(SSL_stream test_ssl_stream)
 add_test(http_client test_http_client)
 add_test(http_server test_http_server)
+add_test(cookie test_cookie)
 

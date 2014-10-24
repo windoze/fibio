@@ -14,21 +14,6 @@
 #include <fibio/http/common/common_types.hpp>
 
 namespace fibio { namespace http { namespace common {
-    
-    struct parsed_url_type {
-        std::string schema;
-        std::string host;
-        uint16_t port=0;
-        std::string path;
-        std::string query;
-        std::string fragment;
-        std::string userinfo;
-        std::list<std::string> path_components;
-        std::map<std::string, std::string> query_params;
-    };
-    
-    bool parse_url(const std::string url, parsed_url_type &parsed_url, bool parse_path=true, bool parse_query=true);
-    
     struct request {
         void clear();
         

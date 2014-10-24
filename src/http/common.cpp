@@ -8,11 +8,19 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include "../http-parser/http_parser.h"
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/system/system_error.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/throw_exception.hpp>
+#include <fibio/fibers/exceptions.hpp>
 #include <fibio/http/common/common_types.hpp>
 #include <fibio/http/common/request.hpp>
 #include <fibio/http/common/response.hpp>
+#include <fibio/http/common/url_codec.hpp>
 #include "url_parser.hpp"
 
 namespace fibio { namespace http { namespace common {
@@ -663,5 +671,151 @@ namespace fibio { namespace http { namespace common {
         // End of header
         os.write("\r\n", 2);
         return true;
+    }
+    
+    //////////////////////////////////////////////////////////////////////////////////////////
+    // cookie
+    //////////////////////////////////////////////////////////////////////////////////////////
+    
+    cookie::cookie(const std::string &s) {
+        std::list<std::string> r;
+        boost::split(r, s, boost::is_any_of(";"), boost::token_compress_on);
+        
+        iequal ieq;
+        
+        for (auto &i: r) {
+            boost::algorithm::trim(i);
+            auto eq=i.find('=');
+            if (eq==i.npos) {
+                // No '=' found
+                if(ieq(i, "secure")) {
+                    secure=true;
+                } else if(ieq(i, "httponly")) {
+                    http_only=true;
+                }
+            } else {
+                std::string name(i.begin(), i.begin()+eq);
+                std::string value(i.begin()+eq+1, i.end());
+                if(ieq(name, "domain")) {
+                    domain=std::move(value);
+                } else if(ieq(name, "path")) {
+                    path=std::move(value);
+                } else if(ieq(name, "expires")) {
+                    // TODO: Windows doesn't support strptime
+                    tm t;
+                    if(strptime(value.c_str(), "%a, %d-%b-%Y %H:%M:%S %Z", &t)) {
+                        expires=std::chrono::system_clock::from_time_t(mktime(&t));
+                    } else {
+                        // TODO: Time parse error
+                        BOOST_THROW_EXCEPTION(invalid_argument());
+                    }
+                } else if(ieq(name, "max-age")) {
+                    expires=std::chrono::system_clock::now()+std::chrono::seconds(boost::lexical_cast<int>(value));
+                } else {
+                    this->name=std::move(name);
+                    this->value=std::move(value);
+                }
+            }
+        }
+    }
+    
+    bool cookie::effective(const std::string &url) const {
+        parsed_url_type purl;
+        parse_url(url, purl);
+        return effective(purl);
+    }
+    
+    // Check if sd is a subdomain of d
+    bool is_subdomain(const std::string &sd, const std::string &d) {
+        std::list<std::string> components_d;
+        boost::algorithm::split(components_d,
+                                d,
+                                boost::is_any_of("."),
+                                boost::token_compress_on);
+        components_d.remove("");
+        if (d.size()<=1) {
+            // "example.com" is *not* subdomain of "com"
+            return false;
+        }
+        std::list<std::string> components_sd;
+        boost::algorithm::split(components_sd,
+                                sd,
+                                boost::is_any_of("."),
+                                boost::token_compress_on);
+        components_sd.remove("");
+        typedef boost::iterator_range<std::list<std::string>::const_reverse_iterator> r;
+        return boost::algorithm::starts_with(r(components_sd.rbegin(), components_sd.rend()),
+                                             r(components_d.rbegin(), components_d.rend()),
+                                             iequal());
+    }
+    
+    bool cookie::effective(const parsed_url_type &url) const {
+        iequal ieq;
+        // Check expiraition
+        if (expired()) {
+            return false;
+        }
+        
+        // Check Secure
+        if (secure) {
+            // Secure cookie can only apply to HTTPS
+            if (!ieq(url.schema, "https")) {
+                return false;
+            }
+        }
+        
+        // Check Domain
+        if (!domain.empty()) {
+            // Check if url.host is a subdomain of cookie.domain
+            if (!is_subdomain(url.host, domain)) {
+                return false;
+            }
+        } else {
+            // Cookie doesn't have Domain attribute, apply only if url.host==cookie.domain
+            if (!ieq(url.host, domain)) {
+                return false;
+            }
+        }
+        
+        // Check Path
+        if (!path.empty()) {
+            if (!boost::algorithm::istarts_with(url.path, path)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    std::string cookie::to_string() const {
+        std::ostringstream ss;
+        
+        ss << url_encode(name) << '=' << url_encode(value);
+        if(!domain.empty()) ss << "; Domain=" << url_encode(domain);
+        if(!path.empty()) ss << "; Path=" << url_encode(path, false);
+        if(expires!=timepoint_type()){
+            ss << "; Expires=";
+            std::time_t exp_c=std::chrono::system_clock::to_time_t(expires);
+            ss << std::put_time(std::gmtime(&exp_c), "%a, %d-%b-%Y %H:%M:%S GMT");
+        }
+        if(secure) ss << "; Secure";
+        if(http_only) ss << "; HttpOnly";
+        
+        return ss.str();
+    }
+    
+    std::pair<std::string, cookie> cookie::from_string(const std::string &s) {
+        cookie c(s);
+        std::string name=c.name;
+        return {std::move(name), std::move(c)};
+    }
+    
+    void parse_cookie(const header_map &hdr, cookie_map &cookies, bool set) {
+        std::string key="cookie";
+        if (set) key="set-cookie";
+        
+        std::pair<header_map::const_iterator, header_map::const_iterator> range=hdr.equal_range(key);
+        for (auto i=range.first; i!=range.second; ++i) {
+            cookies.insert(cookie::from_string(i->second));
+        }
     }
 }}} // End of namespace fibio::http::common

@@ -12,7 +12,9 @@
 #include <cstdint>
 #include <string>
 #include <map>
+#include <list>
 #include <chrono>
+#include <boost/lexical_cast.hpp>
 #include <fibio/http/common/content_type.hpp>
 
 namespace fibio { namespace http { namespace common {
@@ -107,6 +109,20 @@ namespace fibio { namespace http { namespace common {
         HTTP_VERSION_NOT_SUPPORTED      =505,
     };
     
+    struct parsed_url_type {
+        std::string schema;
+        std::string host;
+        uint16_t port=0;
+        std::string path;
+        std::string query;
+        std::string fragment;
+        std::string userinfo;
+        std::list<std::string> path_components;
+        std::map<std::string, std::string> query_params;
+    };
+    
+    bool parse_url(const std::string url, parsed_url_type &parsed_url, bool parse_path=true, bool parse_query=true);
+    
     typedef std::string header_key_type;
     typedef std::string header_value_type;
     
@@ -121,6 +137,45 @@ namespace fibio { namespace http { namespace common {
     };
 
     typedef std::multimap<header_key_type, header_value_type, iless> header_map;
+
+    typedef std::chrono::time_point<std::chrono::system_clock> timepoint_type;
+    
+    struct cookie {
+        std::string name;
+        std::string value;
+        std::string path;
+        std::string domain;
+        timepoint_type expires;
+        bool secure=false;
+        bool http_only=false;
+        
+        cookie(const std::string &s);
+        cookie()=default;
+        
+        template<typename T>
+        T get() const {
+            return boost::lexical_cast<T>(value);
+        }
+        
+        template<typename T>
+        void set(const T &t) {
+            value=boost::lexical_cast<std::string>(t);
+        }
+        
+        bool expired() const {
+            return expires<=std::chrono::system_clock::now();
+        }
+        
+        bool effective(const std::string &url) const;
+        bool effective(const parsed_url_type &url) const;
+        
+        std::string to_string() const;
+        static std::pair<std::string, cookie> from_string(const std::string &s);
+    };
+    
+    typedef std::map<std::string, cookie> cookie_map;
+    
+    void parse_cookie(const header_map &h, cookie_map &cookies, bool set);
     
     typedef std::chrono::steady_clock::duration timeout_type;
 }}} // End of namespace fibio::http::common
