@@ -232,7 +232,7 @@ namespace fibio { namespace http { namespace common {
                 } else if (parser_.http_major==1 && parser_.http_minor==1) {
                     req_.version=http_version::HTTP_1_1;
                 } else {
-                    req_.version=http_version::INVALID;
+                    req_.version=http_version::INVALID_VERSION;
                 }
                 
                 // Set HTTP method
@@ -416,7 +416,7 @@ namespace fibio { namespace http { namespace common {
                 } else if (parser_.http_major==1 && parser_.http_minor==1) {
                     resp_.version=http_version::HTTP_1_1;
                 } else {
-                    resp_.version=http_version::INVALID;
+                    resp_.version=http_version::INVALID_VERSION;
                 }
                 
                 // Set HTTP method
@@ -520,9 +520,9 @@ namespace fibio { namespace http { namespace common {
     //////////////////////////////////////////////////////////////////////////////////////////
     
     void request::clear() {
-        method=http_method::INVALID;
+        method=http_method::INVALID_METHOD;
         url.clear();
-        version=http_version::INVALID;
+        version=http_version::INVALID_VERSION;
         headers.clear();
         content_length=0;
         keep_alive=false;
@@ -586,9 +586,9 @@ namespace fibio { namespace http { namespace common {
     
     bool request::write_header(std::ostream &os) {
         // Some validation
-        if (method==http_method::INVALID) return false;
+        if (method==http_method::INVALID_METHOD) return false;
         if (url.empty()) return false;
-        if (version==http_version::INVALID) return false;
+        if (version==http_version::INVALID_VERSION) return false;
         
         // METHOD " " URL " " HTTP_VER "\r\n"
         auto m=detail::method_name_map.find(method);
@@ -619,9 +619,9 @@ namespace fibio { namespace http { namespace common {
     //////////////////////////////////////////////////////////////////////////////////////////
     
     void response::clear() {
-        status_code=http_status_code::INVALID;
+        status_code=http_status_code::INVALID_STATUS;
         status_message.clear();
-        version=http_version::INVALID;
+        version=http_version::INVALID_VERSION;
         headers.clear();
         content_length=0;
         keep_alive=false;
@@ -634,9 +634,9 @@ namespace fibio { namespace http { namespace common {
     
     bool response::write_header(std::ostream &os) {
         // Some validation
-        if (status_code==http_status_code::INVALID) return false;
+        if (status_code==http_status_code::INVALID_STATUS) return false;
         //if (status_message.empty()) return false;
-        if (version==http_version::INVALID) return false;
+        if (version==http_version::INVALID_VERSION) return false;
         
         // HTTP_VER " " STATUS_CODE URL " "  "\r\n"
         auto v=detail::http_version_name_map.find(version);

@@ -235,7 +235,7 @@ namespace fibio { namespace http {
         if(!req.write(*stream_)) return false;
         if (!stream_->is_open() || stream_->eof() || stream_->fail() || stream_->bad()) return false;
         //if (!stream_.is_open()) return false;
-        return resp.read(*stream_) && (resp.status_code!=http_status_code::INVALID);
+        return resp.read(*stream_) && (resp.status_code!=http_status_code::INVALID_STATUS);
     }
 
     client::request &make_request(client::request &req,

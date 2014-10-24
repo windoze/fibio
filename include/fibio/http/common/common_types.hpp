@@ -17,49 +17,49 @@
 
 namespace fibio { namespace http { namespace common {
     enum class http_version : uint16_t {
-        INVALID=0x0000,
+        INVALID_VERSION=0x0000,
         HTTP_0_9=0x0009,
         HTTP_1_0=0x0100,
         HTTP_1_1=0x0101,
     };
     
     enum class http_method : uint16_t {
-        DELETE=0,
-        GET=1,
-        HEAD=2,
-        POST=3,
-        PUT=4,
+        INVALID_METHOD=0,
+        DELETE=1,
+        GET=2,
+        HEAD=3,
+        POST=4,
+        PUT=5,
         /* pathological */
-        CONNECT=5,
-        OPTIONS=6,
-        TRACE=7,
+        CONNECT=6,
+        OPTIONS=7,
+        TRACE=8,
         /* webdav */
-        COPY=8,
-        LOCK=9,
-        MKCOL=10,
-        MOVE=11,
-        PROPFIND=12,
-        PROPPATCH=13,
-        SEARCH=14,
-        UNLOCK=15,
+        COPY=9,
+        LOCK=10,
+        MKCOL=11,
+        MOVE=12,
+        PROPFIND=13,
+        PROPPATCH=14,
+        SEARCH=15,
+        UNLOCK=16,
         /* subversion */
-        REPORT=16,
-        MKACTIVITY=17,
-        CHECKOUT=18,
-        MERGE=19,
+        REPORT=17,
+        MKACTIVITY=18,
+        CHECKOUT=19,
+        MERGE=20,
         /* upnp */
-        MSEARCH=20,
-        NOTIFY=21,
-        SUBSCRIBE=22,
-        UNSUBSCRIBE=23,
+        MSEARCH=21,
+        NOTIFY=22,
+        SUBSCRIBE=23,
+        UNSUBSCRIBE=24,
         /* RFC-5789 */
-        PATCH=24,
-        PURGE=25,
-        INVALID=0xFFFF,
+        PATCH=25,
+        PURGE=26,
     };
     
     enum class http_status_code : uint16_t {
-        INVALID                         =0,
+        INVALID_STATUS                  =0,
         CONTINUE                        =100,
         SWITCHING_PROTOCOLS             =101,
         OK                              =200,

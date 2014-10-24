@@ -180,15 +180,15 @@ namespace fibio { namespace http {
         return std::move(m);
     }
     
-    match_type GET(const std::string &pattern) {
+    match_type get_(const std::string &pattern) {
         return method_is(http_method::GET) && path_(pattern);
     }
     
-    match_type POST(const std::string &pattern) {
+    match_type post_(const std::string &pattern) {
         return method_is(http_method::POST) && path_(pattern);
     }
     
-    match_type PUT(const std::string &pattern) {
+    match_type put_(const std::string &pattern) {
         return method_is(http_method::PUT) && path_(pattern);
     }
 }}  // End of namespace fibio::http

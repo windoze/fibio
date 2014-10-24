@@ -18,8 +18,8 @@ namespace fibio { namespace http { namespace common {
         bool read_header(std::istream &is);
         bool write_header(std::ostream &os);
         
-        http_version version=http_version::INVALID;
-        http_status_code status_code=http_status_code::INVALID;
+        http_version version=http_version::INVALID_VERSION;
+        http_status_code status_code=http_status_code::INVALID_STATUS;
         std::string status_message;
         header_map headers;
         size_t content_length=0;

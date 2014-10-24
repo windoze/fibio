@@ -123,9 +123,9 @@ namespace fibio { namespace http {
     match_type path_(const std::string &tmpl);
     
     // Convenience
-    match_type GET(const std::string &pattern);
-    match_type POST(const std::string &pattern);
-    match_type PUT(const std::string &pattern);
+    match_type get_(const std::string &pattern);
+    match_type post_(const std::string &pattern);
+    match_type put_(const std::string &pattern);
 }}  // End of namespace fibio::http
 
 #endif

@@ -35,9 +35,9 @@ namespace fibio { namespace http { namespace common {
         bool read_header(std::istream &is);
         bool write_header(std::ostream &os);
         
-        http_method method=http_method::INVALID;
+        http_method method=http_method::INVALID_METHOD;
         std::string url;
-        http_version version=http_version::INVALID;
+        http_version version=http_version::INVALID_VERSION;
         header_map headers;
         size_t content_length=0;
         bool keep_alive=false;
