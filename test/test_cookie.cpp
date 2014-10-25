@@ -98,7 +98,7 @@ void test_cookie_jar() {
         }
         {
             request req;
-            // This will load cookie from jar into request
+            // This will not load cookie from jar into request
             jar.load_cookie("http://www.example1.com", req);
             assert(req.headers.find("Cookie")==req.headers.end());
         }
