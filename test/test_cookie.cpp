@@ -21,6 +21,12 @@ void test() {
         assert(!c.effective("http://www.example.com/"));
     }
     {
+        cookie c("lu=Rg3vHJZnehYLjVg7qi3bZjzg; Max-Age=600; Path=/; Domain=.example.com;");
+        assert(!c.expired());
+        c.expires-=std::chrono::seconds(601);
+        assert(c.expired());
+    }
+    {
         cookie c("lu=Rg3vHJZnehYLjVg7qi3bZjzg; Expires=Sat, 15-Jan-2050 21:47:38 GMT; Path=/; Domain=.example.com;");
         assert(c.to_string()=="lu=Rg3vHJZnehYLjVg7qi3bZjzg; Domain=.example.com; Path=/; Expires=Sat, 15-Jan-2050 21:47:38 GMT");
         assert(!c.expired());
