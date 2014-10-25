@@ -703,6 +703,8 @@ namespace fibio { namespace http { namespace common {
                     path=std::move(value);
                 } else if(ieq(name, "expires")) {
                     // TODO: Windows doesn't support strptime
+                    // FIXME: Linux strptime doesn't process time zone
+                    //        This code doesn't work on system with time zone differs to UTC
                     tm t;
                     if(strptime(value.c_str(), "%a, %d-%b-%Y %H:%M:%S %Z", &t)) {
                         expires=std::chrono::system_clock::from_time_t(mktime(&t));

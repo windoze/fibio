@@ -4,6 +4,7 @@ TODO List for Fiberized.IO
 BUGS
 ----
 * <del>scheduler::add_thread caused problem, disabled(FIXED)</del>
+* Cookie expiration doesn't work on Linux with time zone differs to UTC
 
 Core
 ----
@@ -44,8 +45,8 @@ Protocol
 --------
 
 * HTTP
+    * <del>Cookie (DONE)</del>
     * HTTP client
-        * Cookie
         * Chunked response
     * HTTP server framework
         * Chunked resquest (File upload, etc.)
