@@ -13,6 +13,7 @@
 #include <istream>
 #include <ostream>
 #include <exception>
+#include <chrono>
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 #include <boost/lexical_cast.hpp>
@@ -114,9 +115,6 @@ namespace fibio { namespace redis {
             a.push_back(int64_t(std::chrono::duration_cast<std::chrono::microseconds>(t.time_since_epoch()).count()));
         }
         inline void make_array_impl(array &a, std::chrono::system_clock::duration t) {
-            a.push_back(int64_t(std::chrono::duration_cast<std::chrono::microseconds>(t).count()));
-        }
-        inline void make_array_impl(array &a, std::chrono::steady_clock::duration t) {
             a.push_back(int64_t(std::chrono::duration_cast<std::chrono::microseconds>(t).count()));
         }
         template<typename T>
