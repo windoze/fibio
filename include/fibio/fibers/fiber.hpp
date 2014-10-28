@@ -270,6 +270,7 @@ namespace std {
 }   // End of namespace std
 
 namespace fibio {
+    typedef std::chrono::steady_clock::duration timeout_type;
     using fibers::scheduler;
     using fibers::fiber;
     namespace this_fiber {
