@@ -58,6 +58,15 @@
 		2D5A306918E6E21600C5EB41 /* future.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D5A306718E6E21600C5EB41 /* future.cpp */; };
 		2D5A308118E71C4900C5EB41 /* test_asio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D5A307F18E71C4900C5EB41 /* test_asio.cpp */; };
 		2D5A308218E71CC000C5EB41 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
+		2D650CD219FCC06700977AB2 /* redis_proto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D650CD119FCC06700977AB2 /* redis_proto.cpp */; };
+		2D650CDE19FCD0F600977AB2 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
+		2D650CE019FCD12500977AB2 /* test_redis_proto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D650CDF19FCD12500977AB2 /* test_redis_proto.cpp */; };
+		2D650CE419FCF33600977AB2 /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D650CE319FCF33600977AB2 /* client.cpp */; };
+		2D650CF119FCF8A900977AB2 /* test_redis_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D650CF019FCF8A900977AB2 /* test_redis_client.cpp */; };
+		2D650CF219FCF8BF00977AB2 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
+		2D650CF619FD3D7400977AB2 /* libboost_context-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D650CF319FD3D7400977AB2 /* libboost_context-mt.a */; };
+		2D650CF719FD3D7400977AB2 /* libboost_coroutine-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D650CF419FD3D7400977AB2 /* libboost_coroutine-mt.a */; };
+		2D650CF819FD3D7400977AB2 /* libboost_system-mt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D650CF519FD3D7400977AB2 /* libboost_system-mt.a */; };
 		2D82CD6719CFF72000B0257D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
 		2D82CD6919CFF73F00B0257D /* test_ssl_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D82CD6819CFF73F00B0257D /* test_ssl_stream.cpp */; };
 		2D82CD7819CFF7AB00B0257D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
@@ -152,6 +161,24 @@
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 		2D5A307418E71C0900C5EB41 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		2D650CD519FCD0E400977AB2 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		2D650CE719FCF88D00977AB2 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -274,6 +301,17 @@
 		2D5A309018E95F3600C5EB41 /* use_future.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = use_future.hpp; sourceTree = "<group>"; };
 		2D5A309218E9605E00C5EB41 /* asio.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = asio.hpp; sourceTree = "<group>"; };
 		2D650CCD19FAB30500977AB2 /* cookie.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = cookie.hpp; sourceTree = "<group>"; };
+		2D650CCF19FCC05000977AB2 /* redis_proto.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = redis_proto.hpp; sourceTree = "<group>"; };
+		2D650CD119FCC06700977AB2 /* redis_proto.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = redis_proto.cpp; sourceTree = "<group>"; };
+		2D650CD719FCD0E400977AB2 /* test_redis_proto */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_redis_proto; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D650CDF19FCD12500977AB2 /* test_redis_proto.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_redis_proto.cpp; sourceTree = "<group>"; };
+		2D650CE219FCF2DB00977AB2 /* client.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = client.hpp; sourceTree = "<group>"; };
+		2D650CE319FCF33600977AB2 /* client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = client.cpp; sourceTree = "<group>"; };
+		2D650CE919FCF88D00977AB2 /* test_redis_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_redis_client; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D650CF019FCF8A900977AB2 /* test_redis_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_redis_client.cpp; sourceTree = "<group>"; };
+		2D650CF319FD3D7400977AB2 /* libboost_context-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_context-mt.a"; path = "/usr/local/lib/libboost_context-mt.a"; sourceTree = "<group>"; };
+		2D650CF419FD3D7400977AB2 /* libboost_coroutine-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_coroutine-mt.a"; path = "/usr/local/lib/libboost_coroutine-mt.a"; sourceTree = "<group>"; };
+		2D650CF519FD3D7400977AB2 /* libboost_system-mt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libboost_system-mt.a"; path = "/usr/local/lib/libboost_system-mt.a"; sourceTree = "<group>"; };
 		2D6A7BF318E05C5500AC89EC /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		2D75D679192FAFA600B85950 /* fibio-config.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "fibio-config.cmake"; sourceTree = "<group>"; };
 		2D75D67A192FB00400B85950 /* CPackLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CPackLists.txt; sourceTree = "<group>"; };
@@ -438,6 +476,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2D650CD419FCD0E400977AB2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D650CDE19FCD0F600977AB2 /* libfibio.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D650CE619FCF88D00977AB2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D650CF619FD3D7400977AB2 /* libboost_context-mt.a in Frameworks */,
+				2D650CF719FD3D7400977AB2 /* libboost_coroutine-mt.a in Frameworks */,
+				2D650CF819FD3D7400977AB2 /* libboost_system-mt.a in Frameworks */,
+				2D650CF219FCF8BF00977AB2 /* libfibio.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2D82CD5719CFF69500B0257D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -545,6 +602,8 @@
 				2DACAAA119F3AB19004F6780 /* test_http_server.cpp */,
 				2DD5666418DB35E5002A259D /* echo_server.cpp */,
 				2D86E78819FA4A29009B5623 /* test_cookie.cpp */,
+				2D650CDF19FCD12500977AB2 /* test_redis_proto.cpp */,
+				2D650CF019FCF8A900977AB2 /* test_redis_client.cpp */,
 			);
 			path = test;
 			sourceTree = "<group>";
@@ -592,9 +651,30 @@
 			path = detail;
 			sourceTree = "<group>";
 		};
+		2D650CCE19FCC05000977AB2 /* redis */ = {
+			isa = PBXGroup;
+			children = (
+				2D650CCF19FCC05000977AB2 /* redis_proto.hpp */,
+				2D650CE219FCF2DB00977AB2 /* client.hpp */,
+			);
+			path = redis;
+			sourceTree = "<group>";
+		};
+		2D650CD019FCC06700977AB2 /* redis */ = {
+			isa = PBXGroup;
+			children = (
+				2D650CD119FCC06700977AB2 /* redis_proto.cpp */,
+				2D650CE319FCF33600977AB2 /* client.cpp */,
+			);
+			path = redis;
+			sourceTree = "<group>";
+		};
 		2D7E684718CCCD2D00B7C4E5 = {
 			isa = PBXGroup;
 			children = (
+				2D650CF319FD3D7400977AB2 /* libboost_context-mt.a */,
+				2D650CF419FD3D7400977AB2 /* libboost_coroutine-mt.a */,
+				2D650CF519FD3D7400977AB2 /* libboost_system-mt.a */,
 				2D42967519D1C0B80068AAB3 /* libboost_context-mt.a */,
 				2D42967619D1C0B80068AAB3 /* libboost_coroutine-mt.a */,
 				2DACAAA419F3AB48004F6780 /* libboost_iostreams-mt.a */,
@@ -632,6 +712,8 @@
 				2DACAAAE19F3AB87004F6780 /* test_http_client */,
 				2DACAABA19F3ABAE004F6780 /* test_http_server */,
 				2D86E78119FA4A0E009B5623 /* test_cookie */,
+				2D650CD719FCD0E400977AB2 /* test_redis_proto */,
+				2D650CE919FCF88D00977AB2 /* test_redis_client */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -658,6 +740,7 @@
 				2D7E685E18CCCD5D00B7C4E5 /* concurrent */,
 				2D7E687018CCCD5D00B7C4E5 /* stream */,
 				2DACAA5B19F3AAD6004F6780 /* http */,
+				2D650CCE19FCC05000977AB2 /* redis */,
 			);
 			path = fibio;
 			sourceTree = "<group>";
@@ -716,6 +799,7 @@
 				2D7E687518CCCD5D00B7C4E5 /* fiber */,
 				2DACAA7D19F3AB05004F6780 /* http */,
 				2DACAA8419F3AB05004F6780 /* http-parser */,
+				2D650CD019FCC06700977AB2 /* redis */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -954,6 +1038,40 @@
 			productReference = 2D5A307618E71C0900C5EB41 /* test_asio */;
 			productType = "com.apple.product-type.tool";
 		};
+		2D650CD619FCD0E400977AB2 /* test_redis_proto */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D650CDB19FCD0E400977AB2 /* Build configuration list for PBXNativeTarget "test_redis_proto" */;
+			buildPhases = (
+				2D650CD319FCD0E400977AB2 /* Sources */,
+				2D650CD419FCD0E400977AB2 /* Frameworks */,
+				2D650CD519FCD0E400977AB2 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = test_redis_proto;
+			productName = test_redis_proto;
+			productReference = 2D650CD719FCD0E400977AB2 /* test_redis_proto */;
+			productType = "com.apple.product-type.tool";
+		};
+		2D650CE819FCF88D00977AB2 /* test_redis_client */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D650CED19FCF88D00977AB2 /* Build configuration list for PBXNativeTarget "test_redis_client" */;
+			buildPhases = (
+				2D650CE519FCF88D00977AB2 /* Sources */,
+				2D650CE619FCF88D00977AB2 /* Frameworks */,
+				2D650CE719FCF88D00977AB2 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = test_redis_client;
+			productName = test_redis_client;
+			productReference = 2D650CE919FCF88D00977AB2 /* test_redis_client */;
+			productType = "com.apple.product-type.tool";
+		};
 		2D82CD5919CFF69500B0257D /* test_ssl_stream */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2D82CD6019CFF69500B0257D /* Build configuration list for PBXNativeTarget "test_ssl_stream" */;
@@ -1082,6 +1200,12 @@
 				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = 0d0a.com;
 				TargetAttributes = {
+					2D650CD619FCD0E400977AB2 = {
+						CreatedOnToolsVersion = 6.1;
+					};
+					2D650CE819FCF88D00977AB2 = {
+						CreatedOnToolsVersion = 6.1;
+					};
 					2D86E78019FA4A0E009B5623 = {
 						CreatedOnToolsVersion = 6.1;
 					};
@@ -1119,6 +1243,8 @@
 				2DACAAAD19F3AB87004F6780 /* test_http_client */,
 				2DACAAB919F3ABAE004F6780 /* test_http_server */,
 				2D86E78019FA4A0E009B5623 /* test_cookie */,
+				2D650CD619FCD0E400977AB2 /* test_redis_proto */,
+				2D650CE819FCF88D00977AB2 /* test_redis_client */,
 			);
 		};
 /* End PBXProject section */
@@ -1138,7 +1264,9 @@
 			files = (
 				2D5A306918E6E21600C5EB41 /* future.cpp in Sources */,
 				2DACAA9419F3AB05004F6780 /* common.cpp in Sources */,
+				2D650CD219FCC06700977AB2 /* redis_proto.cpp in Sources */,
 				2DACAA9B19F3AB05004F6780 /* http_parser.c in Sources */,
+				2D650CE419FCF33600977AB2 /* client.cpp in Sources */,
 				2D15D01018E579E700E64B99 /* cv_object.cpp in Sources */,
 				2DACAA9319F3AB05004F6780 /* client.cpp in Sources */,
 				2DACAA9519F3AB05004F6780 /* routing.cpp in Sources */,
@@ -1187,6 +1315,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				2D5A308118E71C4900C5EB41 /* test_asio.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D650CD319FCD0E400977AB2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D650CE019FCD12500977AB2 /* test_redis_proto.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D650CE519FCF88D00977AB2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D650CF119FCF8A900977AB2 /* test_redis_client.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1346,6 +1490,84 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		2D650CDC19FCD0E400977AB2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		2D650CDD19FCD0E400977AB2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		2D650CEE19FCF88D00977AB2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		2D650CEF19FCF88D00977AB2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
@@ -1660,6 +1882,23 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		2D650CDB19FCD0E400977AB2 /* Build configuration list for PBXNativeTarget "test_redis_proto" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D650CDC19FCD0E400977AB2 /* Debug */,
+				2D650CDD19FCD0E400977AB2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2D650CED19FCF88D00977AB2 /* Build configuration list for PBXNativeTarget "test_redis_client" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D650CEE19FCF88D00977AB2 /* Debug */,
+				2D650CEF19FCF88D00977AB2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		2D7E684B18CCCD2D00B7C4E5 /* Build configuration list for PBXProject "fibio" */ = {
 			isa = XCConfigurationList;
