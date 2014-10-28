@@ -73,7 +73,7 @@ namespace fibio { namespace redis {
     int64_t client::bitcount(const std::string &key, std::pair<int64_t, int64_t> &&range) {
         return call<int64_t>("BITCOUNT", key, range);
     }
-
+    
     int64_t client::bitpos(const std::string &key, bool bit, int64_t start, int64_t end) {
         return call<int64_t>("BITPOS",
                              key,
@@ -140,10 +140,6 @@ namespace fibio { namespace redis {
         return call<int64_t>("DECRBY", key, decrement);
     }
     
-    void client::discard() {
-        call<void>("DISCARD");
-    }
-    
     std::string client::dump(const std::string &key) {
         return call<bulk_string>("DUMP", key);
     }
@@ -164,10 +160,6 @@ namespace fibio { namespace redis {
                                std::list<std::string> &&args)
     {
         return call<redis_data>("EVALSHA", int64_t(keys.size()), keys, args);
-    }
-    
-    void client::exec() {
-        call<void>("EXEC");
     }
     
     bool client::exists(const std::string &key) {
@@ -344,6 +336,29 @@ namespace fibio { namespace redis {
         return call<std::list<nullable_result>>("MGET", keys);
     }
     
+    void client::migrate(const std::string &host,
+                         uint16_t port,
+                         const std::string &key,
+                         const std::string &destination_db,
+                         std::chrono::system_clock::duration timeout,
+                         bool copy,
+                         bool replace)
+    {
+        array cmd=make_array("MIGRATE", host, int64_t(port), key, destination_db, timeout);
+        if (copy) {
+            cmd << "COPY";
+        }
+        if (replace) {
+            cmd << "REPLACE";
+        }
+        call(cmd);
+    }
+    
+    stream::closable_stream &client::monitor() {
+        stream_ << make_array("MONITOR");
+        return stream_;
+    }
+    
     void client::mset(std::list<std::pair<std::string,std::string>> &&keys_values) {
         call<void>("MSET", keys_values);
     }
@@ -352,6 +367,18 @@ namespace fibio { namespace redis {
         call<void>("MSETNX", keys_values);
     }
     
+    std::string client::object_encoding(const std::string &key) {
+        return call<std::string>("OBJECT", "ENCODING", key);
+    }
+    
+    int64_t client::object_idletime(const std::string &key) {
+        return call<int64_t>("OBJECT", "IDLETIME", key);
+    }
+    
+    int64_t client::object_refcount(const std::string &key) {
+        return call<int64_t>("OBJECT", "REFCOUNT", key);
+    }
+
     bool client::persist(const std::string &key) {
         return call<bool>("PERSIST", key);
     }
@@ -370,6 +397,22 @@ namespace fibio { namespace redis {
     
     void client::ping() {
         call<void>("PING");
+    }
+    
+    std::list<std::string> client::pubsub_channel() {
+        return call<std::list<std::string>>("PUBSUB", "CHANNEL");
+    }
+    
+    std::list<std::string> client::pubsub_channel(const std::string &pattern) {
+        return call<std::list<std::string>>("PUBSUB", "CHANNEL", pattern);
+    }
+    
+    std::list<std::pair<std::string, int64_t>> client::pubsub_numsub(std::list<std::string> &&channels) {
+        return call<std::list<std::pair<std::string, int64_t>>>("PUBSUB", "NUMSUB", channels);
+    }
+    
+    int64_t client::pubsub_numpat() {
+        return call<int64_t>("PUBSUB", "NUMPAT");
     }
     
     int64_t client::publish(const std::string &channel, const std::string &message) {
@@ -508,7 +551,7 @@ namespace fibio { namespace redis {
     std::list<std::string> client::sinter(std::list<std::string> &&keys) {
         return call<std::list<std::string>>("SINTER", keys);
     }
-
+    
     int64_t client::sinterstore(const std::string &destination, std::list<std::string> &&keys) {
         return call<int64_t>("SINTERSTORE", destination, keys);
     }
@@ -521,6 +564,18 @@ namespace fibio { namespace redis {
         call<void>("SLAVEOF", host, int64_t(port));
     }
     
+    array client::slowlog_get(int64_t n) {
+        return call<array>("SLOWLOG", "GET", n);
+    }
+    
+    int64_t client::slowlog_len() {
+        return call<int64_t>("SLOWLOG", "LEN");
+    }
+    
+    void client::slowlog_reset() {
+        return call<void>("SLOWLOG", "RESET");
+    }
+
     std::list<std::string> client::smembers(const std::string &key) {
         return call<std::list<std::string>>("SMEMBERS", key);
     }
@@ -565,10 +620,18 @@ namespace fibio { namespace redis {
         return call<std::chrono::system_clock::time_point>("TIME");
     }
     
+    std::chrono::system_clock::duration client::ttl(const std::string &key) {
+        int64_t ret=call<int64_t>("PTTL", key);
+        if (ret<0) {
+            return std::chrono::seconds(0);
+        }
+        return std::chrono::milliseconds(ret);
+    }
+    
     std::string client::type(const std::string &key) {
         return call<simple_string>("TYPE", key);
     }
-
+    
     int64_t client::zadd(const std::string &key, std::list<std::pair<double, std::string>> &&scores_members) {
         return call<int64_t>("ZADD", key, scores_members);
     }
@@ -584,7 +647,59 @@ namespace fibio { namespace redis {
     double client::zincrby(const std::string &key, double increment, const std::string &member) {
         return call<double>("ZINCRBY", key, increment, member);
     }
-
+    
+    int64_t client::zinterstore(const std::string &destination,
+                        std::list<std::string> &&keys,
+                        aggregate_type agg)
+    {
+        array cmd=make_array("ZINTERSTORE",
+                             destination,
+                             int64_t(keys.size()),
+                             keys);
+        switch (agg) {
+            case SUM:
+                cmd << "AGGREGATE" << "SUM";
+                break;
+            case MIN:
+                cmd << "AGGREGATE" << "MIN";
+                break;
+            case MAX:
+                cmd << "AGGREGATE" << "MAX";
+                break;
+            default:
+                break;
+        }
+        return extract<int64_t>(call(cmd));
+    }
+    
+    int64_t client::zinterstore(const std::string &destination,
+                        std::list<std::string> &&keys,
+                        std::list<double> &&weights,
+                        aggregate_type agg)
+    {
+        array cmd=make_array("ZINTERSTORE",
+                             destination,
+                             int64_t(keys.size()),
+                             keys);
+        for (auto i:weights) {
+            cmd << "WEIGHT" << i;
+        }
+        switch (agg) {
+            case SUM:
+                cmd << "AGGREGATE" << "SUM";
+                break;
+            case MIN:
+                cmd << "AGGREGATE" << "MIN";
+                break;
+            case MAX:
+                cmd << "AGGREGATE" << "MAX";
+                break;
+            default:
+                break;
+        }
+        return extract<int64_t>(call(cmd));
+    }
+    
     int64_t client::zlexcount(const std::string &key, const std::string &min_, const std::string &max_) {
         return call<int64_t>("ZLEXCOUNT", key, min_, max_);
     }
@@ -593,30 +708,245 @@ namespace fibio { namespace redis {
         return call<std::list<std::string>>("ZRANGE", key, start, stop);
     }
     
-    std::list<std::pair<std::string, int64_t>> client::zrange_withscores(const std::string &key, int64_t start, int64_t stop) {
-        redis_data r=call(make_array("ZRANGE", key, start, stop, "WITHSCORES"));
-        array &a=boost::get<array>(r);
-        std::list<std::pair<std::string, int64_t>> ret;
-        auto i=a.begin();
-        while (i!=a.end()) {
-            std::pair<std::string, int64_t> p;
-            p.first.assign(std::move(boost::get<bulk_string>(*i)));
-            ++i;
-            p.second=extract<double>(std::move(*i));
-            ++i;
-            ret.push_back(std::move(p));
-        }
-        return ret;
+    std::list<std::pair<std::string, double>> client::zrange_withscores(const std::string &key, int64_t start, int64_t stop) {
+        return call<std::list<std::pair<std::string, double>>>("ZRANGE", key, start, stop, "WITHSCORES");
     }
-
-    std::list<std::string> client::zrangebylex(const std::string &key, const std::string &min_, const std::string &max_) {
+    
+    std::list<std::string> client::zrangebylex(const std::string &key,
+                                               const std::string &min_,
+                                               const std::string &max_)
+    {
         return call<std::list<std::string>>("ZRANGEBYLEX", key, min_, max_);
     }
     
-    std::list<std::string> client::zrangebylex(const std::string &key, const std::string &min_, const std::string &max_, int64_t offset, int64_t count) {
+    std::list<std::string> client::zrangebylex(const std::string &key,
+                                               const std::string &min_,
+                                               const std::string &max_,
+                                               int64_t offset,
+                                               int64_t count)
+    {
         return call<std::list<std::string>>("ZRANGEBYLEX", key, min_, max_, "LIMIT", offset, count);
-        
     }
+    
+    std::list<std::string> client::zrangebyscore(const std::string &key,
+                                                 const std::string &min_,
+                                                 const std::string &max_)
+    {
+        return call<std::list<std::string>>("ZRANGEBYSCORE", key, min_, max_);
+    }
+    
+    std::list<std::string> client::zrangebyscore(const std::string &key,
+                                                 const std::string &min_,
+                                                 const std::string &max_,
+                                                 int64_t offset,
+                                                 int64_t count)
+    {
+        return call<std::list<std::string>>("ZRANGEBYSCORE", key, min_, max_, "LIMIT", offset, count);
+    }
+    
+    std::list<std::pair<std::string, double>> client::zrangebyscore_withscores(const std::string &key,
+                                                                               const std::string &min_,
+                                                                               const std::string &max_)
+    {
+        return call<std::list<std::pair<std::string, double>>>("ZRANGEBYSCORE", key, min_, max_, "WITHSCORES");
+    }
+    
+    std::list<std::pair<std::string, double>> client::zrangebyscore_withscores(const std::string &key,
+                                                                               const std::string &min_,
+                                                                               const std::string &max_,
+                                                                               int64_t offset,
+                                                                               int64_t count)
+    {
+        return call<std::list<std::pair<std::string, double>>>("ZRANGEBYSCORE", key, min_, max_, "WITHSCORES", "LIMIT", offset, count);
+    }
+    
+    boost::optional<int64_t> client::zrank(const std::string &key, const std::string &member) {
+        redis_data ret=call<redis_data>("ZRANK", key, member);
+        if (data_type(ret)==NIL) {
+            return boost::optional<int64_t>();
+        }
+        return boost::optional<int64_t>(extract<int64_t>(std::move(ret)));
+    }
+    
+    int64_t client::zrem(const std::string &key, std::list<std::string> &&members) {
+        return call<int64_t>("ZREM", key, members);
+    }
+    
+    int64_t client::zremrangebylex(const std::string &key,
+                                   const std::string &min_,
+                                   const std::string &max_)
+    {
+        return call<int64_t>("ZREMRANGEBYLEX", key, min_, max_);
+    }
+    
+    int64_t client::zremrangebyrank(const std::string &key,
+                                    int64_t start,
+                                    int64_t stop)
+    {
+        return call<int64_t>("ZREMRANGEBYRANK", key, start, stop);
+    }
+    
+    int64_t client::zremrangebyscore(const std::string &key,
+                                     const std::string &min_,
+                                     const std::string &max_)
+    {
+        return call<int64_t>("ZREMRANGEBYSCORE", key, min_, max_);
+    }
+    
+    std::list<std::string> client::zrevrange(const std::string &key,
+                                             int64_t start,
+                                             int64_t stop)
+    {
+        return call<std::list<std::string>>("ZREVRANGE", key, start, stop);
+    }
+    
+    std::list<std::pair<std::string, double>> client::zrevrange_withscores(const std::string &key,
+                                                                           int64_t start,
+                                                                           int64_t stop)
+    {
+        return call<std::list<std::pair<std::string, double>>>("ZREVRANGE", key, start, stop, "WITHSCORES");
+    }
+    
+    std::list<std::string> client::zrevrangebyscore(const std::string &key,
+                                                    const std::string &min_,
+                                                    const std::string &max_)
+    {
+        return call<std::list<std::string>>("ZREVRANGEBYSCORE", key, min_, max_);
+    }
+    
+    std::list<std::string> client::zrevrangebyscore(const std::string &key,
+                                                    const std::string &min_,
+                                                    const std::string &max_,
+                                                    int64_t offset,
+                                                    int64_t count)
+    {
+        return call<std::list<std::string>>("ZREVRANGEBYSCORE", key, min_, max_, "LIMIT", offset, count);
+    }
+    
+    std::list<std::pair<std::string, double>> client::zrevrangebyscore_withscores(const std::string &key,
+                                                                                  const std::string &min_,
+                                                                                  const std::string &max_)
+    {
+        return call<std::list<std::pair<std::string, double>>>("ZREVRANGEBYSCORE", key, min_, max_, "WITHSCORES");
+    }
+    
+    std::list<std::pair<std::string, double>> client::zrevrangebyscore_withscores(const std::string &key,
+                                                                                  const std::string &min_,
+                                                                                  const std::string &max_,
+                                                                                  int64_t offset,
+                                                                                  int64_t count)
+    {
+        return call<std::list<std::pair<std::string, double>>>("ZREVRANGEBYSCORE", key, min_, max_, "WITHSCORES", "LIMIT", offset, count);
+    }
+    
+    boost::optional<int64_t> client::zrevrank(const std::string &key, const std::string &member) {
+        redis_data ret=call<redis_data>("ZREVRANK", key, member);
+        if (data_type(ret)==NIL) {
+            return boost::optional<int64_t>();
+        }
+        return boost::optional<int64_t>(extract<int64_t>(std::move(ret)));
+    }
+    
+    double client::zscore(const std::string &key, const std::string &member) {
+        return call<double>("ZSCORE", key, member);
+    }
+
+    int64_t client::zunionstore(const std::string &destination,
+                                std::list<std::string> &&keys,
+                                aggregate_type agg)
+    {
+        array cmd=make_array("ZUNIONSTORE",
+                             destination,
+                             int64_t(keys.size()),
+                             keys);
+        switch (agg) {
+            case SUM:
+                cmd << "AGGREGATE" << "SUM";
+                break;
+            case MIN:
+                cmd << "AGGREGATE" << "MIN";
+                break;
+            case MAX:
+                cmd << "AGGREGATE" << "MAX";
+                break;
+            default:
+                break;
+        }
+        return extract<int64_t>(call(cmd));
+    }
+    
+    int64_t client::zunionstore(const std::string &destination,
+                                std::list<std::string> &&keys,
+                                std::list<double> &&weights,
+                                aggregate_type agg)
+    {
+        array cmd=make_array("ZUNIONSTORE",
+                             destination,
+                             int64_t(keys.size()),
+                             keys);
+        for (auto i:weights) {
+            cmd << "WEIGHT" << i;
+        }
+        switch (agg) {
+            case SUM:
+                cmd << "AGGREGATE" << "SUM";
+                break;
+            case MIN:
+                cmd << "AGGREGATE" << "MIN";
+                break;
+            case MAX:
+                cmd << "AGGREGATE" << "MAX";
+                break;
+            default:
+                break;
+        }
+        return extract<int64_t>(call(cmd));
+    }
+    
+    std::list<std::string> client::sort(const std::string &key, client::sort_criteria &&crit) {
+        array cmd=make_array("SORT", key);
+        if (!crit.by_pattern.empty()) {
+            cmd << "BY" << crit.by_pattern;
+        }
+        if (crit.count>0) {
+            cmd << "LIMIT" << crit.offset << crit.count;
+        }
+        if (!crit.get_patterns.empty()) {
+            for (const auto &i : crit.get_patterns) {
+                cmd << "GET" << i;
+            }
+        }
+        if (crit.asc) {
+            cmd << "ASC";
+        } else {
+            cmd << "DESC";
+        }
+        if (crit.alpha) {
+            cmd << "ALPHA";
+        }
+        if (!crit.destination.empty()) {
+            cmd << "STORE" << crit.destination;
+        }
+        return extract<std::list<std::string>>(call(cmd));
+    }
+    
+#if 0
+    // TODO: Transaction
+    void client::multi() {
+    }
+    void client::discard() {
+        call<void>("DISCARD");
+    }
+    void client::exec() {
+        call<void>("EXEC");
+    }
+    void client::unwatch() {
+        call<void>("UNWATCH");
+    }
+    void client::watch(std::list<std::string> &&keys) {
+        call<void>("WATCH", keys);
+    }
+#endif
 }}  // End of namespace fibio::redis
 
 

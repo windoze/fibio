@@ -15,11 +15,15 @@
 #include <fibio/redis/redis_proto.hpp>
 
 namespace fibio { namespace redis {
-    namespace detail {
-        
-    }
-    
     constexpr uint16_t DEFAULT_REDIS_PORT=6379;
+
+    enum aggregate_type {
+        NO_AGGREGATE=0,
+        SUM=1,
+        MIN=2,
+        MAX=3,
+    };
+    
     struct client {
         client(const std::string &host, const std::string &port);
         client(const std::string &host, uint16_t port=DEFAULT_REDIS_PORT);
@@ -27,7 +31,43 @@ namespace fibio { namespace redis {
         
         void close();
         bool is_open() const;
-
+        
+#if 0
+        // TODO: Transaction
+        void discard();
+        void exec();
+        void multi();
+        void unwatch();
+        void watch(std::list<std::string> &&keys);
+#endif
+        
+#if 0
+        // TODO: Subscription
+        // PSUBSCRIBE pattern [pattern ...]
+        // PUNSUBSCRIBE [pattern [pattern ...]]
+        // SUBSCRIBE channel [channel ...]
+        // UNSUBSCRIBE [channel [channel ...]]
+#endif
+        
+#if 0
+        // TODO: Scan
+        // SCAN cursor [MATCH pattern] [COUNT count]
+        // SSCAN key cursor [MATCH pattern] [COUNT count]
+        // HSCAN key cursor [MATCH pattern] [COUNT count]
+        // ZSCAN key cursor [MATCH pattern] [COUNT count]
+#endif
+        
+        struct sort_criteria {
+            std::string by_pattern;
+            int64_t offset=0;
+            int64_t count=-1;
+            std::list<std::string> get_patterns;
+            bool asc=true;
+            bool alpha=false;
+            std::string destination;
+        };
+        std::list<std::string> sort(const std::string &key, sort_criteria &&crit);
+        
         int64_t append(const std::string &key,
                        const std::string &value);
         bool auth(const std::string &password);
@@ -58,7 +98,6 @@ namespace fibio { namespace redis {
         int64_t decr(const std::string &key);
         int64_t decrby(const std::string &key,
                        int64_t decrement);
-        void discard();
         std::string dump(const std::string &key);
         std::string echo(const std::string &message);
         redis_data eval(const std::string &script,
@@ -67,7 +106,6 @@ namespace fibio { namespace redis {
         redis_data evalsha(const std::string &script,
                            std::list<std::string> &&keys,
                            std::list<std::string> &&args);
-        void exec();
         bool exists(const std::string &key);
         bool expire(const std::string &key,
                     std::chrono::system_clock::duration expiration);
@@ -141,15 +179,21 @@ namespace fibio { namespace redis {
                    int64_t start,
                    int64_t stop);
         std::list<nullable_result> mget(std::list<std::string> &&keys);
-        
-        // MIGRATE host port key destination-db timeout [COPY] [REPLACE]
-        // void monitor();
+        void migrate(const std::string &host,
+                     uint16_t port,
+                     const std::string &key,
+                     const std::string &destination_db,
+                     std::chrono::system_clock::duration timeout,
+                     bool copy=false,
+                     bool replace=false);
+        stream::closable_stream &monitor();
         
         void mset(std::list<std::pair<std::string,std::string>> &&keys_values);
         void msetnx(std::list<std::pair<std::string,std::string>> &&keys_values);
         
-        // void multi();
-        // void object(const std::string &subcommand, std::list<std::string> &&arguments);
+        std::string object_encoding(const std::string &key);
+        int64_t object_idletime(const std::string &key);
+        int64_t object_refcount(const std::string &key);
         
         bool persist(const std::string &key);
         
@@ -161,14 +205,13 @@ namespace fibio { namespace redis {
         // NOTE: Use expire: bool pexpire(const std::string &key, std::chrono::system_clock::duration expiration);
         // NOTE: Use expireat: bool pexpireat(const std::string &key, std::chrono::system_clock::time_point expiration);
         void ping();
-        // PSUBSCRIBE pattern [pattern ...]
-        // PUBSUB subcommand [argument [argument ...]]
-
-        // std::chrono::system_clock::duration pttl(const std::string &key);
-        
+        std::list<std::string> pubsub_channel();
+        std::list<std::string> pubsub_channel(const std::string &pattern);
+        std::list<std::pair<std::string, int64_t>> pubsub_numsub(std::list<std::string> &&channels);
+        int64_t pubsub_numpat();
+        // NOTE: Uses ttl, std::chrono::system_clock::duration pttl(const std::string &key);
         int64_t publish(const std::string &channel, const std::string &message);
-    
-        // TODO: PUNSUBSCRIBE [pattern [pattern ...]]
+        
         
         void quit();
         std::string randomkey();
@@ -222,12 +265,13 @@ namespace fibio { namespace redis {
                        const std::string &member);
         void slaveof(const std::string &host,
                      uint16_t port);
-        // SLOWLOG subcommand [argument]
+        array slowlog_get(int64_t n);
+        int64_t slowlog_len();
+        void slowlog_reset();
         std::list<std::string> smembers(const std::string &key);
         bool smove(const std::string &source,
                    const std::string &destination,
                    const std::string &member);
-        // SORT key [BY pattern] [LIMIT offset count] [GET pattern [GET pattern ...]] [ASC|DESC] [ALPHA] [STORE destination]
         nullable_result spop(const std::string &key);
         nullable_result srandmember(const std::string &key);
         std::list<std::string> srandmember(const std::string &key,
@@ -235,17 +279,13 @@ namespace fibio { namespace redis {
         int64_t srem(const std::string &key,
                      std::list<std::string> &&members);
         int64_t strlen(const std::string &key);
-        // SUBSCRIBE channel [channel ...]
         std::list<std::string> sunion(std::list<std::string> &&keys);
         int64_t sunionstore(const std::string &destination,
                             std::list<std::string> &&keys);
         void sync();
         std::chrono::system_clock::time_point time();
-        // std::chrono::system_clock::duration ttl(const std::string &key);
+        std::chrono::system_clock::duration ttl(const std::string &key);
         std::string type(const std::string &key);
-        // UNSUBSCRIBE [channel [channel ...]]
-        // WATCH key [key ...]
-        
         int64_t zadd(const std::string &key,
                      std::list<std::pair<double, std::string>> &&scores_members);
         int64_t zcard(const std::string &key);
@@ -255,16 +295,22 @@ namespace fibio { namespace redis {
         double zincrby(const std::string &key,
                        double increment,
                        const std::string &member);
-        // ZINTERSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]
+        int64_t zinterstore(const std::string &destination,
+                            std::list<std::string> &&keys,
+                            aggregate_type agg=NO_AGGREGATE);
+        int64_t zinterstore(const std::string &destination,
+                            std::list<std::string> &&keys,
+                            std::list<double> &&weights,
+                            aggregate_type agg=NO_AGGREGATE);
         int64_t zlexcount(const std::string &key,
                           const std::string &min_,
                           const std::string &max_);
         std::list<std::string> zrange(const std::string &key,
                                       int64_t start,
                                       int64_t stop);
-        std::list<std::pair<std::string, int64_t>> zrange_withscores(const std::string &key,
-                                                                     int64_t start,
-                                                                     int64_t stop);
+        std::list<std::pair<std::string, double>> zrange_withscores(const std::string &key,
+                                                                    int64_t start,
+                                                                    int64_t stop);
         std::list<std::string> zrangebylex(const std::string &key,
                                            const std::string &min_,
                                            const std::string &max_);
@@ -273,22 +319,64 @@ namespace fibio { namespace redis {
                                            const std::string &max_,
                                            int64_t offset,
                                            int64_t count);
-        // ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]
-        // ZRANK key member
-        // ZREM key member [member ...]
-        // ZREMRANGEBYLEX key min max
-        // ZREMRANGEBYRANK key start stop
-        // ZREMRANGEBYSCORE key min max
-        // ZREVRANGE key start stop [WITHSCORES]
-        // ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]
-        // ZREVRANK key member
-        // ZSCORE key member
-        // ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]
-
-        // SCAN cursor [MATCH pattern] [COUNT count]
-        // SSCAN key cursor [MATCH pattern] [COUNT count]
-        // HSCAN key cursor [MATCH pattern] [COUNT count]
-        // ZSCAN key cursor [MATCH pattern] [COUNT count]
+        std::list<std::string> zrangebyscore(const std::string &key,
+                                             const std::string &min_,
+                                             const std::string &max_);
+        std::list<std::string> zrangebyscore(const std::string &key,
+                                             const std::string &min_,
+                                             const std::string &max_,
+                                             int64_t offset,
+                                             int64_t count);
+        std::list<std::pair<std::string, double>> zrangebyscore_withscores(const std::string &key,
+                                                                           const std::string &min_,
+                                                                           const std::string &max_);
+        std::list<std::pair<std::string, double>> zrangebyscore_withscores(const std::string &key,
+                                                                           const std::string &min_,
+                                                                           const std::string &max_,
+                                                                           int64_t offset,
+                                                                           int64_t count);
+        boost::optional<int64_t> zrank(const std::string &key, const std::string &member);
+        int64_t zrem(const std::string &key, std::list<std::string> &&members);
+        int64_t zremrangebylex(const std::string &key,
+                               const std::string &min_,
+                               const std::string &max_);
+        int64_t zremrangebyrank(const std::string &key,
+                                int64_t start,
+                                int64_t stop);
+        int64_t zremrangebyscore(const std::string &key,
+                                 const std::string &min_,
+                                 const std::string &max_);
+        std::list<std::string> zrevrange(const std::string &key,
+                                         int64_t start,
+                                         int64_t stop);
+        std::list<std::pair<std::string, double>> zrevrange_withscores(const std::string &key,
+                                                                       int64_t start,
+                                                                       int64_t stop);
+        std::list<std::string> zrevrangebyscore(const std::string &key,
+                                                const std::string &min_,
+                                                const std::string &max_);
+        std::list<std::string> zrevrangebyscore(const std::string &key,
+                                                const std::string &min_,
+                                                const std::string &max_,
+                                                int64_t offset,
+                                                int64_t count);
+        std::list<std::pair<std::string, double>> zrevrangebyscore_withscores(const std::string &key,
+                                                                              const std::string &min_,
+                                                                              const std::string &max_);
+        std::list<std::pair<std::string, double>> zrevrangebyscore_withscores(const std::string &key,
+                                                                              const std::string &min_,
+                                                                              const std::string &max_,
+                                                                              int64_t offset,
+                                                                              int64_t count);
+        boost::optional<int64_t> zrevrank(const std::string &key, const std::string &member);
+        double zscore(const std::string &key, const std::string &member);
+        int64_t zunionstore(const std::string &destination,
+                            std::list<std::string> &&keys,
+                            aggregate_type agg=NO_AGGREGATE);
+        int64_t zunionstore(const std::string &destination,
+                            std::list<std::string> &&keys,
+                            std::list<double> &&weights,
+                            aggregate_type agg=NO_AGGREGATE);
         
         template<typename R, typename... Args>
         R call(Args&&... args) {

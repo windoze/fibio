@@ -226,7 +226,39 @@ namespace fibio { namespace redis {
         }
         return r;
     }
+    
+    template<>
+    inline std::list<std::pair<std::string, int64_t>> extract<std::list<std::pair<std::string, int64_t>>>(redis_data &&d) {
+        array &a=boost::get<array>(d);
+        std::list<std::pair<std::string, int64_t>> ret;
+        auto i=a.begin();
+        while (i!=a.end()) {
+            std::pair<std::string, int64_t> p;
+            p.first.assign(std::move(boost::get<bulk_string>(*i)));
+            ++i;
+            p.second=extract<int64_t>(std::move(*i));
+            ++i;
+            ret.push_back(std::move(p));
+        }
+        return ret;
+    }
 
+    template<>
+    inline std::list<std::pair<std::string, double>> extract<std::list<std::pair<std::string, double>>>(redis_data &&d) {
+        array &a=boost::get<array>(d);
+        std::list<std::pair<std::string, double>> ret;
+        auto i=a.begin();
+        while (i!=a.end()) {
+            std::pair<std::string, int64_t> p;
+            p.first.assign(std::move(boost::get<bulk_string>(*i)));
+            ++i;
+            p.second=extract<double>(std::move(*i));
+            ++i;
+            ret.push_back(std::move(p));
+        }
+        return ret;
+    }
+    
     template<>
     inline void extract<void>(redis_data &&d)
     {}
