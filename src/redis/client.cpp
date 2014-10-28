@@ -317,7 +317,10 @@ namespace fibio { namespace redis {
     }
     
     std::list<std::string> client::lrange(const std::string &key, int64_t start, int64_t stop) {
-        return call<std::list<std::string>>("LRANGE", key, start, stop);
+        return call<std::list<std::string>>("LRANGE",
+                                            key,
+                                            boost::lexical_cast<bulk_string>(start),
+                                            boost::lexical_cast<bulk_string>(stop));
     }
     
     int64_t client::lrem(const std::string &key, int64_t count, const std::string &value) {
@@ -917,7 +920,7 @@ namespace fibio { namespace redis {
             }
         }
         if (crit.asc) {
-            cmd << "ASC";
+            //cmd << "ASC";
         } else {
             cmd << "DESC";
         }

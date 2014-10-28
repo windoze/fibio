@@ -67,6 +67,9 @@ namespace fibio { namespace redis {
             std::string destination;
         };
         std::list<std::string> sort(const std::string &key, sort_criteria &&crit);
+        std::list<std::string> sort(const std::string &key, const sort_criteria &crit) {
+            return sort(key, sort_criteria(crit));
+        }
         
         int64_t append(const std::string &key,
                        const std::string &value);
