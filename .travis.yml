@@ -4,7 +4,7 @@ compiler:
   - gcc
 
 before_install:
-    # Add software package repository, containing updated build toochain, i.e. GNU GCC 4.8
+    # Add software package repository, containing updated build toochain, i.e. GNU GCC 4.9
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test --yes
   - sudo add-apt-repository ppa:kalakris/cmake --yes
   - sudo apt-get update -qq
@@ -13,16 +13,16 @@ before_install:
   - export BOOST_ROOT="$TRAVIS_BUILD_DIR/../boost"
   - mkdir -p $BOOST_ROOT
   - tar jxf boost_1_56_0.tar.bz2 --strip-components=1 -C $BOOST_ROOT
-  - wget http://www.us.apache.org/dist/thrift/0.9.1/thrift-0.9.1.tar.gz
-  - tar xfz thrift-0.9.1.tar.gz
+  - wget http://www.us.apache.org/dist/thrift/0.9.2/thrift-0.9.2.tar.gz
+  - tar xfz thrift-0.9.2.tar.gz
 
 install: 
     # Install GNU GCC 4.8 required by use of C++11
-  - sudo apt-get install -qq g++-4.8 gcc-4.8 libssl-dev zlib1g-dev cmake redis-server automake libtool flex bison pkg-config
-  - export CXX="g++-4.8" CC="gcc-4.8"
+  - sudo apt-get install -qq g++-4.9 gcc-4.9 libssl-dev zlib1g-dev cmake redis-server automake libtool flex bison pkg-config
+  - export CXX="g++-4.9" CC="gcc-4.9"
     # Build boost libraries required by ledger
   - (cd $BOOST_ROOT; ./bootstrap.sh --with-libraries=atomic,chrono,context,coroutine,iostreams,system,thread)
   - (cd $BOOST_ROOT; sudo ./b2 threading=multi --prefix=/usr/local -d0 install)
-  - cd thrift-0.9.1 && ./configure && sudo make install
+  - cd thrift-0.9.2 && ./configure && sudo make install
 
 script: mkdir build && cd build && cmake ../ && make && make test
