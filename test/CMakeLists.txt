@@ -64,3 +64,28 @@ add_test(cookie test_cookie)
 add_test(redis_proto test_redis_proto)
 add_test(redis_client test_redis_client)
 
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/test)
+find_package(Thrift)
+if(THRIFT_FOUND)
+execute_process(COMMAND ${THRIFT_COMPILER} --gen cpp -out ${CMAKE_BINARY_DIR}/test ${CMAKE_SOURCE_DIR}/test/t.thrift)
+INCLUDE_DIRECTORIES(
+    ${Boost_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIR}
+    ${ZLIB_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${THRIFT_INCLUDE_DIR}
+    ${CMAKE_BINARY_DIR}/test
+)
+add_executable(test_thrift
+    test_thrift.cpp
+    ${CMAKE_BINARY_DIR}/test/Something.cpp
+    ${CMAKE_BINARY_DIR}/test/Something.h
+    ${CMAKE_BINARY_DIR}/test/t_constants.cpp
+    ${CMAKE_BINARY_DIR}/test/t_constants.h
+    ${CMAKE_BINARY_DIR}/test/t_types.cpp
+    ${CMAKE_BINARY_DIR}/test/t_types.h
+)
+TARGET_LINK_LIBRARIES(test_thrift ${FIBIO_LIBS} ${THRIFT_LIBS})
+add_test(thrift test_thrift)
+endif(THRIFT_FOUND)
+

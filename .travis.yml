@@ -11,16 +11,18 @@ before_install:
     # Download boost 1.5 and extract the source archive
   - wget --no-verbose --output-document=boost_1_56_0.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.56.0/boost_1_56_0.tar.bz2/download
   - export BOOST_ROOT="$TRAVIS_BUILD_DIR/../boost"
-  - export CMAKE_MODULE_PATH="$BOOST_ROOT"
   - mkdir -p $BOOST_ROOT
   - tar jxf boost_1_56_0.tar.bz2 --strip-components=1 -C $BOOST_ROOT
+  - wget http://www.us.apache.org/dist/thrift/0.9.1/thrift-0.9.1.tar.gz
+  - tar xfz thrift-0.9.1.tar.gz
 
 install: 
     # Install GNU GCC 4.8 required by use of C++11
-  - sudo apt-get install -qq g++-4.8 gcc-4.8 libssl-dev zlib1g-dev cmake redis-server
+  - sudo apt-get install -qq g++-4.8 gcc-4.8 libssl-dev zlib1g-dev cmake redis-server automake libtool flex bison pkg-config
   - export CXX="g++-4.8" CC="gcc-4.8"
     # Build boost libraries required by ledger
   - (cd $BOOST_ROOT; ./bootstrap.sh --with-libraries=atomic,chrono,context,coroutine,iostreams,system,thread)
-  - (cd $BOOST_ROOT; ./b2 threading=multi --prefix=$BOOST_ROOT -d0 install)
+  - (cd $BOOST_ROOT; ./b2 threading=multi --prefix=/usr -d0 install)
+  - cd thrift-0.9.1 && ./configure && sudo make install
 
 script: mkdir build && cd build && cmake ../ && make && make test
