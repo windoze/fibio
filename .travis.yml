@@ -22,7 +22,7 @@ install:
   - export CXX="g++-4.8" CC="gcc-4.8"
     # Build boost libraries required by ledger
   - (cd $BOOST_ROOT; ./bootstrap.sh --with-libraries=atomic,chrono,context,coroutine,iostreams,system,thread)
-  - (cd $BOOST_ROOT; ./b2 threading=multi --prefix=/usr -d0 install)
+  - (cd $BOOST_ROOT; sudo ./b2 threading=multi --prefix=/usr/local -d0 install)
   - cd thrift-0.9.1 && ./configure && sudo make install
 
 script: mkdir build && cd build && cmake ../ && make && make test
