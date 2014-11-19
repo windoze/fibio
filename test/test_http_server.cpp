@@ -335,7 +335,7 @@ void https_server() {
 }
 
 int fibio::main(int argc, char *argv[]) {
-    scheduler::get_instance().add_worker_thread(3);
+    this_fiber::get_scheduler().add_worker_thread(3);
     fiber_group fibers;
     fibers.create_fiber(http_server);
     fibers.create_fiber(https_server);

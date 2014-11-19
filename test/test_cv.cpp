@@ -46,7 +46,7 @@ void parent(mutex &m, condition_variable &cv) {
 }
 
 int fibio::main(int argc, char *argv[]) {
-    scheduler::get_instance().add_worker_thread(3);
+    this_fiber::get_scheduler().add_worker_thread(3);
 
     mutex m;
     condition_variable cv;

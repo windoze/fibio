@@ -280,6 +280,11 @@ namespace fibio { namespace fibers {
          * set the name of current fiber
          */
         void set_name(const std::string &name);
+
+        /**
+         * get current scheduler
+         */
+        scheduler get_scheduler();
     }   // End of namespace this_fiber
 }}   // End of namespace fibio::fibers
 
@@ -302,6 +307,7 @@ namespace fibio {
         using fibers::this_fiber::sleep_until;
         using fibers::this_fiber::get_name;
         using fibers::this_fiber::set_name;
+        using fibers::this_fiber::get_scheduler;
     }
     namespace asio {
         using fibers::this_fiber::detail::get_io_service;

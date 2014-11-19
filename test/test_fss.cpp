@@ -26,7 +26,7 @@ void f(int x) {
 }
 
 int fibio::main(int argc, char *argv[]) {
-    scheduler::get_instance().add_worker_thread(3);
+    this_fiber::get_scheduler().add_worker_thread(3);
     fiber_group fibers;
     for(int n=0; n<100; n++) {
         fibers.create_fiber(f, n);

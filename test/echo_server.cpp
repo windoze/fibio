@@ -177,7 +177,7 @@ int fibio::main(int argc, char *argv[]) {
     address=argv[1];
     
     // Start more work threads
-    scheduler::get_instance().add_worker_thread(3);
+    this_fiber::get_scheduler().add_worker_thread(3);
 
     // Start console
     fiber(console).detach();

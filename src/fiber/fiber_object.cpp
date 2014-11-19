@@ -496,6 +496,13 @@ namespace fibio { namespace fibers {
             }
             ::fibio::fibers::detail::fiber_object::current_fiber_->set_name(name);
         }
+        
+        scheduler get_scheduler() {
+            if (!::fibio::fibers::detail::fiber_object::current_fiber_) {
+                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+            }
+            return scheduler(::fibio::fibers::detail::fiber_object::current_fiber_->sched_);
+        }
     }   // End of namespace this_fiber
 }}  // End of namespace fibio::fibers
 

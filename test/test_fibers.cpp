@@ -53,7 +53,6 @@ void ex() {
 }
 
 void main_fiber(/*int argc, char *argv[]*/) {
-    //scheduler::get_instance().add_worker_thread(3);
     fiber_group fibers;
     
     data d1(1);

@@ -22,7 +22,7 @@ namespace fibio { namespace fibers {
             typedef stream::fiberized_streambuf<boost::asio::posix::stream_descriptor> sbuf_t;
             typedef std::unique_ptr<sbuf_t> sbuf_ptr_t;
             
-            inline fiberized_std_stream_guard(boost::asio::io_service &iosvc=scheduler::get_instance().get_io_service())
+            inline fiberized_std_stream_guard(boost::asio::io_service &iosvc=fibio::asio::get_io_service())
             : old_cin_buf_(0)
             , old_cout_buf_(0)
             , old_cerr_buf_(0)
@@ -62,20 +62,20 @@ namespace fibio { namespace fibers {
     }   // End of namespace fibio::fibers::detail
     
     template<typename Fn, typename ...Args>
-    int fiberize(Fn &&fn, Args&& ...args) {
-        int ret;
+    auto fiberize(Fn &&fn, Args&& ...args) -> typename std::result_of<Fn(Args...)>::type {
+        typedef typename std::result_of<Fn(Args...)>::type result_type;
+        result_type ret;
         try {
-            fibio::scheduler sched=fibio::scheduler::get_instance();
+            fibio::scheduler sched;
             sched.start();
-            fibio::fiber f([&](){
+            fibio::fiber f(sched, [&](){
                 detail::fiberized_std_stream_guard guard;
-                ret=fn(args...);
+                ret=fn(std::forward<Args>(args)...);
             });
             sched.join();
         } catch (std::exception& e) {
             std::cerr << "Exception: " << e.what() << "\n";
         }
-        fibio::scheduler::reset_instance();
         return ret;
     }
 }}  // End of namespace fibio::fibers
