@@ -93,7 +93,7 @@ namespace fibio { namespace fibers { namespace detail {
             // std::thread will call std::terminate if deleting a unstopped thread
             std::terminate();
         }
-        if (uncaught_exception_ != std::exception_ptr()) {
+        if (uncaught_exception_) {
             // There is an uncaught exception not propagated to joiner
             std::terminate();
         }
@@ -341,7 +341,13 @@ namespace fibio { namespace fibers { namespace detail {
 
 namespace fibio { namespace fibers {
     void fiber::start() {
-        impl_=scheduler::get_instance().impl_->make_fiber(data_.release());
+        if (detail::fiber_object::current_fiber_) {
+            // use current scheduler if we're in a fiber
+            impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(data_.release());
+        } else {
+            // use default scheduler if we're not in a fiber
+            impl_=scheduler::get_instance().impl_->make_fiber(data_.release());
+        }
     }
     
     void fiber::start(attributes attr) {
@@ -366,6 +372,11 @@ namespace fibio { namespace fibers {
             // use default scheduler if we're not in a fiber
             impl_=scheduler::get_instance().impl_->make_fiber(data_.release());
         }
+    }
+    
+    void fiber::start(scheduler &sched) {
+        // use supplied scheduler to start fiber
+        impl_=sched.impl_->make_fiber(data_.release());
     }
     
     fiber::fiber(fiber &&other) noexcept
@@ -393,7 +404,9 @@ namespace fibio { namespace fibers {
     
     bool fiber::joinable() const noexcept {
         // Return true iff this is a fiber and not the current calling fiber
-        return (impl_ && detail::fiber_object::current_fiber_!=impl_.get());
+        // and 2 fibers are in the same scheduler
+        return (impl_ && detail::fiber_object::current_fiber_!=impl_.get())
+        && (impl_->sched_==detail::fiber_object::current_fiber_->sched_);
     }
     
     fiber::id fiber::get_id() const noexcept {

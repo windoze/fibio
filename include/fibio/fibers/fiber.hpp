@@ -150,6 +150,26 @@ namespace fibio { namespace fibers {
                 )
         { start(attrs); }
         
+        /**
+         * Creates new fiber object and associates it with a fiber of execution in a specific scheduler.
+         */
+        template <class F>
+        explicit fiber(scheduler &sched, F &&f)
+        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f))))
+        { start(sched); }
+        
+        /**
+         * Creates new fiber object and associates it with a fiber of execution in a specific scheduler.
+         */
+        template <class F, class Arg, class ...Args>
+        fiber(scheduler &sched, F&& f, Arg&& arg, Args&&... args)
+        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f)),
+                                        detail::decay_copy(std::forward<Arg>(arg)),
+                                        detail::decay_copy(std::forward<Args>(args))...)
+                )
+        
+        { start(sched); }
+        
         /// Assigns the state of other to `*this` using move semantics.
         /**
          * If *this still has an associated running fiber (i.e. `joinable() == true`), `std::terminate()` is called.
@@ -201,7 +221,8 @@ namespace fibio { namespace fibers {
         fiber(const fiber&) = delete;
         void start();
         void start(attributes);
- 
+        void start(scheduler &sched);
+
         std::unique_ptr<detail::fiber_data_base> data_;
         std::shared_ptr<detail::fiber_object> impl_;
     };

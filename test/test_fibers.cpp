@@ -9,10 +9,12 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <thread>
 #include <fibio/fiber.hpp>
-#include <fibio/fiberize.hpp>
 
 using namespace fibio;
+
+std::mutex cout_mtx;
 
 /// A test data structure
 struct data {
@@ -50,8 +52,8 @@ void ex() {
     throw std::string("exception from child fiber");
 }
 
-int fibio::main(int argc, char *argv[]) {
-    scheduler::get_instance().add_worker_thread(3);
+void main_fiber(/*int argc, char *argv[]*/) {
+    //scheduler::get_instance().add_worker_thread(3);
     fiber_group fibers;
     
     data d1(1);
@@ -116,6 +118,27 @@ int fibio::main(int argc, char *argv[]) {
     assert(d5.n==0);
     // d6.n changed
     assert(d6.n=400);
+    std::lock_guard<std::mutex> lk(cout_mtx);
     std::cout << "main_fiber exiting" << std::endl;
+}
+
+void thr_entry() {
+    try {
+        fibio::scheduler sched;
+        sched.start();
+        fibio::fiber f(sched, main_fiber);
+        sched.join();
+    } catch (std::exception& e) {
+        std::lock_guard<std::mutex> lk(cout_mtx);
+        std::cerr << "Exception: " << e.what() << "\n";
+    }
+}
+
+int main() {
+    // Create 2 schedulers
+    std::thread t1(thr_entry);
+    std::thread t2(thr_entry);
+    t1.join();
+    t2.join();
     return 0;
 }

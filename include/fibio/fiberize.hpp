@@ -61,27 +61,6 @@ namespace fibio { namespace fibers {
         };
     }   // End of namespace fibio::fibers::detail
     
-//#ifndef NO_VARIADIC_TEMPLATE
-#if 0
-    // FIXME: doesn't compile under GCC 4.8.1
-    template<typename Fn, typename ...Args>
-    int fiberize(size_t nthr, Fn &&fn, Args&& ...args) {
-        int ret;
-        try {
-            fibio::scheduler sched=fibio::scheduler::get_instance();
-            sched.start(nthr);
-            fibio::fiber f([&](){
-                detail::fiberized_std_stream_guard guard;
-                ret=fn(args...);
-            });
-            sched.join();
-        } catch (std::exception& e) {
-            std::cerr << "Exception: " << e.what() << "\n";
-        }
-        fibio::scheduler::reset_instance();
-        return ret;
-    }
-    
     template<typename Fn, typename ...Args>
     int fiberize(Fn &&fn, Args&& ...args) {
         int ret;
@@ -99,29 +78,12 @@ namespace fibio { namespace fibers {
         fibio::scheduler::reset_instance();
         return ret;
     }
-#else
-    inline int fiberize(std::function<int(int, char *[])> &&fn, int argc, char *argv[], size_t nthr=1) {
-        int ret;
-        try {
-            fibio::scheduler sched=fibio::scheduler::get_instance();
-            sched.start(nthr);
-            fibio::fiber f([&](){
-                detail::fiberized_std_stream_guard guard;
-                ret=fn(argc, argv);
-            });
-            sched.join();
-        } catch (std::exception& e) {
-            std::cerr << "Exception: " << e.what() << "\n";
-        }
-        fibio::scheduler::reset_instance();
-        return ret;
-    }
-#endif
 }}  // End of namespace fibio::fibers
 
 namespace fibio {
     using fibers::fiberize;
 #ifndef FIBIO_DONT_USE_DEFAULT_MAIN
+    // Forward declaration of real entry point
     int main(int argc, char *argv[]);
 #endif
 }
