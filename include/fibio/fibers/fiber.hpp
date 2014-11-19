@@ -55,8 +55,8 @@ namespace fibio { namespace fibers {
          */
         static void reset_instance();
         
-    private:
         scheduler(std::shared_ptr<detail::scheduler_object>);
+    private:
         std::shared_ptr<detail::scheduler_object> impl_;
         friend class fiber;
     };

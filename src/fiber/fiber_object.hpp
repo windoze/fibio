@@ -115,11 +115,13 @@ namespace fibio { namespace fibers { namespace detail {
         
         void add_cleanup_function(std::function<void()> &&f);
         
+        scheduler_ptr_t get_scheduler() { return sched_; }
+        
         static __thread fiber_object *current_fiber_;
 
         scheduler_ptr_t sched_;
         strand_ptr_t fiber_strand_;
-	spinlock mtx_;
+        spinlock mtx_;
         std::atomic<state_t> state_;
         std::unique_ptr<fiber_data_base> entry_;
         runner_t runner_;

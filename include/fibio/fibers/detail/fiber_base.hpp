@@ -18,6 +18,7 @@ namespace fibio { namespace fibers { namespace detail {
     /**
      * can be used to comminicate with foreign threads
      */
+    struct scheduler_object;
     struct fiber_base {
         typedef std::shared_ptr<fiber_base> ptr_t;
         
@@ -54,6 +55,11 @@ namespace fibio { namespace fibers { namespace detail {
         inline boost::asio::io_service &get_io_service() {
             return get_fiber_strand().get_io_service();
         }
+        
+        /**
+         * Returns the scheduler the fiber was created
+         */
+        virtual std::shared_ptr<scheduler_object> get_scheduler()=0;
     };
     
     /**

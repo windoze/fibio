@@ -361,8 +361,8 @@ namespace fibio { namespace fibers {
                 }
                 case attributes::scheduling_policy::stick_with_parent: {
                     // Create a fiber shares strand with parent
-                    impl_=scheduler::get_instance().impl_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
-                                                                      data_.release());
+                    impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
+                                                                                   data_.release());
                     break;
                 }
                 default:
@@ -433,7 +433,7 @@ namespace fibio { namespace fibers {
     }
     
     void fiber::detach() {
-        if (!joinable()) {
+        if (!(impl_ && detail::fiber_object::current_fiber_!=impl_.get())) {
             BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
         }
         detail::fiber_ptr_t this_fiber=impl_;

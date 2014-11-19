@@ -107,7 +107,9 @@ namespace boost { namespace asio {
         template<typename Function, typename T>
         void asio_handler_invoke(Function f, fibio::fibers::asio::detail::promise_handler<T> *h)
         {
-            fibio::fiber(fibio::fibers::asio::detail::fibio_do_handler_invoke<Function, T>,
+            fibio::scheduler s(h->fiber_->get_scheduler());
+            fibio::fiber(s,
+                         fibio::fibers::asio::detail::fibio_do_handler_invoke<Function, T>,
                          f,
                          fibio::fibers::asio::detail::promise_handler<T>(std::move(*h))).detach();
         }
