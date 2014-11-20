@@ -62,11 +62,11 @@ namespace fibio { namespace fibers {
     }   // End of namespace fibio::fibers::detail
     
     template<typename Fn, typename ...Args>
-    auto fiberize(Fn &&fn, Args&& ...args) -> typename std::result_of<Fn(Args...)>::type {
-        typedef typename std::result_of<Fn(Args...)>::type result_type;
-        result_type ret;
+    auto fiberize(fibio::scheduler sched, Fn &&fn, Args&& ...args)
+    -> typename std::result_of<Fn(Args...)>::type
+    {
+        typename std::result_of<Fn(Args...)>::type ret;
         try {
-            fibio::scheduler sched;
             sched.start();
             fibio::fiber f(sched, [&](){
                 detail::fiberized_std_stream_guard guard;
@@ -77,6 +77,16 @@ namespace fibio { namespace fibers {
             std::cerr << "Exception: " << e.what() << "\n";
         }
         return ret;
+    }
+    
+    template<typename Fn, typename ...Args>
+    auto fiberize(Fn &&fn, Args&& ...args)
+    -> typename std::result_of<Fn(Args...)>::type
+    {
+        struct resetter { ~resetter() { fibio::scheduler::reset_instance(); } } r;
+        return fiberize(fibio::scheduler::get_instance(),
+                        std::forward<Fn>(fn),
+                        std::forward<Args>(args)...);
     }
 }}  // End of namespace fibio::fibers
 
