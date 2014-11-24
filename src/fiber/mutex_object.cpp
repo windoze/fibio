@@ -45,7 +45,7 @@ namespace fibio { namespace fibers { namespace detail {
         suspended_.pop_front();
         owner_->resume();
 
-        { relock_guard<spinlock> relock(mtx_); this_fiber->yield(); }
+        { relock_guard<spinlock> relock(mtx_); this_fiber->yield(owner_); }
     }
     
     bool mutex_object::try_lock(fiber_ptr_t this_fiber) {
@@ -108,7 +108,7 @@ namespace fibio { namespace fibers { namespace detail {
         level_=1;
         owner_->resume();
         
-        { relock_guard<spinlock> relock(mtx_); this_fiber->yield(); }
+        { relock_guard<spinlock> relock(mtx_); this_fiber->yield(owner_); }
     }
     
     bool recursive_mutex_object::try_lock(fiber_ptr_t this_fiber) {
@@ -187,7 +187,7 @@ namespace fibio { namespace fibers { namespace detail {
             owner_->resume();
         }
         
-        { relock_guard<spinlock> relock(mtx_); this_fiber->yield(); }
+        { relock_guard<spinlock> relock(mtx_); this_fiber->yield(owner_); }
     }
     
     static inline void timed_mutex_timeout_handler(fiber_ptr_t this_fiber,
@@ -291,7 +291,7 @@ namespace fibio { namespace fibers { namespace detail {
             owner_->resume();
         }
 
-        { relock_guard<spinlock> relock(mtx_); this_fiber->yield(); }
+        { relock_guard<spinlock> relock(mtx_); this_fiber->yield(owner_); }
     }
     
     bool recursive_timed_mutex_object::try_lock(fiber_ptr_t this_fiber) {

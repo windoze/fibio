@@ -213,13 +213,25 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     // Following functions can only be called inside coroutine
-    void fiber_object::yield() {
+    void fiber_object::yield(fiber_ptr_t hint) {
         // Pre-condition
         // Can only pause current running fiber
         BOOST_ASSERT(current_fiber_==this);
         BOOST_ASSERT(state_==RUNNING);
-        
-        set_state(READY);
+
+        // Do yeild when:
+        //  1. there is only 1 thread in this scheduler
+        //  2. or, too many fibers out there (fiber_count > thread_count*2)
+        //  3. or, hint is a fiber that shares the strand with this one
+        //  4. or, there is no hint (force yield)
+        if ((sched_->threads_.size()==1)
+            || (sched_->fiber_count_>sched_->threads_.size()*2)
+            || (hint && (hint->fiber_strand_==fiber_strand_))
+            || !hint
+            )
+        {
+            set_state(READY);
+        }
     }
 
     void fiber_object::join(fiber_ptr_t f) {

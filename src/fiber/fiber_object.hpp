@@ -102,7 +102,7 @@ namespace fibio { namespace fibers { namespace detail {
         virtual boost::asio::strand &get_fiber_strand() override;
         
         // Following functions can only be called inside coroutine
-        void yield();
+        void yield(fiber_ptr_t hint=fiber_ptr_t());
         void join(fiber_ptr_t f);
         void join_and_rethrow(fiber_ptr_t f);
         void sleep_usec(uint64_t usec);
