@@ -43,31 +43,41 @@ namespace fibio { namespace stream {
         
         template<>
         inline boost::asio::ip::tcp::endpoint make_endpoint<boost::asio::ip::tcp::endpoint>(const std::string &access_point) {
-            auto i=access_point.find(':');
-            // TODO: IPv4 and IPv6
+            auto i=access_point.rfind(':');
+            // Use 0::0 if access point contains port only
             std::string addr("0::0");
             std::string port;
             if(i==access_point.npos) {
-                // Assume arg contains only port
+                // ':' not found, assume arg contains only port
                 port=access_point;
             } else {
+                // Split access point into address and port
                 addr.assign(access_point.begin(), access_point.begin()+i);
                 port.assign(access_point.begin()+i+1, access_point.end());
+                // Remove enclosing '[]' for IPv6 address
+                if (addr[0]=='[' && *(addr.rbegin())==']') {
+                    addr.assign(addr, 1, addr.size()-2);
+                }
             }
+            // Test if the address is numeric IP
             boost::system::error_code ec;
             boost::asio::ip::address a=boost::asio::ip::address::from_string(addr, ec);
-            if (ec) {
-                // Address is *not* an IP address
-                boost::asio::ip::tcp::resolver r(asio::get_io_service());
-                boost::asio::ip::tcp::resolver::query q(addr, port);
-                boost::asio::ip::tcp::resolver::iterator i=r.async_resolve(q, asio::yield[ec]);
-                if(ec) {
-                    BOOST_THROW_EXCEPTION(boost::system::system_error(ec, "Resolving address failed"));
+            if(!ec) {
+                try {
+                    // Assume we have a numeric IP address and numeric port
+                    return boost::asio::ip::tcp::endpoint(a, boost::lexical_cast<uint16_t>(port));
+                } catch(boost::bad_lexical_cast &) {
+                    // Port is not a number, need to resolve
                 }
-                return i->endpoint();
-            } else {
-                return boost::asio::ip::tcp::endpoint(a, boost::lexical_cast<uint16_t>(port));
             }
+            // Address and/or port are *not* numeric
+            boost::asio::ip::tcp::resolver r(asio::get_io_service());
+            boost::asio::ip::tcp::resolver::query q(addr, port);
+            auto res=r.async_resolve(q, asio::yield[ec]);
+            if(ec) {
+                BOOST_THROW_EXCEPTION(boost::system::system_error(ec, "Resolving address failed"));
+            }
+            return res->endpoint();
         }
         
         template<>
@@ -95,6 +105,7 @@ namespace fibio { namespace stream {
     public:
         typedef typename streambuf_t::stream_type stream_type;
         typedef typename stream_type::lowest_layer_type::protocol_type protocol_type;
+        typedef typename protocol_type::endpoint endpoint_type;
 
         fiberized_iostream()
         : streambase_t()
@@ -141,6 +152,14 @@ namespace fibio { namespace stream {
             typename resolver_type::iterator i=r.async_resolve(q, asio::yield[ec]);
             if (ec) return ec;
             return this->sbuf_.connect(i->endpoint());
+        }
+        
+        boost::system::error_code connect(const char *access_point) {
+            return this->sbuf_.connect(detail::make_endpoint<endpoint_type>(access_point));
+        }
+        
+        boost::system::error_code connect(const std::string &access_point) {
+            return this->sbuf_.connect(detail::make_endpoint<endpoint_type>(access_point));
         }
         
         /**
@@ -202,6 +221,14 @@ namespace fibio { namespace stream {
         
         stream_acceptor(const endpoint_type &ep)
         : acc_(asio::get_io_service(), ep)
+        {}
+        
+        stream_acceptor(const char *access_point)
+        : stream_acceptor(detail::make_endpoint<endpoint_type>(access_point))
+        {}
+        
+        stream_acceptor(const std::string &access_point)
+        : stream_acceptor(detail::make_endpoint<endpoint_type>(access_point))
         {}
         
         stream_acceptor(stream_acceptor &&other)

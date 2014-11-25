@@ -21,7 +21,7 @@ using namespace fibio;
 void child() {
     this_fiber::sleep_for(std::chrono::seconds(1));
     stream::tcp_stream str;
-    boost::system::error_code ec=str.connect("127.0.0.1", "23456");
+    boost::system::error_code ec=str.connect("127.0.0.1:12345");
     assert(!ec);
     str << "hello" << std::endl;
     for(int i=0; i<100; i++) {
@@ -39,7 +39,7 @@ void parent() {
     boost::random::mt19937 rng;
     boost::random::uniform_int_distribution<> rand(1,1000);
 
-    tcp_stream_acceptor acc(23456);
+    tcp_stream_acceptor acc("127.0.0.1:12345");
     boost::system::error_code ec;
     stream::tcp_stream str;
     acc(str, ec);

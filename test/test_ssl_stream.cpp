@@ -34,7 +34,7 @@ void ssl_child() {
         std::cout << "Verifying " << subject_name << "\n";
         return preverified;
     });
-    ec=str.connect("127.0.0.1", "23457");
+    ec=str.connect("127.0.0.1:23457");
     assert(!ec);
     str << "hello" << std::endl;
     for(int i=0; i<100; i++) {
@@ -71,7 +71,7 @@ void ssl_parent() {
 
     ssl::tcp_stream str(ctx);
     
-    ssl::tcp_stream_acceptor acc("127.0.0.1", 23457);
+    ssl::tcp_stream_acceptor acc("127.0.0.1:23457");
     ec=acc(str);
     assert(!ec);
     std::string line;

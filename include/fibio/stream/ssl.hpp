@@ -31,6 +31,14 @@ namespace fibio { namespace stream {
                endpoint_type(boost::asio::ip::address(), port_num))
         {}
         
+        stream_acceptor(const char *access_point)
+        : stream_acceptor(detail::make_endpoint<endpoint_type>(access_point))
+        {}
+        
+        stream_acceptor(const std::string &access_point)
+        : stream_acceptor(detail::make_endpoint<endpoint_type>(access_point))
+        {}
+        
         stream_acceptor(const endpoint_type &ep)
         : acc_(asio::get_io_service(), ep)
         {}
