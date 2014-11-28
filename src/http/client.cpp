@@ -315,7 +315,7 @@ namespace fibio { namespace http {
     
     bool url_client::make_client(bool ssl, const std::string &host, uint16_t port) {
         try {
-            if(the_client_) {
+            if(the_client_ && the_client_->is_open()) {
                 if ((the_client_->server_!=host) || (the_client_->port_!=boost::lexical_cast<std::string>(port))) {
                     the_response_.drop_body();
                     the_client_->disconnect();
