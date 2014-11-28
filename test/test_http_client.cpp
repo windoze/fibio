@@ -22,10 +22,10 @@ void the_client() {
     req.url.assign("/");
     req.headers.insert(std::make_pair("Host", "0d0a.com"));
     // Default method
-    assert(req.method==http_method::INVALID);
+    assert(req.method==http_method::INVALID_METHOD);
     req.method=http_method::GET;
     // Default version
-    assert(req.version==http_version::INVALID);
+    assert(req.version==http_version::INVALID_VERSION);
     req.version=http_version::HTTP_1_1;
     assert(req.get_content_length()==0);
     //c.set_auto_decompress(true);
@@ -58,10 +58,6 @@ void the_url_client() {
         assert(resp.status_code==http_status_code::OK);
     }
     {
-        client::response &resp=uc.request("http://0d0a.com/yaaw/");
-        assert(resp.status_code==http_status_code::OK);
-    }
-    {
         client::response &resp=uc.request("http://www.baidu.com/");
         assert(resp.status_code==http_status_code::OK);
     }
@@ -75,7 +71,7 @@ void the_url_client() {
 int fibio::main(int argc, char *argv[]) {
     fiber_group fibers;
     for (int i=0; i<1; i++) {
-        //fibers.create_fiber(the_client);
+        fibers.create_fiber(the_client);
         fibers.create_fiber(the_url_client);
     }
     fibers.join_all();

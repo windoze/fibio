@@ -31,7 +31,7 @@ TARGET_LINK_LIBRARIES(test_tcp_stream ${FIBIO_LIBS})
 add_executable(test_ssl_stream test_ssl_stream.cpp)
 TARGET_LINK_LIBRARIES(test_ssl_stream ${FIBIO_LIBS})
 
-add_executable(test_http_client test_http_server.cpp)
+add_executable(test_http_client test_http_client.cpp)
 TARGET_LINK_LIBRARIES(test_http_client ${FIBIO_LIBS})
 
 add_executable(test_http_server test_http_server.cpp)
