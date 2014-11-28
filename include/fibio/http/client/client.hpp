@@ -34,6 +34,7 @@ namespace fibio { namespace http {
         boost::system::error_code connect(ssl::context &ctx, const std::string &server, const std::string &port);
         boost::system::error_code connect(ssl::context &ctx, const std::string &server, int port);
         void disconnect();
+        bool is_open() const { return stream_ && stream_->is_open() && !stream_->eof() && !stream_->fail() && !stream_->bad(); }
         
         void set_auto_decompress(bool c);
         bool get_auto_decompress() const;
