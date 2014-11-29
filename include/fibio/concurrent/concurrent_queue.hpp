@@ -93,10 +93,10 @@ namespace fibio { namespace concurrent {
         
         // std::back_inserter support
         inline void push_back(const T &data)
-        { return push(data); }
+        { push(data); }
         
         inline void push_back(T &&data)
-        { return push(std::move(data)); }
+        { push(std::move(data)); }
         
         // Push items without blocking
         template<typename InIterator>
@@ -376,7 +376,7 @@ namespace fibio { namespace concurrent {
             return capacity_;
         }
         
-        // Minimal for loop support
+        // Minimal range-based for loop support
         struct iterator : std::iterator<std::input_iterator_tag, T> {
             iterator()
             : queue_(0)
