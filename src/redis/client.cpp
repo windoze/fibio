@@ -21,16 +21,27 @@ namespace fibio { namespace redis {
             return (t==def) ? boost::optional<T>() : boost::optional<T>(t);
         }
     }
-    client::client(const std::string &host, const std::string &port) {
-        stream_.connect(host, port);
+    
+    client::client(const std::string &host_port)
+    : queue_(message_queue::size_type(-1), false)
+    {
+        if(host_port.find(':')==host_port.npos) {
+            stream_.connect(host_port+":"+boost::lexical_cast<std::string>(DEFAULT_REDIS_PORT));
+        } else {
+            stream_.connect(host_port);
+        }
     }
     
-    client::client(const std::string &host, uint16_t port) {
-        stream_.connect(host, boost::lexical_cast<std::string>(port));
-    }
+    client::client(const std::string &host, uint16_t port)
+    : client(host+":"+boost::lexical_cast<std::string>(port))
+    {}
     
     void client::close() {
         stream_.close();
+        if (subscribing_fiber_) {
+            subscribing_fiber_->join();
+            subscribing_fiber_.reset();
+        }
     }
     
     bool client::is_open() const {
@@ -38,6 +49,9 @@ namespace fibio { namespace redis {
     }
     
     redis_data client::call(const array &d) {
+        if(subscribing()) {
+            BOOST_THROW_EXCEPTION(redis_error("only (P)SUBSCRIBE / (P)UNSUBSCRIBE / QUIT allowed in this context"));
+        }
         stream_ << d;
         redis_data ret;
         stream_ >> ret;
@@ -423,7 +437,9 @@ namespace fibio { namespace redis {
     }
     
     void client::quit() {
-        call<void>("QUIT");
+        stream_ << make_array("QUIT");
+        redis_data d;
+        stream_ >> d;
         close();
     }
     
@@ -931,6 +947,72 @@ namespace fibio { namespace redis {
             cmd << "STORE" << crit.destination;
         }
         return extract<std::list<std::string>>(call(cmd));
+    }
+    
+    void subscribing_fiber(tcp_stream &s, message_queue &q) {
+        while(s) {
+            redis_data d;
+            s >> d;
+            array &a=boost::get<array>(d);
+            if (a.size()==3) {
+                bulk_string &type=boost::get<bulk_string>(a.front());
+                // PUBSUB response
+                if(type=="message") {
+                    // This is a message
+                    auto i=a.begin();
+                    ++i;
+                    q.push(std::move(redis_message{
+                        std::move(static_cast<std::string>(boost::get<bulk_string>(*i))),
+                        std::move(static_cast<std::string>(boost::get<bulk_string>(a.back())))
+                    }));
+                } else {
+                    int64_t nsub=boost::get<int64_t>(a.back());
+                    if (nsub==0) {
+                        // No subscribed channel/pattern
+                        q.close();
+                        break;
+                    }
+                }
+            } else {
+                //TODO: Anything else
+            }
+        }
+    }
+    
+    message_queue &client::psubscribe(std::list<std::string> &&patterns) {
+        if (!subscribing()) {
+            queue_.open();
+            subscribing_fiber_.reset(new fiber(fiber::attributes(fiber::attributes::stick_with_parent),
+                                               subscribing_fiber,
+                                               std::ref(stream_),
+                                               std::ref(queue_)));
+        }
+        stream_ << make_array("PSUBSCRIBE", std::move(patterns));
+        return queue_;
+    }
+    
+    message_queue &client::subscribe(std::list<std::string> &&channels) {
+        if (!subscribing_fiber_) {
+            queue_.open();
+            subscribing_fiber_.reset(new fiber(fiber::attributes(fiber::attributes::stick_with_parent),
+                                               subscribing_fiber,
+                                               std::ref(stream_),
+                                               std::ref(queue_)));
+        }
+        stream_ << make_array("SUBSCRIBE", std::move(channels));
+        return queue_;
+    }
+    
+    void client::punsubscribe(std::list<std::string> &&patterns) {
+        stream_ << make_array("PUNSUBSCRIBE", std::move(patterns));
+    }
+    
+    void client::unsubscribe(std::list<std::string> &&channels) {
+        stream_ << make_array("UNSUBSCRIBE", std::move(channels));
+    }
+    
+    bool client::subscribing() const {
+        return queue_.is_open();
     }
     
 #if 0

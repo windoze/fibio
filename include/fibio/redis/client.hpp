@@ -13,6 +13,7 @@
 #include <boost/optional.hpp>
 #include <fibio/iostream.hpp>
 #include <fibio/redis/redis_proto.hpp>
+#include <fibio/concurrent/concurrent_queue.hpp>
 
 namespace fibio { namespace redis {
     constexpr uint16_t DEFAULT_REDIS_PORT=6379;
@@ -24,13 +25,21 @@ namespace fibio { namespace redis {
         MAX=3,
     };
     
+    typedef std::pair<std::string, std::string> redis_message;
+    typedef concurrent::concurrent_queue<redis_message> message_queue;
+    
     struct client {
-        client(const std::string &host, const std::string &port);
-        client(const std::string &host, uint16_t port=DEFAULT_REDIS_PORT);
         client(const std::string &host_port);
+        client(const std::string &host, uint16_t port);
         
         void close();
         bool is_open() const;
+        
+        message_queue &psubscribe(std::list<std::string> &&patterns);
+        message_queue &subscribe(std::list<std::string> &&channels);
+        void punsubscribe(std::list<std::string> &&patterns);
+        void unsubscribe(std::list<std::string> &&channels);
+        bool subscribing() const;
         
 #if 0
         // TODO: Transaction
@@ -39,14 +48,6 @@ namespace fibio { namespace redis {
         void multi();
         void unwatch();
         void watch(std::list<std::string> &&keys);
-#endif
-        
-#if 0
-        // TODO: Subscription
-        // PSUBSCRIBE pattern [pattern ...]
-        // PUNSUBSCRIBE [pattern [pattern ...]]
-        // SUBSCRIBE channel [channel ...]
-        // UNSUBSCRIBE [channel [channel ...]]
 #endif
         
 #if 0
@@ -392,6 +393,8 @@ namespace fibio { namespace redis {
         redis_data call(const array &cmd);
     private:
         tcp_stream stream_;
+        message_queue queue_;
+        std::unique_ptr<fiber> subscribing_fiber_;
     };
 }}  // End of namespace fibio::redis
 
