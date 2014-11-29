@@ -10,6 +10,7 @@
 #include <fibio/redis/client.hpp>
 #include <fibio/fiberize.hpp>
 
+using namespace fibio;
 using namespace fibio::redis;
 
 void test_get_set(client &c) {
@@ -44,14 +45,38 @@ void test_sort(client &c) {
     assert((c.lrange("mylist", 0, 100)==std::list<std::string>{"a", "b", "c"}));
 }
 
+void test_pub() {
+    client c("127.0.0.1:37777");
+    this_fiber::sleep_for(std::chrono::seconds(1));
+    c.publish("abc", "123");
+    c.publish("def", "456");
+}
+
+void test_sub(client &c) {
+    message_queue &q=c.subscribe({"abc", "def"});
+    fiber pubber(test_pub);
+    redis_message msg;
+    q.pop(msg);
+    assert(msg.first=="abc");
+    assert(msg.second=="123");
+    q.pop(msg);
+    assert(msg.first=="def");
+    assert(msg.second=="456");
+    c.unsubscribe({"abc", "def"});
+    this_fiber::sleep_for(std::chrono::seconds(1));
+    assert(!q.is_open());
+    pubber.join();
+}
+
 int fibio::main(int argc, char *argv[]) {
     popen("PATH=/usr/bin:/usr/local/bin redis-server --port 37777", "r");
     this_fiber::sleep_for(std::chrono::seconds(1));
-    client c("127.0.0.1", 37777);
+    client c("127.0.0.1:37777");
     
     test_get_set(c);
     test_bitcount(c);
     test_sort(c);
+    test_sub(c);
     
     c.shutdown();
     std::cout << "main_fiber exiting" << std::endl;
