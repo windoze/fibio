@@ -129,16 +129,14 @@ void test_zscan(client &c) {
     for (int i=42; i<442; i++) {
         std::string k("key");
         k+=boost::lexical_cast<std::string>(i);
-        std::string v("key");
-        v+=boost::lexical_cast<std::string>(i);
-        c.hset("myzset", k, v);
-        c.zadd(k, {{1.2, v}});
+        c.zadd("myzset", {{1.2, k}});
         expected.insert(k);
     }
     
     std::set<std::string> keys;
-    for(auto i=c.hscan("myzset"); i!=c.end(); ++i) {
+    for(auto i=c.zscan("myzset"); i!=c.end(); ++i) {
         keys.insert(*i);
+        assert(i.score()==1.2);
     }
     assert(keys==expected);
 }

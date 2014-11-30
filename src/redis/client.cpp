@@ -1028,6 +1028,7 @@ namespace fibio { namespace redis {
     
     void client::scan_iterator::next_batch() {
         if(ended()) return;
+        // Try to get next batch beyond last one, mark ended
         if(last_batch) { c=nullptr; return; }
         do {
             redis_data d=c->call(cmd);
@@ -1057,6 +1058,34 @@ namespace fibio { namespace redis {
                 next_batch();
             }
         }
+    }
+    
+    bool client::scan_iterator::operator==(const client::scan_iterator &other) const {
+        return ended() && other.ended();
+    }
+    
+    bool client::scan_iterator::operator!=(const client::scan_iterator &other) const {
+        return !(*this==other);
+    }
+    
+    client::scan_iterator::reference client::scan_iterator::operator*() {
+        return boost::get<bulk_string>(*cur);
+    }
+    
+    client::scan_iterator::const_reference client::scan_iterator::operator*() const {
+        return boost::get<bulk_string>(*cur);
+    }
+    
+    client::scan_iterator::const_reference client::scan_iterator::operator->() const {
+        return boost::get<bulk_string>(*cur);
+    }
+    
+    client::scan_iterator &client::scan_iterator::operator++() {
+        next(); return *this;
+    }
+    
+    bool client::scan_iterator::ended() const {
+        return !c;
     }
     
     client::scan_iterator client::scan() {
@@ -1107,20 +1136,32 @@ namespace fibio { namespace redis {
         return scan_iterator(this, make_array("HSCAN", key, "0", "MATCH", pattern, "COUNT", int64_t(count)), 2);
     }
     
-    client::scan_iterator client::zscan(const std::string &key) {
-        return scan_iterator(this, make_array("ZSCAN", key, "0"), 2);
+    client::zscan_iterator &client::zscan_iterator::operator++() {
+        next();
+        next();
+        return *this;
     }
     
-    client::scan_iterator client::zscan(const std::string &key, const std::string &pattern) {
-        return scan_iterator(this, make_array("ZSCAN", key, "0", "PATTERN", pattern), 2);
+    double client::zscan_iterator::score() const {
+        auto s=cur;
+        ++s;
+        return boost::lexical_cast<double>(boost::get<bulk_string>(*s));
     }
     
-    client::scan_iterator client::zscan(const std::string &key, size_t count) {
-        return scan_iterator(this, make_array("ZSCAN", key, "0", "COUNT", int64_t(count)), 2);
+    client::zscan_iterator client::zscan(const std::string &key) {
+        return zscan_iterator(this, make_array("ZSCAN", key, "0"), 2);
     }
     
-    client::scan_iterator client::zscan(const std::string &key, const std::string &pattern, size_t count) {
-        return scan_iterator(this, make_array("ZSCAN", key, "0", "MATCH", pattern, "COUNT", int64_t(count)), 2);
+    client::zscan_iterator client::zscan(const std::string &key, const std::string &pattern) {
+        return zscan_iterator(this, make_array("ZSCAN", key, "0", "PATTERN", pattern), 2);
+    }
+    
+    client::zscan_iterator client::zscan(const std::string &key, size_t count) {
+        return zscan_iterator(this, make_array("ZSCAN", key, "0", "COUNT", int64_t(count)), 2);
+    }
+    
+    client::zscan_iterator client::zscan(const std::string &key, const std::string &pattern, size_t count) {
+        return zscan_iterator(this, make_array("ZSCAN", key, "0", "MATCH", pattern, "COUNT", int64_t(count)), 2);
     }
     
 #if 0

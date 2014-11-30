@@ -55,15 +55,15 @@ namespace fibio { namespace redis {
             
             scan_iterator()=default;
             scan_iterator(client *cl, array &&scan_cmd, size_t cur_pos);
-            bool operator==(const scan_iterator &other) const { return ended() && other.ended(); }
-            bool operator!=(const scan_iterator &other) const { return !(*this==other); }
-            reference operator*() { return boost::get<bulk_string>(*cur); }
-            const_reference operator*() const { return boost::get<bulk_string>(*cur); }
-            const_reference operator->() const { return boost::get<bulk_string>(*cur); }
-            scan_iterator &operator++() { next(); return *this; }
+            bool operator==(const scan_iterator &other) const;
+            bool operator!=(const scan_iterator &other) const;
+            reference operator*();
+            const_reference operator*() const;
+            const_reference operator->() const;
+            scan_iterator &operator++();
 
         private:
-            bool ended() const { return !c; }
+            bool ended() const;
             void next_batch();
             void next();
             client *c=nullptr;
@@ -92,10 +92,16 @@ namespace fibio { namespace redis {
         scan_iterator hscan(const std::string &key, size_t count);
         scan_iterator hscan(const std::string &key, const std::string &pattern, size_t count);
         
-        scan_iterator zscan(const std::string &key);
-        scan_iterator zscan(const std::string &key, const std::string &pattern);
-        scan_iterator zscan(const std::string &key, size_t count);
-        scan_iterator zscan(const std::string &key, const std::string &pattern, size_t count);
+        struct zscan_iterator : scan_iterator {
+            using scan_iterator::scan_iterator;
+            // HACK: zscan returns key/score pair, use score() to retrieve score
+            zscan_iterator &operator++();
+            double score() const;
+        };
+        zscan_iterator zscan(const std::string &key);
+        zscan_iterator zscan(const std::string &key, const std::string &pattern);
+        zscan_iterator zscan(const std::string &key, size_t count);
+        zscan_iterator zscan(const std::string &key, const std::string &pattern, size_t count);
         
         // Sorting
         struct sort_criteria {
