@@ -16,8 +16,6 @@
 #include <fibio/concurrent/concurrent_queue.hpp>
 
 namespace fibio { namespace redis {
-    constexpr uint16_t DEFAULT_REDIS_PORT=6379;
-
     enum aggregate_type {
         NO_AGGREGATE=0,
         SUM=1,
@@ -35,12 +33,6 @@ namespace fibio { namespace redis {
         void close();
         bool is_open() const;
         
-        message_queue &psubscribe(std::list<std::string> &&patterns);
-        message_queue &subscribe(std::list<std::string> &&channels);
-        void punsubscribe(std::list<std::string> &&patterns);
-        void unsubscribe(std::list<std::string> &&channels);
-        bool subscribing() const;
-        
 #if 0
         // TODO: Transaction
         void discard();
@@ -50,14 +42,62 @@ namespace fibio { namespace redis {
         void watch(std::list<std::string> &&keys);
 #endif
         
-#if 0
-        // TODO: Scan
-        // SCAN cursor [MATCH pattern] [COUNT count]
-        // SSCAN key cursor [MATCH pattern] [COUNT count]
-        // HSCAN key cursor [MATCH pattern] [COUNT count]
-        // ZSCAN key cursor [MATCH pattern] [COUNT count]
-#endif
+        // Pub/Sub
+        message_queue &psubscribe(std::list<std::string> &&patterns);
+        message_queue &subscribe(std::list<std::string> &&channels);
+        void punsubscribe(std::list<std::string> &&patterns);
+        void unsubscribe(std::list<std::string> &&channels);
+        bool subscribing() const;
         
+        // Scanning
+        struct scan_iterator : std::iterator<std::input_iterator_tag, std::string> {
+            typedef const std::string &const_reference;
+            
+            scan_iterator()=default;
+            scan_iterator(client *cl, array &&scan_cmd, size_t cur_pos);
+            bool operator==(const scan_iterator &other) const { return ended() && other.ended(); }
+            bool operator!=(const scan_iterator &other) const { return !(*this==other); }
+            reference operator*() { return boost::get<bulk_string>(*cur); }
+            const_reference operator*() const { return boost::get<bulk_string>(*cur); }
+            const_reference operator->() const { return boost::get<bulk_string>(*cur); }
+            scan_iterator &operator++() { next(); return *this; }
+
+        private:
+            bool ended() const { return !c; }
+            void next_batch();
+            void next();
+            client *c=nullptr;
+            int64_t cursor=0;
+            array current_batch;
+            bool last_batch=false;
+            array::iterator cur;
+            array cmd;
+            array::iterator cursor_pos;
+            friend struct client;
+        };
+        scan_iterator end() const { return scan_iterator(); }
+        
+        scan_iterator scan();
+        scan_iterator scan(const std::string &pattern);
+        scan_iterator scan(size_t count);
+        scan_iterator scan(const std::string &pattern, size_t count);
+        
+        scan_iterator sscan(const std::string &key);
+        scan_iterator sscan(const std::string &key, const std::string &pattern);
+        scan_iterator sscan(const std::string &key, size_t count);
+        scan_iterator sscan(const std::string &key, const std::string &pattern, size_t count);
+        
+        scan_iterator hscan(const std::string &key);
+        scan_iterator hscan(const std::string &key, const std::string &pattern);
+        scan_iterator hscan(const std::string &key, size_t count);
+        scan_iterator hscan(const std::string &key, const std::string &pattern, size_t count);
+        
+        scan_iterator zscan(const std::string &key);
+        scan_iterator zscan(const std::string &key, const std::string &pattern);
+        scan_iterator zscan(const std::string &key, size_t count);
+        scan_iterator zscan(const std::string &key, const std::string &pattern, size_t count);
+        
+        // Sorting
         struct sort_criteria {
             std::string by_pattern;
             int64_t offset=0;
@@ -72,6 +112,7 @@ namespace fibio { namespace redis {
             return sort(key, sort_criteria(crit));
         }
         
+        // Commands
         int64_t append(const std::string &key,
                        const std::string &value);
         bool auth(const std::string &password);

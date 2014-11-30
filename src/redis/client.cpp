@@ -11,6 +11,8 @@
 #include <fibio/redis/client.hpp>
 
 namespace fibio { namespace redis {
+    constexpr uint16_t DEFAULT_REDIS_PORT=6379;
+    
     namespace detail {
         template<typename T>
         boost::optional<T> make_optional(T t) {
@@ -1013,6 +1015,112 @@ namespace fibio { namespace redis {
     
     bool client::subscribing() const {
         return queue_.is_open();
+    }
+    
+    client::scan_iterator::scan_iterator(client *cl, array &&scan_cmd, size_t cur_pos)
+    : c(cl)
+    , cmd(std::move(scan_cmd))
+    , cursor_pos(cmd.begin())
+    {
+        for(size_t i=0; i<cur_pos; i++) ++cursor_pos;
+        next_batch();
+    }
+    
+    void client::scan_iterator::next_batch() {
+        if(ended()) return;
+        if(last_batch) { c=nullptr; return; }
+        do {
+            redis_data d=c->call(cmd);
+            array &a=boost::get<array>(d);
+            cursor=boost::lexical_cast<int64_t>(boost::get<bulk_string>(a.front()));
+            current_batch.swap(boost::get<array>(a.back()));
+            // Update cmd
+            *(cursor_pos)=bulk_string(boost::lexical_cast<std::string>(cursor));
+            // This is the last batch if cursor==0
+            last_batch=(cursor==0);
+        } while(current_batch.empty() && !last_batch);
+        if (current_batch.empty()) {
+            // Scan completed, mark ended
+            c=nullptr;
+        } else {
+            cur=current_batch.begin();
+        }
+    }
+    
+    void client::scan_iterator::next() {
+        if(ended()) return;
+        if(cur==current_batch.end()) {
+            next_batch();
+        } else {
+            ++cur;
+            if(cur==current_batch.end()) {
+                next_batch();
+            }
+        }
+    }
+    
+    client::scan_iterator client::scan() {
+        return scan_iterator(this, make_array("SCAN", "0"), 1);
+    }
+    
+    client::scan_iterator client::scan(const std::string &pattern) {
+        return scan_iterator(this, make_array("SCAN", "0", "MATCH", pattern), 1);
+    }
+    
+    client::scan_iterator client::scan(size_t count) {
+        return scan_iterator(this, make_array("SCAN", "0", "COUNT", int64_t(count)), 1);
+    }
+    
+    client::scan_iterator client::scan(const std::string &pattern, size_t count) {
+        return scan_iterator(this, make_array("SCAN", "0", "MATCH", pattern, "COUNT", int64_t(count)), 1);
+    }
+    
+    client::scan_iterator client::sscan(const std::string &key) {
+        return scan_iterator(this, make_array("SSCAN", key, "0"), 2);
+    }
+    
+    client::scan_iterator client::sscan(const std::string &key, const std::string &pattern) {
+        return scan_iterator(this, make_array("SSCAN", key, "0", "PATTERN", pattern), 2);
+    }
+    
+    client::scan_iterator client::sscan(const std::string &key, size_t count) {
+        return scan_iterator(this, make_array("SSCAN", key, "0", "COUNT", int64_t(count)), 2);
+    }
+    
+    client::scan_iterator client::sscan(const std::string &key, const std::string &pattern, size_t count) {
+        return scan_iterator(this, make_array("SSCAN", key, "0", "MATCH", pattern, "COUNT", int64_t(count)), 2);
+    }
+    
+    client::scan_iterator client::hscan(const std::string &key) {
+        return scan_iterator(this, make_array("HSCAN", key, "0"), 2);
+    }
+    
+    client::scan_iterator client::hscan(const std::string &key, const std::string &pattern) {
+        return scan_iterator(this, make_array("HSCAN", key, "0", "PATTERN", pattern), 2);
+    }
+    
+    client::scan_iterator client::hscan(const std::string &key, size_t count) {
+        return scan_iterator(this, make_array("HSCAN", key, "0", "COUNT", int64_t(count)), 2);
+    }
+    
+    client::scan_iterator client::hscan(const std::string &key, const std::string &pattern, size_t count) {
+        return scan_iterator(this, make_array("HSCAN", key, "0", "MATCH", pattern, "COUNT", int64_t(count)), 2);
+    }
+    
+    client::scan_iterator client::zscan(const std::string &key) {
+        return scan_iterator(this, make_array("ZSCAN", key, "0"), 2);
+    }
+    
+    client::scan_iterator client::zscan(const std::string &key, const std::string &pattern) {
+        return scan_iterator(this, make_array("ZSCAN", key, "0", "PATTERN", pattern), 2);
+    }
+    
+    client::scan_iterator client::zscan(const std::string &key, size_t count) {
+        return scan_iterator(this, make_array("ZSCAN", key, "0", "COUNT", int64_t(count)), 2);
+    }
+    
+    client::scan_iterator client::zscan(const std::string &key, const std::string &pattern, size_t count) {
+        return scan_iterator(this, make_array("ZSCAN", key, "0", "MATCH", pattern, "COUNT", int64_t(count)), 2);
     }
     
 #if 0
