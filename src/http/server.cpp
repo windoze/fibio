@@ -279,6 +279,7 @@ namespace fibio { namespace http {
     void server_request::clear() {
         // Make sure there is no pending data in the last request
         drop_body();
+        params.clear();
         common::request::clear();
     }
     
@@ -388,6 +389,7 @@ namespace fibio { namespace http {
         if (!write_header(os)) return false;
         // Write body
         os.write(&(raw_body_stream_.vector()[0]), raw_body_stream_.vector().size());
+        os.flush();
         return !os.eof() && !os.fail() && !os.bad();
     }
 

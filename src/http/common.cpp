@@ -348,8 +348,11 @@ namespace fibio { namespace http { namespace common {
             bool parse(std::istream &is);
             
             int on_message_begin() {
-                resp_.clear();
-                state_=start;
+                // HACK: Don't know why but this got called sometime in headers_complete state?
+                if(state_==none) {
+                    resp_.clear();
+                    state_=start;
+                }
                 return 0;
             }
             
@@ -510,6 +513,9 @@ namespace fibio { namespace http { namespace common {
                 if (state_==header_complete) {
                     // Parse error
                     if (nparsed>=0) {
+                        if (nparsed>0 && nparsed!=recved) {
+                            nparsed--;
+                        }
                         // Move read pointer back to where parser consumed
                         std::streamsize off=nparsed;
                         off-=recved;
