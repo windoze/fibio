@@ -247,7 +247,7 @@ namespace fibio { namespace http { namespace common {
                 // Set HTTP method
                 req_.method = static_cast<http_method>(parser_.method);
                 
-                return 0;
+                return 1;
             }
             
             enum parser_state {
@@ -434,7 +434,7 @@ namespace fibio { namespace http { namespace common {
                 // Set HTTP method
                 resp_.status_code = static_cast<http_status_code>(parser_.status_code);
                 
-                return 0;
+                return 1;
             }
             
             enum parser_state {
@@ -513,9 +513,6 @@ namespace fibio { namespace http { namespace common {
                 if (state_==header_complete) {
                     // Parse error
                     if (nparsed>=0) {
-                        if (nparsed>0 && nparsed!=recved) {
-                            nparsed--;
-                        }
                         // Move read pointer back to where parser consumed
                         std::streamsize off=nparsed;
                         off-=recved;
