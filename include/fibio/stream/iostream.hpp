@@ -24,19 +24,16 @@ namespace fibio { namespace stream {
         template<typename Stream>
         struct iostream_base {
             typedef fiberized_streambuf<Stream> streambuf_t;
-            iostream_base()=default;
+            iostream_base() : sbuf_(new streambuf_t) {}
             iostream_base(iostream_base &&other)
             : sbuf_(std::move(other.sbuf_))
-            {}
-            iostream_base(streambuf_t &&other_buf)
-            : sbuf_(std::move(other_buf))
             {}
             // For SSL stream, construct with ssl::context
             template<typename Arg>
             iostream_base(Arg &arg)
-            : sbuf_(arg)
+            : sbuf_(new streambuf_t(arg))
             {}
-            streambuf_t sbuf_;
+            std::unique_ptr<streambuf_t> sbuf_;
         };
         template<typename R>
         R make_endpoint(const std::string &access_point) {}
@@ -109,20 +106,20 @@ namespace fibio { namespace stream {
 
         fiberized_iostream()
         : streambase_t()
-        , closable_stream(&(this->sbuf_))
+        , closable_stream(this->sbuf_.get())
         {}
         
         // For SSL stream, construct with ssl::context
         template<typename Arg>
         fiberized_iostream(Arg &arg)
         : streambase_t(arg)
-        , closable_stream(&(this->sbuf_))
+        , closable_stream(this->sbuf_.get())
         {}
         
         // Movable
         fiberized_iostream(fiberized_iostream &&src)//=default;
         : streambase_t(std::move(src))
-        , closable_stream(&(this->sbuf_))
+        , closable_stream(this->sbuf_.get())
         {}
         
         // Non-copyable
@@ -131,18 +128,13 @@ namespace fibio { namespace stream {
         
         template <typename... T>
         boost::system::error_code open(T... x) {
-            return this->sbuf_.lowest_layer().open(x...);
+            return streambuf().lowest_layer().open(x...);
+        }
+        
+        boost::system::error_code connect(const endpoint_type &ep) {
+            return streambuf().connect(ep);
         }
 
-        template <typename Arg>
-        auto connect(const Arg &arg) -> decltype(this->sbuf_.connect(arg)) {
-            return this->sbuf_.connect(arg);
-        }
-        
-        boost::system::error_code connect(const char *host, const char *service) {
-            return connect(std::string(host), std::string(service));
-        }
-        
         boost::system::error_code connect(const std::string &host, const std::string &service) {
             boost::system::error_code ec;
             typedef typename protocol_type::resolver resolver_type;
@@ -151,15 +143,15 @@ namespace fibio { namespace stream {
             query_type q(host, service);
             typename resolver_type::iterator i=r.async_resolve(q, asio::yield[ec]);
             if (ec) return ec;
-            return this->sbuf_.connect(i->endpoint());
+            return streambuf().connect(i->endpoint());
         }
         
         boost::system::error_code connect(const char *access_point) {
-            return this->sbuf_.connect(detail::make_endpoint<endpoint_type>(access_point));
+            return streambuf().connect(detail::make_endpoint<endpoint_type>(access_point));
         }
         
         boost::system::error_code connect(const std::string &access_point) {
-            return this->sbuf_.connect(detail::make_endpoint<endpoint_type>(access_point));
+            return streambuf().connect(detail::make_endpoint<endpoint_type>(access_point));
         }
         
         /**
@@ -173,13 +165,13 @@ namespace fibio { namespace stream {
         }
         
         inline bool is_open() const
-        { return this->sbuf_.lowest_layer().is_open(); }
+        { return this->sbuf_->lowest_layer().is_open(); }
         
         inline streambuf_t &streambuf()
-        { return this->sbuf_; }
+        { return *(this->sbuf_); }
         
         inline const streambuf_t &streambuf() const
-        { return this->sbuf_; }
+        { return *(this->sbuf_); }
         
         inline stream_type &stream_descriptor()
         { return streambuf(); }
