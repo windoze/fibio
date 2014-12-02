@@ -30,7 +30,7 @@ void the_client() {
     assert(req.get_content_length()==0);
     //c.set_auto_decompress(true);
     
-    c.connect("0d0a.com", 80);
+    c.connect("0d0a.com");
     for(int i=0; i<10; i++) {
         client::response resp;
         if(c.send_request(req, resp)) {

@@ -24,15 +24,15 @@ namespace fibio { namespace http {
         
         client()=default;
         client(const std::string &server, const std::string &port);
-        client(const std::string &server, int port);
+        client(const std::string &server, int port=80);
         client(ssl::context &ctx, const std::string &server, const std::string &port);
-        client(ssl::context &ctx, const std::string &server, int port);
+        client(ssl::context &ctx, const std::string &server, int port=443);
         ~client();
         
         boost::system::error_code connect(const std::string &server, const std::string &port);
-        boost::system::error_code connect(const std::string &server, int port);
+        boost::system::error_code connect(const std::string &server, int port=80);
         boost::system::error_code connect(ssl::context &ctx, const std::string &server, const std::string &port);
-        boost::system::error_code connect(ssl::context &ctx, const std::string &server, int port);
+        boost::system::error_code connect(ssl::context &ctx, const std::string &server, int port=443);
         void disconnect();
         bool is_open() const { return stream_ && stream_->is_open() && !stream_->eof() && !stream_->fail() && !stream_->bad(); }
         
