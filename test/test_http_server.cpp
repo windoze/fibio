@@ -17,6 +17,7 @@
 #include <fibio/http/client/client.hpp>
 #include <fibio/http/server/server.hpp>
 #include <fibio/http/server/routing.hpp>
+#include <fibio/http/server/template.hpp>
 
 using namespace fibio;
 using namespace fibio::http;
@@ -121,6 +122,15 @@ void the_url_client() {
     assert(resp.status_code==http_status_code::FORBIDDEN);
     c.request("http://127.0.0.1:23456/test3/with/a/long/and/stupid/url.html");
     assert(resp.status_code==http_status_code::OK);
+    c.request("http://127.0.0.1:23456/prize/you");
+    const char text[]="Hello you\nYou have just won 10000 dollars!\nWell, 6000 dollars, after taxes.\n";
+    assert(resp.status_code==http_status_code::OK);
+    assert(resp.content_length==76);
+    std::stringstream ss;
+    ss << resp.body_stream().rdbuf();
+    ss.flush();
+    std::string st=ss.str();
+    assert(ss.str()==text);
 }
 
 bool handler(server::request &req, server::response &resp) {
@@ -164,6 +174,17 @@ bool handler(server::request &req, server::response &resp) {
     return true;
 }
 
+json::wvalue test_model(server::request &req) {
+    json::wvalue v;
+    v["name"]=req.params["id"];
+    v["value"]=10000;
+    v["taxed_value"]=10000-(10000 * 0.4);
+    v["in_ca"]=true;;
+    return v;
+}
+
+const char s[]="Hello {{name}}\nYou have just won {{value}} dollars!\n{{#in_ca}}\nWell, {{taxed_value}} dollars, after taxes.\n{{/in_ca}}";
+
 void http_server() {
     server svr(server::settings{
         route((path_("/")
@@ -171,6 +192,7 @@ void http_server() {
                || path_("/index.htm")) >> handler,
               get_("/test1/:id/test2") >> handler,
               post_("/test2/*p") >> handler,
+              get_("/prize/:id") >> mustache_(s, test_model),
               (path_("/test3/*p") && url_(iends_with{".html"})) >> handler,
               path_("/test3/*") >> stock_handler{http_status_code::FORBIDDEN},
               !method_is(http_method::GET) >> stock_handler{http_status_code::BAD_REQUEST}),

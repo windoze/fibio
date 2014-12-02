@@ -39,6 +39,9 @@
 		2D82CD7F19CFF82500B0257D /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFD818E4375200E64B99 /* libssl.dylib */; };
 		2D86E78919FA4A29009B5623 /* test_cookie.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D86E78819FA4A29009B5623 /* test_cookie.cpp */; };
 		2D86E78A19FA4B54009B5623 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
+		2DA969F71A2D827600289FA9 /* json.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DA969F41A2D827600289FA9 /* json.hpp */; };
+		2DA969F81A2D827600289FA9 /* mustache_template.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DA969F51A2D827600289FA9 /* mustache_template.hpp */; };
+		2DA969F91A2D827600289FA9 /* mustache.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DA969F61A2D827600289FA9 /* mustache.hpp */; };
 		2DACAA9319F3AB05004F6780 /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAA7E19F3AB05004F6780 /* client.cpp */; };
 		2DACAA9419F3AB05004F6780 /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAA7F19F3AB05004F6780 /* common.cpp */; };
 		2DACAA9519F3AB05004F6780 /* routing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAA8019F3AB05004F6780 /* routing.cpp */; };
@@ -356,6 +359,10 @@
 		2D82CD7D19CFF7DA00B0257D /* server.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = server.pem; sourceTree = "<group>"; };
 		2D86E78119FA4A0E009B5623 /* test_cookie */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_cookie; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D86E78819FA4A29009B5623 /* test_cookie.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_cookie.cpp; sourceTree = "<group>"; };
+		2DA969EC1A2C5C6000289FA9 /* template.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = template.hpp; sourceTree = "<group>"; };
+		2DA969F41A2D827600289FA9 /* json.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = json.hpp; sourceTree = "<group>"; };
+		2DA969F51A2D827600289FA9 /* mustache_template.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mustache_template.hpp; sourceTree = "<group>"; };
+		2DA969F61A2D827600289FA9 /* mustache.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mustache.hpp; sourceTree = "<group>"; };
 		2DACAA5D19F3AAD6004F6780 /* client.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = client.hpp; sourceTree = "<group>"; };
 		2DACAA5E19F3AAD6004F6780 /* request.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = request.hpp; sourceTree = "<group>"; };
 		2DACAA5F19F3AAD6004F6780 /* response.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = response.hpp; sourceTree = "<group>"; };
@@ -861,6 +868,16 @@
 			path = fiber;
 			sourceTree = "<group>";
 		};
+		2DA969F11A2D821C00289FA9 /* templates */ = {
+			isa = PBXGroup;
+			children = (
+				2DA969F41A2D827600289FA9 /* json.hpp */,
+				2DA969F51A2D827600289FA9 /* mustache_template.hpp */,
+				2DA969F61A2D827600289FA9 /* mustache.hpp */,
+			);
+			path = templates;
+			sourceTree = "<group>";
+		};
 		2DACAA5B19F3AAD6004F6780 /* http */ = {
 			isa = PBXGroup;
 			children = (
@@ -902,6 +919,8 @@
 				2DACAA6919F3AAD6004F6780 /* response.hpp */,
 				2DACAA6A19F3AAD6004F6780 /* routing.hpp */,
 				2DACAA6B19F3AAD6004F6780 /* server.hpp */,
+				2DA969EC1A2C5C6000289FA9 /* template.hpp */,
+				2DA969F11A2D821C00289FA9 /* templates */,
 			);
 			path = server;
 			sourceTree = "<group>";
@@ -954,6 +973,9 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2DA969F91A2D827600289FA9 /* mustache.hpp in Headers */,
+				2DA969F71A2D827600289FA9 /* json.hpp in Headers */,
+				2DA969F81A2D827600289FA9 /* mustache_template.hpp in Headers */,
 				2DFC92F01A1341A2004A9FF8 /* thrift.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
