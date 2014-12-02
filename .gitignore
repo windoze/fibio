@@ -18,3 +18,5 @@ project.xcworkspace/
 xcuserdata
 DerivedData/
 build/
+
+.idea/
