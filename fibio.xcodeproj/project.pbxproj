@@ -22,6 +22,8 @@
 		2D15D02318E5804400E64B99 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
 		2D15D09818E6C84800E64B99 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
 		2D15D09E18E6C86F00E64B99 /* test_future.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D15D09C18E6C86F00E64B99 /* test_future.cpp */; };
+		2D1E146D1A2EF5C2008AFB97 /* url_parser.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2D1E146C1A2EF5C2008AFB97 /* url_parser.hpp */; };
+		2D1E146F1A2F078A008AFB97 /* http_parser_merged.h in Headers */ = {isa = PBXBuildFile; fileRef = 2D1E146E1A2F078A008AFB97 /* http_parser_merged.h */; };
 		2D5A306918E6E21600C5EB41 /* future.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D5A306718E6E21600C5EB41 /* future.cpp */; };
 		2D5A308118E71C4900C5EB41 /* test_asio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D5A307F18E71C4900C5EB41 /* test_asio.cpp */; };
 		2D5A308218E71CC000C5EB41 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
@@ -44,10 +46,7 @@
 		2DA969F91A2D827600289FA9 /* mustache.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DA969F61A2D827600289FA9 /* mustache.hpp */; };
 		2DACAA9319F3AB05004F6780 /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAA7E19F3AB05004F6780 /* client.cpp */; };
 		2DACAA9419F3AB05004F6780 /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAA7F19F3AB05004F6780 /* common.cpp */; };
-		2DACAA9519F3AB05004F6780 /* routing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAA8019F3AB05004F6780 /* routing.cpp */; };
 		2DACAA9619F3AB05004F6780 /* server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAA8119F3AB05004F6780 /* server.cpp */; };
-		2DACAA9719F3AB05004F6780 /* url_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAA8219F3AB05004F6780 /* url_parser.cpp */; };
-		2DACAA9B19F3AB05004F6780 /* http_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAA8C19F3AB05004F6780 /* http_parser.c */; };
 		2DACAAA619F3AB55004F6780 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFDA18E4376E00E64B99 /* libcrypto.dylib */; };
 		2DACAAA719F3AB59004F6780 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFD818E4375200E64B99 /* libssl.dylib */; };
 		2DACAAA919F3AB60004F6780 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DACAAA819F3AB60004F6780 /* libz.dylib */; };
@@ -310,6 +309,8 @@
 		2D15D0A918E6D21600E64B99 /* packaged_task.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = packaged_task.hpp; sourceTree = "<group>"; };
 		2D15D0AB18E6DB5100E64B99 /* promise.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = promise.hpp; sourceTree = "<group>"; };
 		2D15D0AD18E6DDC400E64B99 /* async.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = async.hpp; sourceTree = "<group>"; };
+		2D1E146C1A2EF5C2008AFB97 /* url_parser.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = url_parser.hpp; sourceTree = "<group>"; };
+		2D1E146E1A2F078A008AFB97 /* http_parser_merged.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = http_parser_merged.h; sourceTree = "<group>"; };
 		2D5A306718E6E21600C5EB41 /* future.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = future.cpp; sourceTree = "<group>"; };
 		2D5A306D18E710C300C5EB41 /* yield.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = yield.hpp; sourceTree = "<group>"; };
 		2D5A306F18E7142C00C5EB41 /* yield.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = yield.hpp; sourceTree = "<group>"; };
@@ -380,23 +381,7 @@
 		2DACAA7A19F3AAEF004F6780 /* http_server.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = http_server.hpp; sourceTree = "<group>"; };
 		2DACAA7E19F3AB05004F6780 /* client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = client.cpp; sourceTree = "<group>"; };
 		2DACAA7F19F3AB05004F6780 /* common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = common.cpp; sourceTree = "<group>"; };
-		2DACAA8019F3AB05004F6780 /* routing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = routing.cpp; sourceTree = "<group>"; };
 		2DACAA8119F3AB05004F6780 /* server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = server.cpp; sourceTree = "<group>"; };
-		2DACAA8219F3AB05004F6780 /* url_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = url_parser.cpp; sourceTree = "<group>"; };
-		2DACAA8319F3AB05004F6780 /* url_parser.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = url_parser.hpp; sourceTree = "<group>"; };
-		2DACAA8519F3AB05004F6780 /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
-		2DACAA8619F3AB05004F6780 /* .mailmap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .mailmap; sourceTree = "<group>"; };
-		2DACAA8719F3AB05004F6780 /* .travis.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
-		2DACAA8819F3AB05004F6780 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
-		2DACAA8A19F3AB05004F6780 /* parsertrace.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = parsertrace.c; sourceTree = "<group>"; };
-		2DACAA8B19F3AB05004F6780 /* url_parser.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = url_parser.c; sourceTree = "<group>"; };
-		2DACAA8C19F3AB05004F6780 /* http_parser.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = http_parser.c; sourceTree = "<group>"; };
-		2DACAA8D19F3AB05004F6780 /* http_parser.gyp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = http_parser.gyp; sourceTree = "<group>"; };
-		2DACAA8E19F3AB05004F6780 /* http_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = http_parser.h; sourceTree = "<group>"; };
-		2DACAA8F19F3AB05004F6780 /* LICENSE-MIT */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "LICENSE-MIT"; sourceTree = "<group>"; };
-		2DACAA9019F3AB05004F6780 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		2DACAA9119F3AB05004F6780 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		2DACAA9219F3AB05004F6780 /* test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test.c; sourceTree = "<group>"; };
 		2DACAAA019F3AB19004F6780 /* test_http_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_http_client.cpp; sourceTree = "<group>"; };
 		2DACAAA119F3AB19004F6780 /* test_http_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_http_server.cpp; sourceTree = "<group>"; };
 		2DACAAA819F3AB60004F6780 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
@@ -846,7 +831,6 @@
 				2D75D679192FAFA600B85950 /* fibio-config.cmake */,
 				2D7E687518CCCD5D00B7C4E5 /* fiber */,
 				2DACAA7D19F3AB05004F6780 /* http */,
-				2DACAA8419F3AB05004F6780 /* http-parser */,
 				2D650CD019FCC06700977AB2 /* redis */,
 			);
 			path = src;
@@ -908,6 +892,7 @@
 				2D650CCD19FAB30500977AB2 /* cookie.hpp */,
 				2DACAA6519F3AAD6004F6780 /* string_pred.hpp */,
 				2DACAA6619F3AAD6004F6780 /* url_codec.hpp */,
+				2D1E146C1A2EF5C2008AFB97 /* url_parser.hpp */,
 			);
 			path = common;
 			sourceTree = "<group>";
@@ -928,42 +913,12 @@
 		2DACAA7D19F3AB05004F6780 /* http */ = {
 			isa = PBXGroup;
 			children = (
+				2D1E146E1A2F078A008AFB97 /* http_parser_merged.h */,
 				2DACAA7E19F3AB05004F6780 /* client.cpp */,
 				2DACAA7F19F3AB05004F6780 /* common.cpp */,
-				2DACAA8019F3AB05004F6780 /* routing.cpp */,
 				2DACAA8119F3AB05004F6780 /* server.cpp */,
-				2DACAA8219F3AB05004F6780 /* url_parser.cpp */,
-				2DACAA8319F3AB05004F6780 /* url_parser.hpp */,
 			);
 			path = http;
-			sourceTree = "<group>";
-		};
-		2DACAA8419F3AB05004F6780 /* http-parser */ = {
-			isa = PBXGroup;
-			children = (
-				2DACAA8519F3AB05004F6780 /* .gitignore */,
-				2DACAA8619F3AB05004F6780 /* .mailmap */,
-				2DACAA8719F3AB05004F6780 /* .travis.yml */,
-				2DACAA8819F3AB05004F6780 /* AUTHORS */,
-				2DACAA8919F3AB05004F6780 /* contrib */,
-				2DACAA8C19F3AB05004F6780 /* http_parser.c */,
-				2DACAA8D19F3AB05004F6780 /* http_parser.gyp */,
-				2DACAA8E19F3AB05004F6780 /* http_parser.h */,
-				2DACAA8F19F3AB05004F6780 /* LICENSE-MIT */,
-				2DACAA9019F3AB05004F6780 /* Makefile */,
-				2DACAA9119F3AB05004F6780 /* README.md */,
-				2DACAA9219F3AB05004F6780 /* test.c */,
-			);
-			path = "http-parser";
-			sourceTree = "<group>";
-		};
-		2DACAA8919F3AB05004F6780 /* contrib */ = {
-			isa = PBXGroup;
-			children = (
-				2DACAA8A19F3AB05004F6780 /* parsertrace.c */,
-				2DACAA8B19F3AB05004F6780 /* url_parser.c */,
-			);
-			path = contrib;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -974,7 +929,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				2DA969F91A2D827600289FA9 /* mustache.hpp in Headers */,
+				2D1E146D1A2EF5C2008AFB97 /* url_parser.hpp in Headers */,
 				2DA969F71A2D827600289FA9 /* json.hpp in Headers */,
+				2D1E146F1A2F078A008AFB97 /* http_parser_merged.h in Headers */,
 				2DA969F81A2D827600289FA9 /* mustache_template.hpp in Headers */,
 				2DFC92F01A1341A2004A9FF8 /* thrift.hpp in Headers */,
 			);
@@ -1329,13 +1286,10 @@
 				2D5A306918E6E21600C5EB41 /* future.cpp in Sources */,
 				2DACAA9419F3AB05004F6780 /* common.cpp in Sources */,
 				2D650CD219FCC06700977AB2 /* redis_proto.cpp in Sources */,
-				2DACAA9B19F3AB05004F6780 /* http_parser.c in Sources */,
 				2D650CE419FCF33600977AB2 /* client.cpp in Sources */,
 				2D15D01018E579E700E64B99 /* cv_object.cpp in Sources */,
 				2DACAA9319F3AB05004F6780 /* client.cpp in Sources */,
-				2DACAA9519F3AB05004F6780 /* routing.cpp in Sources */,
 				2D1319C418D0A28F0086156F /* fiber_object.cpp in Sources */,
-				2DACAA9719F3AB05004F6780 /* url_parser.cpp in Sources */,
 				2DACAA9619F3AB05004F6780 /* server.cpp in Sources */,
 				2D1319C618D0A28F0086156F /* scheduler_object.cpp in Sources */,
 				2D1319C518D0A28F0086156F /* mutex_object.cpp in Sources */,

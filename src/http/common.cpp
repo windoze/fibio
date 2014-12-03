@@ -9,7 +9,6 @@
 #include <string>
 #include <iostream>
 #include <time.h>
-#include "../http-parser/http_parser.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -21,8 +20,9 @@
 #include <fibio/http/common/request.hpp>
 #include <fibio/http/common/response.hpp>
 #include <fibio/http/common/url_codec.hpp>
+#include <fibio/http/common/url_parser.hpp>
 #include <fibio/http/common/cookie.hpp>
-#include "url_parser.hpp"
+#include "http_parser_merged.h"
 
 namespace fibio { namespace http { namespace common {
     namespace detail {
