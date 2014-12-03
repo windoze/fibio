@@ -188,11 +188,6 @@ namespace fibio { namespace stream {
         is.set_duplex_mode(dm);
         return is;
     }
-
-    // streams
-    typedef fiberized_iostream<boost::asio::ip::tcp::socket> tcp_stream;
-    typedef fiberized_iostream<boost::asio::posix::stream_descriptor> posix_stream;
-    typedef fiberized_iostream<boost::asio::local::stream_protocol::socket> local_stream;
     
     template<typename Stream>
     struct stream_acceptor {
@@ -269,10 +264,6 @@ namespace fibio { namespace stream {
         
         acceptor_type acc_;
     };
-    
-    // acceptors
-    typedef stream_acceptor<tcp_stream> tcp_stream_acceptor;
-    typedef stream_acceptor<local_stream> local_stream_acceptor;
     
     template<typename Stream>
     struct stream_traits {
@@ -383,20 +374,26 @@ namespace fibio { namespace stream {
         std::unique_ptr<fiber> acceptor_fiber_;
         std::unique_ptr<promise<void>> stop_signal_;
     };
-    
-    // listeners
-    typedef listener<tcp_stream> tcp_listener;
-    typedef listener<local_stream> local_listener;
 }}  // End of namespace fibio::stream
 
 namespace fibio {
-    using stream::tcp_stream;
-    using stream::posix_stream;
-    using stream::local_stream;
-    using stream::tcp_stream_acceptor;
-    using stream::local_stream_acceptor;
-    using stream::tcp_listener;
-    using stream::local_listener;
+    typedef stream::fiberized_iostream<boost::asio::ip::tcp::socket> tcp_stream;
+    typedef stream::stream_acceptor<tcp_stream> tcp_stream_acceptor;
+    typedef stream::listener<tcp_stream> tcp_listener;
+    
+#ifdef BOOST_ASIO_HAS_LOCAL_SOCKETS
+    typedef stream::fiberized_iostream<boost::asio::local::stream_protocol::socket> local_stream;
+    typedef stream::stream_acceptor<local_stream> local_stream_acceptor;
+    typedef stream::listener<local_stream> local_listener;
+#endif
+
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+    typedef stream::fiberized_iostream<boost::asio::posix::stream_descriptor> posix_stream;
+#endif
+
+#ifdef BOOST_ASIO_HAS_WINDOWS_STREAM_HANDLE
+    typedef stream::fiberized_iostream<boost::asio::windows::stream_handle> posix_stream;
+#endif
 }
 
 #endif

@@ -26,7 +26,29 @@ namespace fibio { namespace fibers {
     namespace detail {
         struct fiberized_std_stream_guard {
 #ifndef FIBIO_DONT_USE_FIBERIZED_STD_STREAM
-            typedef stream::fiberized_streambuf<boost::asio::posix::stream_descriptor> sbuf_t;
+
+#   ifdef BOOST_ASIO_HAS_WINDOWS_STREAM_HANDLE
+            // Windows platform
+            typedef boost::asio::windows::stream_handle stdstream_t;
+            stdstream_t::native_handle_type get_std_in_handle()
+            { return ::GetStdHandle(STD_INPUT_HANDLE); }
+            stdstream_t::native_handle_type get_std_out_handle()
+            { return ::GetStdHandle(STD_OUTPUT_HANDLE); }
+            stdstream_t::native_handle_type get_std_err_handle()
+            { return ::GetStdHandle(STD_ERROR_HANDLE); }
+#   elif defined(BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR)
+            // POSIX platform
+            typedef boost::asio::posix::stream_descriptor stdstream_t;
+            stdstream_t::native_handle_type get_std_in_handle()
+            { return 0; }
+            stdstream_t::native_handle_type get_std_out_handle()
+            { return 1; }
+            stdstream_t::native_handle_type get_std_err_handle()
+            { return 2; }
+#   else
+#       error "Only Windows and POSIX platforms are supported"
+#   endif
+            typedef stream::fiberized_streambuf<stdstream_t> sbuf_t;
             typedef std::unique_ptr<sbuf_t> sbuf_ptr_t;
             
             inline fiberized_std_stream_guard(boost::asio::io_service &iosvc=fibio::asio::get_io_service())
@@ -40,9 +62,9 @@ namespace fibio { namespace fibers {
                 old_cin_buf_=std::cin.rdbuf(cin_buf_.get());
                 old_cout_buf_=std::cout.rdbuf(cout_buf_.get());
                 old_cerr_buf_=std::cerr.rdbuf(cerr_buf_.get());
-                cin_buf_->assign(0);
-                cout_buf_->assign(1);
-                cerr_buf_->assign(2);
+                cin_buf_->assign(get_std_in_handle());
+                cout_buf_->assign(get_std_out_handle());
+                cerr_buf_->assign(get_std_err_handle());
                 // Set cerr to unbuffered
                 std::cerr.rdbuf()->pubsetbuf(0, 0);
             }
@@ -65,7 +87,7 @@ namespace fibio { namespace fibers {
             sbuf_ptr_t cin_buf_;
             sbuf_ptr_t cout_buf_;
             sbuf_ptr_t cerr_buf_;
-#endif
+#endif  // !defined(FIBIO_DONT_USE_FIBERIZED_STD_STREAM)
         };
     }   // End of namespace fibio::fibers::detail
     
