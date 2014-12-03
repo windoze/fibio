@@ -146,7 +146,7 @@ namespace fibio { namespace redis {
         
         template<typename T, typename... Args>
         void make_array(array &a, T &&t, Args&&... args) {
-            make_array_impl(a, std::forward<T>(t));
+            make_array_impl(a, std::move(t));
             make_array(a, std::forward<Args>(args)...);
         }
     }   // End of namespace detail
