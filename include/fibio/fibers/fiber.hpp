@@ -15,6 +15,7 @@
 #include <utility>
 #include <type_traits>
 #include <boost/asio/io_service.hpp>
+#include <boost/asio/strand.hpp>
 #include <fibio/fibers/detail/forward.hpp>
 #include <fibio/fibers/detail/fiber_data.hpp>
 
@@ -237,6 +238,11 @@ namespace fibio { namespace fibers {
              * returns the io_service associated with the current fiber
              */
             boost::asio::io_service &get_io_service();
+            
+            /**
+             * returns the strand associated with the current fiber
+             */
+            boost::asio::strand &get_strand();
         }
         
 

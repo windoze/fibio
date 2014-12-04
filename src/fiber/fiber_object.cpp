@@ -493,6 +493,13 @@ namespace fibio { namespace fibers {
                 }
                 BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
             }
+            
+            boost::asio::strand &get_strand() {
+                if (::fibio::fibers::detail::fiber_object::current_fiber_) {
+                    return ::fibio::fibers::detail::fiber_object::current_fiber_->get_fiber_strand();
+                }
+                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+            }
         }   // End of namespace detail
         
         std::string get_name() {
