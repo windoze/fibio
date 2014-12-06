@@ -177,8 +177,8 @@ namespace fibio { namespace http {
     }
     
     template<typename... Rule>
-    inline server::request_handler_type route(const Rule&... r)
-    { return route(routing_table_type(routing_table_type{r...})); }
+    inline server::request_handler_type route(Rule... r)
+    { return route(routing_table_type{r...}); }
 }}  // End of namespace fibio::http
 
 #endif

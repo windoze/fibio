@@ -23,6 +23,67 @@ using namespace fibio;
 using namespace fibio::http;
 using namespace fibio::http::common;
 
+bool handler(server::request &req, server::response &resp) {
+    resp.headers.insert({"Header1", "Value1"});
+    // Write all headers back in a table
+    resp.set_content_type("text/html");
+    resp.body_stream() << "<HTML><HEAD><TITLE>Test</TITLE></HEAD><BODY>"<< std::endl;
+    resp.body_stream() << "<H1>Request Info</H1>" << std::endl;
+    
+    resp.body_stream() << "<TABLE>" << std::endl;
+    resp.body_stream() << "<TR><TD>URL</TD><TD>" << req.url << "</TD></TR>" << std::endl;
+    resp.body_stream() << "<TR><TD>Schema</TD><TD>" << req.parsed_url.schema << "</TD></TR>" << std::endl;
+    resp.body_stream() << "<TR><TD>Port</TD><TD>" << req.parsed_url.port << "</TD></TR>" << std::endl;
+    resp.body_stream() << "<TR><TD>Path</TD><TD>" << req.parsed_url.path << "</TD></TR>" << std::endl;
+    resp.body_stream() << "<TR><TD>Query</TD><TD>" << req.parsed_url.query << "</TD></TR>" << std::endl;
+    resp.body_stream() << "<TR><TD>User Info</TD><TD>" << req.parsed_url.userinfo << "</TD></TR>" << std::endl;
+    resp.body_stream() << "</TABLE>" << std::endl;
+    
+    resp.body_stream() << "<H1>Headers</H1>" << std::endl;
+    resp.body_stream() << "<TABLE>" << std::endl;
+    for(auto &p: req.headers) {
+        resp.body_stream() << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>" <<std::endl;
+    }
+    resp.body_stream() << "</TABLE>" << std::endl;
+    
+    resp.body_stream() << "<H1>Parameters</H1>" << std::endl;
+    resp.body_stream() << "<TABLE>" << std::endl;
+    for(auto &p: req.params) {
+        resp.body_stream() << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>" <<std::endl;
+    }
+    resp.body_stream() << "</TABLE>" << std::endl;
+    
+    resp.body_stream() << "<H1>Query</H1>" << std::endl;
+    resp.body_stream() << "<TABLE>" << std::endl;
+    for(auto &p: req.parsed_url.query_params) {
+        resp.body_stream() << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>" <<std::endl;
+    }
+    resp.body_stream() << "</TABLE>" << std::endl;
+    
+    resp.body_stream() << "</BODY></HTML>" << std::endl;
+    return true;
+}
+
+json::wvalue test_model(server::request &req) {
+    json::wvalue v;
+    v["name"]=req.params["id"];
+    v["value"]=10000;
+    v["taxed_value"]=10000-(10000 * 0.4);
+    v["in_ca"]=true;;
+    return v;
+}
+
+const char s[]="Hello {{name}}\nYou have just won {{value}} dollars!\n{{#in_ca}}\nWell, {{taxed_value}} dollars, after taxes.\n{{/in_ca}}";
+
+auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> handler,
+             get_("/test1/:id/test2") >> handler,
+             post_("/test2/*p") >> handler,
+             get_("/prize/:id") >> mustache_(s, test_model),
+             (path_("/test3/*p") && url_(iends_with{".html"})) >> handler,
+             path_("/test3/*") >> stock_handler(http_status_code::FORBIDDEN),
+             !method_is(http_method::GET) >> stock_handler(http_status_code::BAD_REQUEST)
+             );
+
 void the_client() {
     client c;
     if(c.connect("127.0.0.1", 23456)) {
@@ -133,73 +194,10 @@ void the_url_client() {
     assert(ss.str()==text);
 }
 
-bool handler(server::request &req, server::response &resp) {
-    resp.headers.insert({"Header1", "Value1"});
-    // Write all headers back in a table
-    resp.set_content_type("text/html");
-    resp.body_stream() << "<HTML><HEAD><TITLE>Test</TITLE></HEAD><BODY>"<< std::endl;
-    resp.body_stream() << "<H1>Request Info</H1>" << std::endl;
-    
-    resp.body_stream() << "<TABLE>" << std::endl;
-    resp.body_stream() << "<TR><TD>URL</TD><TD>" << req.url << "</TD></TR>" << std::endl;
-    resp.body_stream() << "<TR><TD>Schema</TD><TD>" << req.parsed_url.schema << "</TD></TR>" << std::endl;
-    resp.body_stream() << "<TR><TD>Port</TD><TD>" << req.parsed_url.port << "</TD></TR>" << std::endl;
-    resp.body_stream() << "<TR><TD>Path</TD><TD>" << req.parsed_url.path << "</TD></TR>" << std::endl;
-    resp.body_stream() << "<TR><TD>Query</TD><TD>" << req.parsed_url.query << "</TD></TR>" << std::endl;
-    resp.body_stream() << "<TR><TD>User Info</TD><TD>" << req.parsed_url.userinfo << "</TD></TR>" << std::endl;
-    resp.body_stream() << "</TABLE>" << std::endl;
-    
-    resp.body_stream() << "<H1>Headers</H1>" << std::endl;
-    resp.body_stream() << "<TABLE>" << std::endl;
-    for(auto &p: req.headers) {
-        resp.body_stream() << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>" <<std::endl;
-    }
-    resp.body_stream() << "</TABLE>" << std::endl;
-    
-    resp.body_stream() << "<H1>Parameters</H1>" << std::endl;
-    resp.body_stream() << "<TABLE>" << std::endl;
-    for(auto &p: req.params) {
-        resp.body_stream() << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>" <<std::endl;
-    }
-    resp.body_stream() << "</TABLE>" << std::endl;
-    
-    resp.body_stream() << "<H1>Query</H1>" << std::endl;
-    resp.body_stream() << "<TABLE>" << std::endl;
-    for(auto &p: req.parsed_url.query_params) {
-        resp.body_stream() << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>" <<std::endl;
-    }
-    resp.body_stream() << "</TABLE>" << std::endl;
-    
-    resp.body_stream() << "</BODY></HTML>" << std::endl;
-    return true;
-}
-
-json::wvalue test_model(server::request &req) {
-    json::wvalue v;
-    v["name"]=req.params["id"];
-    v["value"]=10000;
-    v["taxed_value"]=10000-(10000 * 0.4);
-    v["in_ca"]=true;;
-    return v;
-}
-
-const char s[]="Hello {{name}}\nYou have just won {{value}} dollars!\n{{#in_ca}}\nWell, {{taxed_value}} dollars, after taxes.\n{{/in_ca}}";
-
-void http_server() {
-    server svr(server::settings{
-        route((path_("/")
-               || path_("/index.html")
-               || path_("/index.htm")) >> handler,
-              get_("/test1/:id/test2") >> handler,
-              post_("/test2/*p") >> handler,
-              get_("/prize/:id") >> mustache_(s, test_model),
-              (path_("/test3/*p") && url_(iends_with{".html"})) >> handler,
-              path_("/test3/*") >> stock_handler(http_status_code::FORBIDDEN),
-              !method_is(http_method::GET) >> stock_handler(http_status_code::BAD_REQUEST)),
-        23456,
-        "127.0.0.1",
-    });
-    svr.start();
+void test_http_server() {
+    server svr;
+    svr.address("127.0.0.1").port(23456).handler(r).start();
+    this_fiber::sleep_for(std::chrono::milliseconds(500));
     {
         // Create some clients, do some requests
         fiber_group fibers;
@@ -316,7 +314,7 @@ void the_ssl_url_client() {
     assert(resp.status_code==http_status_code::OK);
 }
 
-void https_server() {
+void test_https_server() {
     boost::system::error_code ec;
     ssl::context ctx(ssl::context::tlsv1_server);
     ctx.set_options(ssl::context::default_workarounds
@@ -329,19 +327,10 @@ void https_server() {
     assert(!ec);
     ctx.use_tmp_dh_file("dh512.pem", ec);
     assert(!ec);
-    server svr(server::settings{ctx,
-        route((path_("/")
-               || path_("/index.html")
-               || path_("/index.htm")) >> handler,
-              get_("/test1/:id/test2") >> handler,
-              post_("/test2/*p") >> handler,
-              (path_("/test3/*p") && url_(iends_with{".html"})) >> handler,
-              path_("/test3/*") >> stock_handler(http_status_code::FORBIDDEN),
-              !method_is(http_method::GET) >> stock_handler(http_status_code::BAD_REQUEST)),
-        23457,
-        "127.0.0.1"
-    });
-    svr.start();
+
+    server svr;
+    svr.address("127.0.0.1").port(23457).ssl(ctx).handler(r).start();
+    this_fiber::sleep_for(std::chrono::milliseconds(500));
     {
         // Create some clients, do some requests
         fiber_group fibers;
@@ -359,8 +348,8 @@ void https_server() {
 int fibio::main(int argc, char *argv[]) {
     this_fiber::get_scheduler().add_worker_thread(3);
     fiber_group fibers;
-    fibers.create_fiber(http_server);
-    fibers.create_fiber(https_server);
+    fibers.create_fiber(test_http_server);
+    fibers.create_fiber(test_https_server);
     fibers.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;

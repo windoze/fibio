@@ -418,50 +418,50 @@ namespace fibio { namespace http {
         return ret;
     }
     
-    server::server(settings s)
-    : ssl_(s.ctx)
-    {
-        if(ssl_) {
-            engine_=reinterpret_cast<impl *>(new ssl_server_engine(s.ctx,
-                                                                   s.address,
-                                                                   s.port,
-                                                                   get_default_host_name<ssl::tcp_stream>(s.port),
-                                                                   std::move(s.default_request_handler)));
-            get_ssl_engine(engine_)->read_timeout_=s.read_timeout;
-            get_ssl_engine(engine_)->write_timeout_=s.write_timeout;
-            get_ssl_engine(engine_)->max_keep_alive_=s.max_keep_alive;
-        } else {
-            engine_=reinterpret_cast<impl *>(new server_engine(0,
-                                                               s.address,
-                                                               s.port,
-                                                               get_default_host_name<tcp_stream>(s.port),
-                                                               std::move(s.default_request_handler)));
-            get_engine(engine_)->read_timeout_=s.read_timeout;
-            get_engine(engine_)->write_timeout_=s.write_timeout;
-            get_engine(engine_)->max_keep_alive_=s.max_keep_alive;
-        }
-    }
-    
     server::~server() {
         stop();
-        if (ssl_) {
+        if (ssl()) {
             delete get_ssl_engine(engine_);
         } else {
             delete get_engine(engine_);
         }
     }
     
-    void server::start() {
-        if (ssl_) {
+    void server::init_engine() {
+        if(ssl()) {
+            engine_=reinterpret_cast<impl *>(new ssl_server_engine(s_.ctx_,
+                                                                   s_.address_,
+                                                                   s_.port_,
+                                                                   get_default_host_name<ssl::tcp_stream>(s_.port_),
+                                                                   std::move(s_.default_request_handler_)));
+            get_ssl_engine(engine_)->read_timeout_=s_.read_timeout_;
+            get_ssl_engine(engine_)->write_timeout_=s_.write_timeout_;
+            get_ssl_engine(engine_)->max_keep_alive_=s_.max_keep_alive_;
+        } else {
+            engine_=reinterpret_cast<impl *>(new server_engine(0,
+                                                               s_.address_,
+                                                               s_.port_,
+                                                               get_default_host_name<tcp_stream>(s_.port_),
+                                                               std::move(s_.default_request_handler_)));
+            get_engine(engine_)->read_timeout_=s_.read_timeout_;
+            get_engine(engine_)->write_timeout_=s_.write_timeout_;
+            get_engine(engine_)->max_keep_alive_=s_.max_keep_alive_;
+        }
+    }
+    
+    server &server::start() {
+        init_engine();
+        if (ssl()) {
             servant_.reset(new fiber(&ssl_server_engine::start, get_ssl_engine(engine_)));
         } else {
             servant_.reset(new fiber(&server_engine::start, get_engine(engine_)));
         }
+        return *this;
     }
     
     void server::stop() {
         if (servant_) {
-            if (ssl_) {
+            if (ssl()) {
                 get_ssl_engine(engine_)->close();
             } else {
                 get_engine(engine_)->close();
