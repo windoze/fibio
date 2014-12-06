@@ -26,41 +26,36 @@ using namespace fibio::http::common;
 bool handler(server::request &req, server::response &resp) {
     resp.headers.insert({"Header1", "Value1"});
     // Write all headers back in a table
-    resp.set_content_type("text/html");
-    resp.body_stream() << "<HTML><HEAD><TITLE>Test</TITLE></HEAD><BODY>"<< std::endl;
-    resp.body_stream() << "<H1>Request Info</H1>" << std::endl;
-    
-    resp.body_stream() << "<TABLE>" << std::endl;
-    resp.body_stream() << "<TR><TD>URL</TD><TD>" << req.url << "</TD></TR>" << std::endl;
-    resp.body_stream() << "<TR><TD>Schema</TD><TD>" << req.parsed_url.schema << "</TD></TR>" << std::endl;
-    resp.body_stream() << "<TR><TD>Port</TD><TD>" << req.parsed_url.port << "</TD></TR>" << std::endl;
-    resp.body_stream() << "<TR><TD>Path</TD><TD>" << req.parsed_url.path << "</TD></TR>" << std::endl;
-    resp.body_stream() << "<TR><TD>Query</TD><TD>" << req.parsed_url.query << "</TD></TR>" << std::endl;
-    resp.body_stream() << "<TR><TD>User Info</TD><TD>" << req.parsed_url.userinfo << "</TD></TR>" << std::endl;
-    resp.body_stream() << "</TABLE>" << std::endl;
-    
-    resp.body_stream() << "<H1>Headers</H1>" << std::endl;
-    resp.body_stream() << "<TABLE>" << std::endl;
+    resp.content_type("text/html") << "<HTML><HEAD><TITLE>Test</TITLE></HEAD><BODY>\n"
+    "<H1>Request Info</H1>\n"
+    "<TABLE>\n"
+    "<TR><TD>URL</TD><TD>" << req.url << "</TD></TR>\n"
+    "<TR><TD>Schema</TD><TD>" << req.parsed_url.schema << "</TD></TR>\n"
+    "<TR><TD>Port</TD><TD>" << req.parsed_url.port << "</TD></TR>\n"
+    "<TR><TD>Path</TD><TD>" << req.parsed_url.path << "</TD></TR>\n"
+    "<TR><TD>Query</TD><TD>" << req.parsed_url.query << "</TD></TR>\n"
+    "<TR><TD>User Info</TD><TD>" << req.parsed_url.userinfo << "</TD></TR>\n"
+    "</TABLE>\n"
+    "<H1>Headers</H1>\n"
+    "<TABLE>\n";
     for(auto &p: req.headers) {
-        resp.body_stream() << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>" <<std::endl;
+        resp << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>\n";
     }
-    resp.body_stream() << "</TABLE>" << std::endl;
+    resp << "</TABLE>\n"
+    << "<H1>Parameters</H1>\n"
+    << "<TABLE>\n";
     
-    resp.body_stream() << "<H1>Parameters</H1>" << std::endl;
-    resp.body_stream() << "<TABLE>" << std::endl;
     for(auto &p: req.params) {
-        resp.body_stream() << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>" <<std::endl;
+        resp << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>\n";
     }
-    resp.body_stream() << "</TABLE>" << std::endl;
-    
-    resp.body_stream() << "<H1>Query</H1>" << std::endl;
-    resp.body_stream() << "<TABLE>" << std::endl;
+    resp << "</TABLE>\n"
+    "<H1>Query</H1>\n"
+    "<TABLE>\n";
     for(auto &p: req.parsed_url.query_params) {
-        resp.body_stream() << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>" <<std::endl;
+        resp << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>\n";
     }
-    resp.body_stream() << "</TABLE>" << std::endl;
-    
-    resp.body_stream() << "</BODY></HTML>" << std::endl;
+    resp << "</TABLE>\n"
+    "</BODY></HTML>\n";
     return true;
 }
 

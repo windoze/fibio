@@ -23,7 +23,7 @@ namespace fibio { namespace http {
                             server::response &resp)
             {
                 try {
-                    resp.set_content_type("text/html");
+                    resp.content_type("text/html");
                     json::wvalue ctx=model(req);
                     std::string s(t.render(ctx));
                     resp.body_stream().write(&(s[0]), s.size());

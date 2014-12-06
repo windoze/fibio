@@ -343,21 +343,28 @@ namespace fibio { namespace http {
         return raw_body_stream_;
     }
     
-    void server_response::set_cookie(const common::cookie &c) {
-        headers.insert({c.name, c.to_string()});
+    server_response &server_response::header(const std::string &key, const std::string &value) {
+        headers.insert({key, value});
+        return *this;
+    }
+    
+    server_response &server_response::cookie(const common::cookie &c) {
+        headers.insert({"Set-Cookie", c.to_string()});
+        return *this;
     }
     
     size_t server_response::get_content_length() const {
         return raw_body_stream_.vector().size();
     }
     
-    void server_response::set_content_type(const std::string &ct) {
+    server_response &server_response::content_type(const std::string &ct) {
         auto i=headers.find("content-type");
         if (i==headers.end()) {
             headers.insert(std::make_pair("Content-Type", ct));
         } else {
             i->second.assign(ct);
         }
+        return *this;
     }
     
     bool server_response::write_header(std::ostream &os) {

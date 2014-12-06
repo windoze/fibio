@@ -16,6 +16,13 @@
 namespace fibio { namespace http {
     struct server_response : common::response {
         server_response()=default;
+        
+        template<typename T>
+        server_response(const T&b) {
+            version=http_version::HTTP_1_1;
+            status_code=http_status_code::OK;
+            body(b);
+        }
 
         server_response(const server_response &other)
         : common::response(other)
@@ -30,11 +37,13 @@ namespace fibio { namespace http {
         
         void clear();
         
-        void set_cookie(const common::cookie &c);
+        server_response &header(const std::string &key, const std::string &value);
+        
+        server_response &cookie(const common::cookie &c);
         
         size_t get_content_length() const;
         
-        void set_content_type(const std::string &);
+        server_response &content_type(const std::string &);
         
         const std::string &get_body() const;
         
@@ -45,16 +54,26 @@ namespace fibio { namespace http {
         std::ostream &body_stream();
         
         template<typename T>
-        void set_body(const T &t, const std::string &content_type=common::content_type<T>::name) {
-            set_content_type(content_type);
+        server_response &body(const T &t, const std::string &ct=common::content_type<T>::name) {
+            content_type(ct);
             body_stream() << t;
+            return *this;
+        }
+        
+        template<typename T>
+        std::ostream &operator << (const T &t) {
+            body_stream() << t;
+            return body_stream();
+        }
+        
+        template<typename T>
+        server_response &operator()(const T &t) {
+            return body(t);
         }
         
         bool write_header(std::ostream &os);
         bool write(std::ostream &os);
-        
         boost::interprocess::basic_ovectorstream<std::string> raw_body_stream_;
-        
         std::ostream *raw_stream_=nullptr;
     };
 

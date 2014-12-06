@@ -1400,7 +1400,14 @@ namespace fibio { namespace http {
         //std::vector<boost::asio::const_buffer> dump_ref(wvalue& v)
         //{
         //}
-    }   // End of namespace json
+    }   // End of namespace fibio::http::json
+    
+    namespace common {
+        template<>
+        struct content_type<fibio::http::json::wvalue> {
+            static constexpr const char *name="application/json";
+        };
+    }
 }}  // End of namespace fibio::http
 
 #undef crow_json_likely
