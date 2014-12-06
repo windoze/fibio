@@ -29,9 +29,9 @@ namespace fibio { namespace http {
             return *(body_stream_.get());
         }
         
-        void set_auto_decompression(bool c);
+        void auto_decompression(bool c);
         
-        bool get_auto_decompression() const;
+        bool auto_decompression() const;
         
         // Consume and discard body
         void drop_body();

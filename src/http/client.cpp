@@ -28,13 +28,13 @@ namespace fibio { namespace http {
         return raw_body_stream_;
     }
     
-    size_t client_request::get_content_length() const {
+    size_t client_request::content_length() const {
         return raw_body_stream_.vector().size();
     }
     
-    void client_request::set_content_type(const std::string &ct) {
+    client_request &client_request::content_type(const std::string &ct) {
         if (ct.empty()) {
-            return;
+            return *this;
         }
         auto i=headers.find("Content-Type");
         if (i==headers.end()) {
@@ -42,9 +42,15 @@ namespace fibio { namespace http {
         } else {
             i->second.assign(ct);
         }
+        return *this;
     }
     
-    void client_request::accept_compressed(bool c) {
+    client_request &client_request::header(const std::string &key, const std::string &value) {
+        headers.insert({key, value});
+        return *this;
+    }
+    
+    client_request &client_request::accept_compressed(bool c) {
         if (c) {
             // Support gzip only for now
             common::header_map::iterator i=headers.find("Accept-Encoding");
@@ -56,11 +62,12 @@ namespace fibio { namespace http {
         } else {
             headers.erase("Accept-Encoding");
         }
+        return *this;
     }
     
     bool client_request::write_header(std::ostream &os) {
         std::string ka;
-        if (keep_alive) {
+        if (keep_alive()) {
             ka="keep-alive";
         } else {
             ka="close";
@@ -79,9 +86,9 @@ namespace fibio { namespace http {
         // Set "content-length"
         auto i=headers.find("content-length");
         if (i==headers.end()) {
-            headers.insert(std::make_pair("Content-Length", boost::lexical_cast<std::string>(get_content_length())));
+            headers.insert(std::make_pair("Content-Length", boost::lexical_cast<std::string>(content_length())));
         } else {
-            i->second.assign(boost::lexical_cast<std::string>(get_content_length()));
+            i->second.assign(boost::lexical_cast<std::string>(content_length()));
         }
         // Write header
         if (!write_header(os)) return false;
@@ -102,11 +109,11 @@ namespace fibio { namespace http {
         common::response::clear();
     }
     
-    void client_response::set_auto_decompression(bool c) {
+    void client_response::auto_decompression(bool c) {
         auto_decompress_=c;
     }
     
-    bool client_response::get_auto_decompression() const {
+    bool client_response::auto_decompression() const {
         return auto_decompress_;
     }
     
@@ -218,11 +225,11 @@ namespace fibio { namespace http {
         }
     }
     
-    void client::set_auto_decompress(bool c) {
+    void client::auto_decompress(bool c) {
         auto_decompress_=c;
     }
     
-    bool client::get_auto_decompress() const {
+    bool client::auto_decompress() const {
         return auto_decompress_;
     }
     
@@ -231,24 +238,11 @@ namespace fibio { namespace http {
         // Make sure there is no pending data in the last response
         resp.clear();
         req.accept_compressed(auto_decompress_);
-        resp.set_auto_decompression(auto_decompress_);
+        resp.auto_decompression(auto_decompress_);
         if(!req.write(*stream_)) return false;
         if (!stream_->is_open() || stream_->eof() || stream_->fail() || stream_->bad()) return false;
         //if (!stream_.is_open()) return false;
         return resp.read(*stream_) && (resp.status_code!=http_status_code::INVALID_STATUS);
-    }
-
-    client::request &make_request(client::request &req,
-                                  const std::string &url,
-                                  const common::header_map &hdr)
-    {
-        req.clear();
-        req.url=url;
-        req.method=http_method::GET;
-        req.version=http_version::HTTP_1_1;
-        req.keep_alive=true;
-        req.headers.insert(hdr.begin(), hdr.end());
-        return req;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -284,18 +278,18 @@ namespace fibio { namespace http {
             // ERROR: Unknown protocol
             return false;
         }
-        the_request_.url.reserve(url.length());
-        the_request_.url=purl.path;
+        the_request_.url().reserve(url.length());
+        the_request_.url(purl.path);
         if(!purl.query.empty()) {
-            the_request_.url+='?';
-            the_request_.url+=purl.query;
+            the_request_.url()+='?';
+            the_request_.url()+=purl.query;
         }
         if(!purl.fragment.empty()) {
-            the_request_.url+='?';
-            the_request_.url+=purl.fragment;
+            the_request_.url()+='?';
+            the_request_.url()+=purl.fragment;
         }
-        the_request_.version=http_version::HTTP_1_1;
-        the_request_.keep_alive=true;
+        the_request_.version(http_version::HTTP_1_1);
+        the_request_.keep_alive(true);
         the_request_.headers.insert({"Host", std::move(host)});
         the_request_.headers.insert(hdr.begin(), hdr.end());
         return true;

@@ -108,7 +108,7 @@ namespace fibio { namespace http {
                     watchdog_timer_->expires_from_now(write_timeout_);
                 }
                 ret=resp.write(stream());
-                if (!resp.keep_alive) {
+                if (!resp.keep_alive()) {
                     stream().close();
                     return false;
                 }
@@ -231,10 +231,10 @@ namespace fibio { namespace http {
                     req.raw_stream_=&(c.stream());
                     resp.raw_stream_=&(c.stream());
                     // Set default attributes for response
-                    resp.status_code=http_status_code::OK;
-                    resp.version=req.version;
-                    resp.keep_alive=req.keep_alive;
-                    if(count>=max_keep_alive_) resp.keep_alive=false;
+                    resp.status_code(http_status_code::OK);
+                    resp.version(req.version);
+                    resp.keep_alive(req.keep_alive);
+                    if(count>=max_keep_alive_) resp.keep_alive(false);
                     if(!default_request_handler_(req, resp)) {
                         break;
                     }
@@ -335,7 +335,7 @@ namespace fibio { namespace http {
             raw_body_stream_.swap_vector(e);
     }
     
-    const std::string &server_response::get_body() const {
+    const std::string &server_response::body() const {
         return raw_body_stream_.vector();
     }
     
@@ -353,7 +353,7 @@ namespace fibio { namespace http {
         return *this;
     }
     
-    size_t server_response::get_content_length() const {
+    size_t server_response::content_length() const {
         return raw_body_stream_.vector().size();
     }
     
@@ -369,7 +369,7 @@ namespace fibio { namespace http {
     
     bool server_response::write_header(std::ostream &os) {
         std::string ka;
-        if (keep_alive) {
+        if (keep_alive()) {
             ka="keep-alive";
         } else {
             ka="close";
@@ -388,9 +388,9 @@ namespace fibio { namespace http {
         // Set "content-length" header
         auto i=headers.find("content-length");
         if (i==headers.end()) {
-            headers.insert(std::make_pair("Content-Length", boost::lexical_cast<std::string>(get_content_length())));
+            headers.insert(std::make_pair("Content-Length", boost::lexical_cast<std::string>(content_length())));
         } else {
-            i->second.assign(boost::lexical_cast<std::string>(get_content_length()));
+            i->second.assign(boost::lexical_cast<std::string>(content_length()));
         }
         // Write headers
         if (!write_header(os)) return false;

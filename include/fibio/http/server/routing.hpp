@@ -158,7 +158,7 @@ namespace fibio { namespace http {
      * Stock response with specific status code, can be used with http server or routing table
      */
     server::request_handler_type stock_handler(http_status_code c)
-    { return [=](server::request &, server::response &resp)->bool{ resp.status_code=c; return true; }; }
+    { return [=](server::request &, server::response &resp)->bool{ resp.status_code(c); return true; }; }
     
     /**
      * Routing table

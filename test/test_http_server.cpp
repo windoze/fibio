@@ -21,7 +21,6 @@
 
 using namespace fibio;
 using namespace fibio::http;
-using namespace fibio::http::common;
 
 bool handler(server::request &req, server::response &resp) {
     resp.headers.insert({"Header1", "Value1"});

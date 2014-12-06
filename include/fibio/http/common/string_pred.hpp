@@ -62,4 +62,14 @@ namespace fibio { namespace http { namespace common {
     };
 }}} // End of namespace fibio::http::common
 
+namespace fibio { namespace http {
+    using common::starts_with;
+    using common::istarts_with;
+    using common::ends_with;
+    using common::iends_with;
+    using common::contains;
+    using common::icontains;
+    using common::equals;
+    using common::iequals;
+}}
 #endif

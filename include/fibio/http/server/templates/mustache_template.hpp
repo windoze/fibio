@@ -30,7 +30,7 @@ namespace fibio { namespace http {
                     resp.body_stream().flush();
                     return true;
                 } catch (std::exception &) {
-                    resp.status_code=common::http_status_code::INTERNAL_SERVER_ERROR;
+                    resp.status_code(common::http_status_code::INTERNAL_SERVER_ERROR);
                 }
                 return false;
             }

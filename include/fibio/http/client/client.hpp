@@ -36,8 +36,8 @@ namespace fibio { namespace http {
         void disconnect();
         bool is_open() const { return stream_ && stream_->is_open() && !stream_->eof() && !stream_->fail() && !stream_->bad(); }
         
-        void set_auto_decompress(bool c);
-        bool get_auto_decompress() const;
+        void auto_decompress(bool c);
+        bool auto_decompress() const;
         
         bool send_request(request &req, response &resp);
         
@@ -49,9 +49,15 @@ namespace fibio { namespace http {
     };
     
     // GET
-    client::request &make_request(client::request &req,
+    inline client::request &make_request(client::request &req,
                                   const std::string &url,
-                                  const common::header_map &hdr=common::header_map());
+                                  const common::header_map &hdr=common::header_map())
+    {
+        req.clear();
+        req.url(url).method(http_method::GET).version(http_version::HTTP_1_1).keep_alive(true);
+        req.headers.insert(hdr.begin(), hdr.end());
+        return req;
+    }
 
     // POST
     template<typename T>
@@ -61,13 +67,10 @@ namespace fibio { namespace http {
                       const common::header_map &hdr=common::header_map())
     {
         req.clear();
-        req.url=url;
-        req.method=http_method::POST;
-        req.version=http_version::HTTP_1_1;
-        req.keep_alive=true;
+        req.url(url).method(http_method::POST).version(http_version::HTTP_1_1).keep_alive(true);
         req.headers.insert(hdr.begin(), hdr.end());
         // Default content type for HTML Forms
-        req.set_content_type("application/x-www-form-urlencoded");
+        req.content_type("application/x-www-form-urlencoded");
         // Write URL encoded body into body stream
         url_encode(body, std::ostreambuf_iterator<char>(req.body_stream()));
         return req;
@@ -90,7 +93,7 @@ namespace fibio { namespace http {
                                          unsigned max_redirection=50)
         {
             if(prepare(url)) {
-                the_request_.method=http_method::GET;
+                the_request_.method(http_method::GET);
                 if (!hdr.empty()) the_request_.headers.insert(hdr.begin(), hdr.end());
                 the_client_->send_request(the_request_, the_response_);
             }
@@ -112,9 +115,7 @@ namespace fibio { namespace http {
                                   unsigned max_redirection=std::numeric_limits<unsigned>::max())
         {
             if(prepare(url)) {
-                the_request_.method=http_method::POST;
-                // Default content type for HTML Forms
-                the_request_.set_content_type("application/x-www-form-urlencoded");
+                the_request_.method(http_method::POST).content_type("application/x-www-form-urlencoded");
                 // Write URL encoded body into body stream
                 url_encode(body, std::ostreambuf_iterator<char>(the_request_.body_stream()));
                 if (!hdr.empty()) the_request_.headers.insert(hdr.begin(), hdr.end());

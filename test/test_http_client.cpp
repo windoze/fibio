@@ -19,15 +19,15 @@ using namespace fibio::http;
 void the_client() {
     client c;
     client::request req;
-    req.url.assign("/");
+    req.url("/");
     req.headers.insert(std::make_pair("Host", "0d0a.com"));
     // Default method
-    assert(req.method==http_method::INVALID_METHOD);
-    req.method=http_method::GET;
+    assert(req.method()==http_method::INVALID_METHOD);
+    req.method(http_method::GET);
     // Default version
-    assert(req.version==http_version::INVALID_VERSION);
-    req.version=http_version::HTTP_1_1;
-    assert(req.get_content_length()==0);
+    assert(req.version()==http_version::INVALID_VERSION);
+    req.version(http_version::HTTP_1_1);
+    assert(req.content_length()==0);
     //c.set_auto_decompress(true);
     
     c.connect("0d0a.com");
