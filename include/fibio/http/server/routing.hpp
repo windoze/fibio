@@ -113,7 +113,8 @@ namespace fibio { namespace http {
                         // Ignore anything remains if the wildcard doesn't have a name
                         if (p->length()==1) return true;
                         std::string param_name(p->begin()+1, p->end());
-                        auto mi=m.find(param_name);
+                        //auto mi=m.find(param_name);
+                        auto mi=std::find_if(m.begin(), m.end(), [&](const std::pair<std::string, std::string> &e){return e.first==param_name;});
                         if (mi==m.end()) {
                             // Not found
                             m.insert({param_name, i});
@@ -165,6 +166,63 @@ namespace fibio { namespace http {
      */
     inline routing_rule_type operator >> (match_type &&m, server::request_handler_type &&h)
     { return routing_rule_type{std::move(m), std::move(h)}; }
+    
+    namespace detail {
+        template <size_t N, typename Vec>
+        struct apply {
+            template<typename Ret, typename... Args, typename... ArgsT>
+            static Ret call(Ret(func)(Args...), const Vec &v, ArgsT&&... args) {
+                return apply<N-1, Vec>::call(func,
+                                             v,
+                                             std::forward<ArgsT>(args)...,
+                                             boost::lexical_cast<
+                                                typename std::tuple_element<sizeof...(args),
+                                                std::tuple<Args...>>::type
+                                             >(v[sizeof...(ArgsT)].second));
+            }
+        };
+        
+        template<typename Vec>
+        struct apply<0, Vec> {
+            template <typename Ret, typename... Args, typename... ArgsT>
+            static Ret call(Ret(func)(Args...), const Vec &v, ArgsT&&... args)
+            { return func(args...); }
+        };
+        
+        template <typename Ret, typename Vec, typename... Args>
+        Ret call(Ret(func)(Args...), const Vec &v)
+        { return apply<sizeof...(Args), Vec>::call(func, v); }
+        
+        template<typename... Args>
+        struct is_general_handler {
+            typedef typename std::tuple_element<0, std::tuple<Args...>>::type first_type;
+            static const bool first_value=std::is_same<first_type, server::request &>::value;
+            typedef typename std::tuple_element<1, std::tuple<Args...>>::type second_type;
+            static const bool second_value=std::is_same<second_type, server::response &>::value;
+            static const bool value=first_value && second_value && (sizeof...(Args)==2);
+            // disable_if
+            static const bool neg_value=!value;
+        };
+    }
+    
+    template<typename Ret, typename... Args,
+        typename std::enable_if<detail::is_general_handler<Args...>::neg_value>::type* = nullptr
+    >
+    inline routing_rule_type operator >> (match_type &&m, Ret(func)(Args...)) {
+        return std::forward<match_type>(m) >> [func](server::request &req, server::response &resp){
+            try {
+                resp.body(detail::call(func, req.params));
+            } catch(boost::bad_lexical_cast &e) {
+                resp.status_code(http_status_code::BAD_REQUEST);
+            } catch(std::exception &e) {
+                resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
+            } catch(...) {
+                // Unknown exception
+                return false;
+            }
+            return true;
+        };
+    }
     
     inline server::request_handler_type route(const routing_table_type &table,
                                               server::request_handler_type default_handler=stock_handler(http_status_code::NOT_FOUND))

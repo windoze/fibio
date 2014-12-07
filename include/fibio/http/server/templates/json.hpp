@@ -1323,6 +1323,7 @@ namespace fibio { namespace http {
 
             friend void dump_internal(const wvalue& v, std::string& out);
             friend std::string dump(const wvalue& v);
+            friend std::ostream &operator<<(std::ostream &os, const wvalue& v);
         };
 
         inline void dump_string(const std::string& str, std::string& out)
@@ -1397,6 +1398,70 @@ namespace fibio { namespace http {
             return ret;
         }
 
+        inline void dump_string(const std::string& str, std::ostream &os) {
+            std::string out;
+            dump_string(str, out);
+            os << out;
+        }
+        inline std::ostream &operator<<(std::ostream &os, const wvalue& v) {
+            switch(v.t_)
+            {
+                case type::Null: os << "null"; break;
+                case type::False: os << "false"; break;
+                case type::True: os << "true"; break;
+                case type::Number:
+                {
+                    char outbuf[128];
+                    sprintf(outbuf, "%g", v.d);
+                    os << outbuf;
+                }
+                    break;
+                case type::String:
+                    dump_string(v.s, os);
+                    break;
+                case type::List:
+                {
+                    os << '[';
+                    if (v.l)
+                    {
+                        bool first = true;
+                        for(auto& x:*v.l)
+                        {
+                            if (!first)
+                            {
+                                os << ',';
+                            }
+                            first = false;
+                            os << x;
+                        }
+                    }
+                    os << ']';
+                }
+                    break;
+                case type::Object:
+                {
+                    os << '{';
+                    if (v.o)
+                    {
+                        bool first = true;
+                        for(auto& kv:*v.o)
+                        {
+                            if (!first)
+                            {
+                                os << ',';
+                            }
+                            first = false;
+                            dump_string(kv.first, os);
+                            os << ':' << kv.second;
+                        }
+                    }
+                    os << '}';
+                }
+                    break;
+            }
+            return os;
+        }
+        
         //std::vector<boost::asio::const_buffer> dump_ref(wvalue& v)
         //{
         //}

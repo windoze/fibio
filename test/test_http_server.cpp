@@ -60,11 +60,16 @@ bool handler(server::request &req, server::response &resp) {
 
 json::wvalue test_model(server::request &req) {
     json::wvalue v;
-    v["name"]=req.params["id"];
+    v["name"]=req.param("id");
     v["value"]=10000;
     v["taxed_value"]=10000-(10000 * 0.4);
     v["in_ca"]=true;;
     return v;
+}
+
+int any_handler(int x, int y) {
+    // Default content-type for int is text/plain
+    return x*y;
 }
 
 const char s[]="Hello {{name}}\nYou have just won {{value}} dollars!\n{{#in_ca}}\nWell, {{taxed_value}} dollars, after taxes.\n{{/in_ca}}";
@@ -73,6 +78,7 @@ auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> hand
              get_("/test1/:id/test2") >> handler,
              post_("/test2/*p") >> handler,
              get_("/prize/:id") >> mustache_(s, test_model),
+             get_("/mul/:x/:y") >> any_handler,
              (path_("/test3/*p") && url_(iends_with{".html"})) >> handler,
              path_("/test3/*") >> stock_handler(http_status_code::FORBIDDEN),
              !method_is(http_method::GET) >> stock_handler(http_status_code::BAD_REQUEST)
@@ -149,6 +155,14 @@ void the_client() {
     ret=c.send_request(make_request(req, "/test3/with/a/long/and/stupid/url.html"), resp);
     assert(ret);
     assert(resp.status_code==http_status_code::OK);
+
+    //std::cout << "GET /mul/42/24" << std::endl;
+    ret=c.send_request(make_request(req, "/mul/42/24"), resp);
+    assert(ret);
+    assert(resp.status_code==http_status_code::OK);
+    int r;
+    resp.body_stream() >> r;
+    assert(r==1008);
 }
 
 void the_url_client() {
@@ -186,6 +200,11 @@ void the_url_client() {
     ss.flush();
     std::string st=ss.str();
     assert(ss.str()==text);
+    c.request("http://127.0.0.1:23456/mul/42/24");
+    assert(resp.status_code==http_status_code::OK);
+    int r;
+    resp.body_stream() >> r;
+    assert(r==1008);
 }
 
 void test_http_server() {
@@ -278,6 +297,14 @@ void the_ssl_client() {
     ret=c.send_request(make_request(req, "/test3/with/a/long/and/stupid/url.html"), resp);
     assert(ret);
     assert(resp.status_code==http_status_code::OK);
+    
+    //std::cout << "GET /mul/42/24" << std::endl;
+    ret=c.send_request(make_request(req, "/mul/42/24"), resp);
+    assert(ret);
+    assert(resp.status_code==http_status_code::OK);
+    int r;
+    resp.body_stream() >> r;
+    assert(r==1008);
 }
 
 void the_ssl_url_client() {
@@ -306,6 +333,11 @@ void the_ssl_url_client() {
     assert(resp.status_code==http_status_code::FORBIDDEN);
     c.request("https://127.0.0.1:23457/test3/with/a/long/and/stupid/url.html");
     assert(resp.status_code==http_status_code::OK);
+    c.request("https://127.0.0.1:23457/mul/42/24");
+    assert(resp.status_code==http_status_code::OK);
+    int r;
+    resp.body_stream() >> r;
+    assert(r==1008);
 }
 
 void test_https_server() {
