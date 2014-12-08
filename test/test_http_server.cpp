@@ -14,10 +14,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <fibio/fiber.hpp>
 #include <fibio/fiberize.hpp>
-#include <fibio/http/client/client.hpp>
-#include <fibio/http/server/server.hpp>
-#include <fibio/http/server/routing.hpp>
-#include <fibio/http/server/template.hpp>
+#include <fibio/http_client.hpp>
+#include <fibio/http_server.hpp>
 
 using namespace fibio;
 using namespace fibio::http;
@@ -67,18 +65,33 @@ json::wvalue test_model(server::request &req) {
     return v;
 }
 
-int any_handler(int x, int y) {
-    // Default content-type for int is text/plain
-    return x*y;
+const char s[]="Hello {{name}}\nYou have just won {{value}} dollars!\n{{#in_ca}}\nWell, {{taxed_value}} dollars, after taxes.\n{{/in_ca}}";
+
+int add(int x, int y) {
+    return x+y;
 }
 
-const char s[]="Hello {{name}}\nYou have just won {{value}} dollars!\n{{#in_ca}}\nWell, {{taxed_value}} dollars, after taxes.\n{{/in_ca}}";
+struct sub {
+    int operator()(int x, int y) const { return x-y; }
+};
+
+struct val {
+    int n;
+};
+// boost::lexical_cast support
+std::istream &operator>>(std::istream &is, val &v) {
+    is >> v.n;
+    return is;
+}
 
 auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> handler,
              get_("/test1/:id/test2") >> handler,
              post_("/test2/*p") >> handler,
              get_("/prize/:id") >> mustache_(s, test_model),
-             get_("/mul/:x/:y") >> any_handler,
+             get_("/add/:x/:y") >> add,                                   // plain function
+             get_("/sub/:x/:y") >> sub(),                                 // functor
+             get_("/mul/:x/:y") >> [](int x, int y){return x*y;},         // lambda
+             get_("/mul2/:x/:y") >> [](val x, val y){return x.n*y.n;},    // custom type via boost::lexical_cast
              (path_("/test3/*p") && url_(iends_with{".html"})) >> handler,
              path_("/test3/*") >> stock_handler(http_status_code::FORBIDDEN),
              !method_is(http_method::GET) >> stock_handler(http_status_code::BAD_REQUEST)
@@ -156,13 +169,42 @@ void the_client() {
     assert(ret);
     assert(resp.status_code==http_status_code::OK);
 
-    //std::cout << "GET /mul/42/24" << std::endl;
-    ret=c.send_request(make_request(req, "/mul/42/24"), resp);
-    assert(ret);
-    assert(resp.status_code==http_status_code::OK);
-    int r;
-    resp.body_stream() >> r;
-    assert(r==1008);
+    {
+        //std::cout << "GET /add/42/24" << std::endl;
+        ret=c.send_request(make_request(req, "/add/42/24"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        int r;
+        resp.body_stream() >> r;
+        assert(r==66);
+    }
+    {
+        //std::cout << "GET /sub/42/24" << std::endl;
+        ret=c.send_request(make_request(req, "/sub/42/24"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        int r;
+        resp.body_stream() >> r;
+        assert(r==18);
+    }
+    {
+        //std::cout << "GET /mul/42/24" << std::endl;
+        ret=c.send_request(make_request(req, "/mul/42/24"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        int r;
+        resp.body_stream() >> r;
+        assert(r==1008);
+    }
+    {
+        //std::cout << "GET /mul2/42/24" << std::endl;
+        ret=c.send_request(make_request(req, "/mul2/42/24"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        int r;
+        resp.body_stream() >> r;
+        assert(r==1008);
+    }
 }
 
 void the_url_client() {
@@ -298,13 +340,42 @@ void the_ssl_client() {
     assert(ret);
     assert(resp.status_code==http_status_code::OK);
     
-    //std::cout << "GET /mul/42/24" << std::endl;
-    ret=c.send_request(make_request(req, "/mul/42/24"), resp);
-    assert(ret);
-    assert(resp.status_code==http_status_code::OK);
-    int r;
-    resp.body_stream() >> r;
-    assert(r==1008);
+    {
+        //std::cout << "GET /add/42/24" << std::endl;
+        ret=c.send_request(make_request(req, "/add/42/24"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        int r;
+        resp.body_stream() >> r;
+        assert(r==66);
+    }
+    {
+        //std::cout << "GET /sub/42/24" << std::endl;
+        ret=c.send_request(make_request(req, "/sub/42/24"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        int r;
+        resp.body_stream() >> r;
+        assert(r==18);
+    }
+    {
+        //std::cout << "GET /mul/42/24" << std::endl;
+        ret=c.send_request(make_request(req, "/mul/42/24"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        int r;
+        resp.body_stream() >> r;
+        assert(r==1008);
+    }
+    {
+        //std::cout << "GET /mul2/42/24" << std::endl;
+        ret=c.send_request(make_request(req, "/mul2/42/24"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        int r;
+        resp.body_stream() >> r;
+        assert(r==1008);
+    }
 }
 
 void the_ssl_url_client() {

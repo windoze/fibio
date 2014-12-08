@@ -12,6 +12,7 @@
 #include <list>
 #include <functional>
 #include <boost/optional.hpp>
+#include <fibio/utility.hpp>
 #include <fibio/http/common/string_pred.hpp>
 #include <fibio/http/common/url_parser.hpp>
 #include <fibio/http/server/server.hpp>
@@ -161,57 +162,43 @@ namespace fibio { namespace http {
     server::request_handler_type stock_handler(http_status_code c)
     { return [=](server::request &, server::response &resp)->bool{ resp.status_code(c); return true; }; }
     
-    /**
-     * Routing table
-     */
-    inline routing_rule_type operator >> (match_type &&m, server::request_handler_type &&h)
-    { return routing_rule_type{std::move(m), std::move(h)}; }
-    
     namespace detail {
-        template <size_t N, typename Vec>
-        struct apply {
-            template<typename Ret, typename... Args, typename... ArgsT>
-            static Ret call(Ret(func)(Args...), const Vec &v, ArgsT&&... args) {
-                return apply<N-1, Vec>::call(func,
-                                             v,
-                                             std::forward<ArgsT>(args)...,
-                                             boost::lexical_cast<
-                                                typename std::tuple_element<sizeof...(args),
-                                                std::tuple<Args...>>::type
-                                             >(v[sizeof...(ArgsT)].second));
-            }
-        };
+        template<typename Vec, typename Ret, class... Args>
+        struct function_wrapper;
         
-        template<typename Vec>
-        struct apply<0, Vec> {
-            template <typename Ret, typename... Args, typename... ArgsT>
-            static Ret call(Ret(func)(Args...), const Vec &v, ArgsT&&... args)
-            { return func(args...); }
+        // function_wrapper
+        template<typename Vec, typename Ret, class... Args>
+        struct function_wrapper<Vec, std::function<Ret(Args...)>> {
+            typedef std::function<Ret(Args...)> function_type;
+            typedef std::tuple<typename std::decay<Args>::type...> arg_list_type;
+            typedef Ret result_type;
+            static constexpr size_t arity=sizeof...(Args);
+            function_wrapper(function_type &&f) : f_(std::forward<function_type>(f)) {}
+            template<typename T, size_t N>
+            T get(const Vec &v) const { return boost::lexical_cast<T>(v[N].second); }
+            template <std::size_t... Indices>
+            result_type call2(const Vec &v, utility::tuple_indices<Indices...>)
+            { return utility::invoke(f_, get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(v)...); }
+            size_t get_arity() const { return arity; }
+            result_type call(const Vec &v)
+            { return call2(v, typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type()); }
+            std::function<Ret(Args...)> f_;
         };
-        
-        template <typename Ret, typename Vec, typename... Args>
-        Ret call(Ret(func)(Args...), const Vec &v)
-        { return apply<sizeof...(Args), Vec>::call(func, v); }
-        
-        template<typename... Args>
-        struct is_general_handler {
-            typedef typename std::tuple_element<0, std::tuple<Args...>>::type first_type;
-            static const bool first_value=std::is_same<first_type, server::request &>::value;
-            typedef typename std::tuple_element<1, std::tuple<Args...>>::type second_type;
-            static const bool second_value=std::is_same<second_type, server::response &>::value;
-            static const bool value=first_value && second_value && (sizeof...(Args)==2);
-            // disable_if
-            static const bool neg_value=!value;
-        };
-    }
     
-    template<typename Ret, typename... Args,
-        typename std::enable_if<detail::is_general_handler<Args...>::neg_value>::type* = nullptr
-    >
-    inline routing_rule_type operator >> (match_type &&m, Ret(func)(Args...)) {
-        return std::forward<match_type>(m) >> [func](server::request &req, server::response &resp){
+        template<typename Vec, typename F>
+        auto apply(F &&f, const Vec &v) -> typename utility::make_function_type<F>::result_type {
+            typedef detail::function_wrapper<Vec, utility::make_function_type<F>> wrapper;
+            return wrapper(utility::make_function(std::forward<F>(f))).call(v);
+        }
+    }
+    template<typename Fn>
+    inline server::request_handler_type handler_(Fn &&func,
+                                                 std::function<void(server::response &)> post_proc=[](server::response &){})
+    {
+        return [func, post_proc](server::request &req, server::response &resp){
             try {
-                resp.body(detail::call(func, req.params));
+                resp.body(detail::apply(Fn(func), req.params));
+                post_proc(resp);
             } catch(boost::bad_lexical_cast &e) {
                 resp.status_code(http_status_code::BAD_REQUEST);
             } catch(std::exception &e) {
@@ -222,6 +209,39 @@ namespace fibio { namespace http {
             }
             return true;
         };
+    }
+    
+    /**
+     * Routing table
+     */
+    template<typename Fn,
+        typename std::enable_if<!std::is_constructible<server::request_handler_type, Fn>::value>::type* = nullptr
+    >
+    inline routing_rule_type rule(match_type &&m, Fn &&func)
+    { return routing_rule_type{std::move(m), handler_(std::forward<Fn>(func))}; }
+    
+    inline routing_rule_type rule(match_type &&m, server::request_handler_type &&h)
+    { return routing_rule_type{std::forward<match_type>(m), std::forward<server::request_handler_type>(h)}; }
+    
+    template<typename Fn>
+    inline routing_rule_type operator >> (match_type &&m, Fn &&func)
+    { return rule(std::forward<match_type>(m), std::forward<Fn>(func)); }
+    
+    template<typename Fn>
+    inline server::request_handler_type with_content_type(const std::string &ct, Fn &&func) {
+        return handler_(func, [ct](server::response &resp){
+            resp.content_type(ct);
+        });
+    }
+    
+    template<typename Fn>
+    inline server::request_handler_type html_(Fn &&func) {
+        return with_content_type("text/html", func);
+    }
+    
+    template<typename Fn>
+    inline server::request_handler_type xml_(Fn &&func) {
+        return with_content_type("text/xml", func);
     }
     
     inline server::request_handler_type route(const routing_table_type &table,

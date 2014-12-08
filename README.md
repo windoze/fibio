@@ -29,28 +29,17 @@ int fibio::main(int argc, char *argv[]) {
 
 The HTTP server example
 -----------------------
-<pre><code>
-#include &lt;fibio/fiberize.hpp&gt;
-#include &lt;fibio/http_server.hpp&gt;
+```
+#include <fibio/fiberize.hpp>
+#include <fibio/http_server.hpp>
 
 using namespace fibio::http;
-
-bool handler(server::request &req,
-             server::response &resp)
-{
-    resp.body_stream() &lt;&lt; "&lt;HTML&gt;&lt;BODY&gt;&lt;H1&gt;"
-                       &lt;&lt; req.params["p"]
-                       &lt;&lt; "&lt;/H1&gt;&lt;/BODY&gt;&lt;/HTML&gt;"
-                       &lt;&lt; std::endl;
-    return true;
-}
-
+ 
 int fibio::main(int argc, char *argv[]) {
-    server svr(server::settings{
-        route(path_("/*p") >> handler),
-        23456,
-    });
-    svr.start();
-    svr.join();
+    return server().port(23456).handler(
+        route(
+            path_("/add/:x/:y")>>[](double x, double y){return x+y;}
+        )
+    ).start().join().value();
 }
-</code></pre>
+```

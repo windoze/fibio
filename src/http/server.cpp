@@ -476,10 +476,15 @@ namespace fibio { namespace http {
         }
     }
     
-    void server::join() {
-        if (servant_) {
-            servant_->join();
-            servant_.reset();
+    boost::system::error_code server::join() {
+        try {
+            if (servant_) {
+                servant_->join(true);
+                servant_.reset();
+            }
+        } catch(boost::system::system_error &e) {
+            return e.code();
         }
+        return boost::system::error_code();
     }
 }}  // End of namespace fibio::http

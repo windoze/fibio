@@ -11,65 +11,9 @@
 
 #include <memory>
 #include <boost/static_assert.hpp>
+#include <fibio/utility.hpp>
 
 namespace fibio { namespace fibers { namespace detail {
-    // make_tuple_indices
-    template <std::size_t...> struct tuple_indices
-    {};
-    
-    template <std::size_t Sp, class IntTuple, std::size_t Ep>
-    struct make_indices_imp;
-    
-    template <std::size_t Sp, std::size_t... Indices, std::size_t Ep>
-    struct make_indices_imp<Sp, tuple_indices<Indices...>, Ep>
-    {
-        typedef typename make_indices_imp<Sp+1, tuple_indices<Indices..., Sp>, Ep>::type type;
-    };
-    
-    template <std::size_t Ep, std::size_t... Indices>
-    struct make_indices_imp<Ep, tuple_indices<Indices...>, Ep>
-    {
-        typedef tuple_indices<Indices...> type;
-    };
-    
-    template <std::size_t Ep, std::size_t Sp = 0>
-    struct make_tuple_indices
-    {
-        BOOST_STATIC_ASSERT_MSG(Sp <= Ep, "make_tuple_indices input error");
-        typedef typename make_indices_imp<Sp, tuple_indices<>, Ep>::type type;
-    };
-    
-    // invoke
-    template <class Fp, class A0, class... Args>
-    inline auto invoke(Fp&& f, A0&& a0, Args&&... args)
-    -> decltype((std::forward<A0>(a0).*f)(std::forward<Args>(args)...))
-    { return (std::forward<A0>(a0).*f)(std::forward<Args>(args)...); }
-    
-    template <class Fp, class A0, class... Args>
-    inline auto invoke(Fp&& f, A0&& a0, Args&&... args)
-    -> decltype(((*std::forward<A0>(a0)).*f)(std::forward<Args>(args)...))
-    { return ((*std::forward<A0>(a0)).*f)(std::forward<Args>(args)...); }
-    
-    template <class Fp, class A0>
-    inline auto invoke(Fp&& f, A0&& a0)
-    -> decltype(std::forward<A0>(a0).*f)
-    { return std::forward<A0>(a0).*f; }
-    
-    template <class Fp, class A0>
-    inline auto invoke(Fp&& f, A0&& a0)
-    -> decltype((*std::forward<A0>(a0)).*f)
-    { return (*std::forward<A0>(a0)).*f; }
-    
-    template <class Fp, class... Args>
-    inline auto invoke(Fp&& f, Args&&... args)
-    -> decltype(std::forward<Fp>(f)(std::forward<Args>(args)...))
-    { return std::forward<Fp>(f)(std::forward<Args>(args)...); }
-
-    /// decay_copy
-    template <class T>
-    typename std::decay<T>::type decay_copy(T&& t)
-    { return std::forward<T>(t); }
-
     /// fiber_data_base
     struct fiber_data_base
     {
@@ -87,12 +31,12 @@ namespace fibio { namespace fibers { namespace detail {
         {}
 
         template <std::size_t... Indices>
-        void run2(tuple_indices<Indices...>)
-        { invoke(std::move(std::get<0>(fp)), std::move(std::get<Indices>(fp))...); }
+        void run2(utility::tuple_indices<Indices...>)
+        { utility::invoke(std::move(std::get<0>(fp)), std::move(std::get<Indices>(fp))...); }
 
         void run()
         {
-            typedef typename make_tuple_indices<std::tuple_size<std::tuple<F, ArgTypes...> >::value, 1>::type index_type;
+            typedef typename utility::make_tuple_indices<std::tuple_size<std::tuple<F, ArgTypes...> >::value, 1>::type index_type;
             run2(index_type());
         }
         

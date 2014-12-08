@@ -39,6 +39,9 @@ namespace fibio { namespace http {
             ssl::context *ctx_=nullptr;
         };
 
+        server()=default;
+        server(uint p) { port(p); }
+        server(const std::string &a, uint p) { address(a).port(p); }
         ~server();
         
         server &address(const std::string &a) { s_.address_=a; return *this; }
@@ -50,16 +53,8 @@ namespace fibio { namespace http {
         
         server &start();
         void stop();
-        void join();
-        boost::system::error_code operator()() {
-            try {
-                start();
-                join();
-            } catch(boost::system::system_error &e) {
-                return e.code();
-            }
-            return boost::system::error_code();
-        }
+        boost::system::error_code join();
+        boost::system::error_code run() { return start().join(); }
         
         struct impl;
     private:

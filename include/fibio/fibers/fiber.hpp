@@ -120,7 +120,7 @@ namespace fibio { namespace fibers {
          */
         template <class F>
         explicit fiber(F &&f)
-        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f))))
+        : data_(detail::make_fiber_data(utility::decay_copy(std::forward<F>(f))))
         { start(); }
         
         /**
@@ -128,9 +128,9 @@ namespace fibio { namespace fibers {
          */
         template <class F, class Arg, class ...Args>
         fiber(F&& f, Arg&& arg, Args&&... args)
-        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f)),
-                                        detail::decay_copy(std::forward<Arg>(arg)),
-                                        detail::decay_copy(std::forward<Args>(args))...)
+        : data_(detail::make_fiber_data(utility::decay_copy(std::forward<F>(f)),
+                                        utility::decay_copy(std::forward<Arg>(arg)),
+                                        utility::decay_copy(std::forward<Args>(args))...)
                 )
         
         { start(); }
@@ -140,14 +140,14 @@ namespace fibio { namespace fibers {
          */
         template <class F>
         fiber(attributes attrs, F &&f)
-        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f))))
+        : data_(detail::make_fiber_data(utility::decay_copy(std::forward<F>(f))))
         { start(attrs); }
         
         template <class F, class Arg, class ...Args>
         fiber(attributes attrs, F&& f, Arg&& arg, Args&&... args)
-        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f)),
-                                        detail::decay_copy(std::forward<Arg>(arg)),
-                                        detail::decay_copy(std::forward<Args>(args))...)
+        : data_(detail::make_fiber_data(utility::decay_copy(std::forward<F>(f)),
+                                        utility::decay_copy(std::forward<Arg>(arg)),
+                                        utility::decay_copy(std::forward<Args>(args))...)
                 )
         { start(attrs); }
         
@@ -156,7 +156,7 @@ namespace fibio { namespace fibers {
          */
         template <class F>
         explicit fiber(scheduler &sched, F &&f)
-        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f))))
+        : data_(detail::make_fiber_data(utility::decay_copy(std::forward<F>(f))))
         { start(sched); }
         
         /**
@@ -164,9 +164,9 @@ namespace fibio { namespace fibers {
          */
         template <class F, class Arg, class ...Args>
         fiber(scheduler &sched, F&& f, Arg&& arg, Args&&... args)
-        : data_(detail::make_fiber_data(detail::decay_copy(std::forward<F>(f)),
-                                        detail::decay_copy(std::forward<Arg>(arg)),
-                                        detail::decay_copy(std::forward<Args>(args))...)
+        : data_(detail::make_fiber_data(utility::decay_copy(std::forward<F>(f)),
+                                        utility::decay_copy(std::forward<Arg>(arg)),
+                                        utility::decay_copy(std::forward<Args>(args))...)
                 )
         
         { start(sched); }

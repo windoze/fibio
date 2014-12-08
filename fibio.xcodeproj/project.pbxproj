@@ -311,6 +311,7 @@
 		2D15D0AD18E6DDC400E64B99 /* async.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = async.hpp; sourceTree = "<group>"; };
 		2D1E146C1A2EF5C2008AFB97 /* url_parser.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = url_parser.hpp; sourceTree = "<group>"; };
 		2D1E146E1A2F078A008AFB97 /* http_parser_merged.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = http_parser_merged.h; sourceTree = "<group>"; };
+		2D25D77D1A34C42C006A2585 /* utility.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = utility.hpp; sourceTree = "<group>"; };
 		2D5A306718E6E21600C5EB41 /* future.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = future.cpp; sourceTree = "<group>"; };
 		2D5A306D18E710C300C5EB41 /* yield.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = yield.hpp; sourceTree = "<group>"; };
 		2D5A306F18E7142C00C5EB41 /* yield.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = yield.hpp; sourceTree = "<group>"; };
@@ -769,6 +770,7 @@
 				2DACAA7919F3AAEF004F6780 /* http_client.hpp */,
 				2DACAA7A19F3AAEF004F6780 /* http_server.hpp */,
 				2DFC92EF1A1341A2004A9FF8 /* thrift.hpp */,
+				2D25D77D1A34C42C006A2585 /* utility.hpp */,
 				2D7E686118CCCD5D00B7C4E5 /* fibers */,
 				2D7E685E18CCCD5D00B7C4E5 /* concurrent */,
 				2D7E687018CCCD5D00B7C4E5 /* stream */,
