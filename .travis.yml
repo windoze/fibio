@@ -1,7 +1,5 @@
 language: cpp
 env: CXX=/usr/bin/clang++ CC=/usr/bin/clang
-compiler:
-  - clang
 before_install:
     # Add software package repository, containing updated build toochain, i.e. GNU GCC 4.9
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test --yes
@@ -9,7 +7,7 @@ before_install:
   - sudo apt-add-repository 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise main'
   - wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key|sudo apt-key add -
   - sudo apt-get update -qq
-    # Download boost 1.5 and extract the source archive
+    # Download boost 1.57 and extract the source archive
   - wget --no-verbose --output-document=boost_1_57_0.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.57.0/boost_1_57_0.tar.bz2/download
   - export BOOST_ROOT="$TRAVIS_BUILD_DIR/../boost"
   - mkdir -p $BOOST_ROOT
