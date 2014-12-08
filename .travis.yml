@@ -1,18 +1,19 @@
 language: cpp
+env: CXX=/usr/bin/clang++ CC=/usr/bin/clang
 compiler:
   - clang
-  - gcc
-
 before_install:
     # Add software package repository, containing updated build toochain, i.e. GNU GCC 4.9
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test --yes
   - sudo add-apt-repository ppa:kalakris/cmake --yes
+  - sudo apt-add-repository 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise main'
+  - wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key|sudo apt-key add -
   - sudo apt-get update -qq
     # Download boost 1.5 and extract the source archive
-  - wget --no-verbose --output-document=boost_1_56_0.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.56.0/boost_1_56_0.tar.bz2/download
+  - wget --no-verbose --output-document=boost_1_57_0.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.57.0/boost_1_57_0.tar.bz2/download
   - export BOOST_ROOT="$TRAVIS_BUILD_DIR/../boost"
   - mkdir -p $BOOST_ROOT
-  - tar jxf boost_1_56_0.tar.bz2 --strip-components=1 -C $BOOST_ROOT
+  - tar jxf boost_1_57_0.tar.bz2 --strip-components=1 -C $BOOST_ROOT
   - wget http://www.us.apache.org/dist/thrift/0.9.2/thrift-0.9.2.tar.gz
   - export THRIFT_ROOT="$TRAVIS_BUILD_DIR/../thrift"
   - mkdir -p $THRIFT_ROOT
@@ -20,8 +21,7 @@ before_install:
 
 install: 
     # Install GNU GCC 4.8 required by use of C++11
-  - sudo apt-get install -qq g++-4.9 gcc-4.9 libssl-dev zlib1g-dev cmake redis-server automake libtool flex bison pkg-config
-  - export CXX="g++-4.9" CC="gcc-4.9"
+  - sudo apt-get install -qq g++-4.9 gcc-4.9 clang-3.5 libssl-dev zlib1g-dev cmake redis-server automake libtool flex bison pkg-config
     # Build boost libraries required by ledger
   - (cd $BOOST_ROOT; ./bootstrap.sh --with-libraries=atomic,chrono,context,coroutine,iostreams,system,test,thread)
   - (cd $BOOST_ROOT; sudo ./b2 threading=multi --prefix=/usr/local -d0 install)
