@@ -36,10 +36,10 @@ The HTTP server example
 using namespace fibio::http;
  
 int fibio::main(int argc, char *argv[]) {
-    return server().port(23456).handler(
+    return server(23456).handler(
         route(
             path_("/add/:x/:y")>>[](double x, double y){return x+y;}
         )
-    ).start().join().value();
+    ).run().value();
 }
 ```
