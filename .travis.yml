@@ -19,6 +19,7 @@ before_install:
 install: 
     # Install GNU GCC 4.9 required by use of C++11
   - sudo apt-get install --allow-unauthenticated -qq g++-4.9 gcc-4.9 libssl-dev zlib1g-dev cmake redis-server automake libtool flex bison pkg-config
+  - export CXX="g++-4.9" CC="gcc-4.9"
     # Build boost libraries required by ledger
   - (cd $BOOST_ROOT; ./bootstrap.sh --with-libraries=atomic,chrono,context,coroutine,iostreams,system,test,thread)
   - (cd $BOOST_ROOT; sudo ./b2 threading=multi --prefix=/usr/local -d0 install)
