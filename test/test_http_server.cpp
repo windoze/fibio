@@ -56,9 +56,9 @@ bool handler(server::request &req, server::response &resp) {
     return true;
 }
 
-json::wvalue test_model(server::request &req) {
+json::wvalue test_model(std::string id) {
     json::wvalue v;
-    v["name"]=req.param("id");
+    v["name"]=id;
     v["value"]=10000;
     v["taxed_value"]=10000-(10000 * 0.4);
     v["in_ca"]=true;;
@@ -233,14 +233,13 @@ void the_url_client() {
     assert(resp.status_code==http_status_code::FORBIDDEN);
     c.request("http://127.0.0.1:23456/test3/with/a/long/and/stupid/url.html");
     assert(resp.status_code==http_status_code::OK);
-    c.request("http://127.0.0.1:23456/prize/you");
-    const char text[]="Hello you\nYou have just won 10000 dollars!\nWell, 6000 dollars, after taxes.\n";
+    c.request("http://127.0.0.1:23456/prize/John%20Doe");
+    const std::string text("Hello John Doe\nYou have just won 10000 dollars!\nWell, 6000 dollars, after taxes.\n");
     assert(resp.status_code==http_status_code::OK);
-    assert(resp.content_length==76);
+    assert(resp.content_length==text.length());
     std::stringstream ss;
     ss << resp.body_stream().rdbuf();
     ss.flush();
-    std::string st=ss.str();
     assert(ss.str()==text);
     c.request("http://127.0.0.1:23456/mul/42/24");
     assert(resp.status_code==http_status_code::OK);
