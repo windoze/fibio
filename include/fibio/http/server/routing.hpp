@@ -25,6 +25,34 @@ namespace fibio { namespace http {
             if(i!=c.end()) return pred(i->second());
             return false;
         }
+
+        template<typename Vec, typename Ret, class... Args>
+        struct function_wrapper;
+        
+        // function_wrapper
+        template<typename Vec, typename Ret, class... Args>
+        struct function_wrapper<Vec, std::function<Ret(Args...)>> {
+            typedef std::function<Ret(Args...)> function_type;
+            typedef std::tuple<typename std::decay<Args>::type...> arg_list_type;
+            typedef Ret result_type;
+            static constexpr size_t arity=sizeof...(Args);
+            function_wrapper(function_type &&f) : f_(std::forward<function_type>(f)) {}
+            template<typename T, size_t N>
+            T get(const Vec &v) const { return boost::lexical_cast<T>(v[N].second); }
+            template <std::size_t... Indices>
+            result_type call2(const Vec &v, utility::tuple_indices<Indices...>)
+            { return utility::invoke(f_, get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(v)...); }
+            size_t get_arity() const { return arity; }
+            result_type call(const Vec &v)
+            { return call2(v, typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type()); }
+            std::function<Ret(Args...)> f_;
+        };
+        
+        template<typename Vec, typename F>
+        auto apply(F f, const Vec &v) -> typename utility::make_function_type<F>::result_type {
+            typedef detail::function_wrapper<Vec, utility::make_function_type<F>> wrapper;
+            return wrapper(utility::make_function(std::forward<F>(f))).call(v);
+        }
     }
     
     typedef std::function<bool(server::request &)> match_type;
@@ -162,43 +190,52 @@ namespace fibio { namespace http {
     server::request_handler_type stock_handler(http_status_code c)
     { return [=](server::request &, server::response &resp)->bool{ resp.status_code(c); return true; }; }
     
-    namespace detail {
-        template<typename Vec, typename Ret, class... Args>
-        struct function_wrapper;
-        
-        // function_wrapper
-        template<typename Vec, typename Ret, class... Args>
-        struct function_wrapper<Vec, std::function<Ret(Args...)>> {
-            typedef std::function<Ret(Args...)> function_type;
-            typedef std::tuple<typename std::decay<Args>::type...> arg_list_type;
-            typedef Ret result_type;
-            static constexpr size_t arity=sizeof...(Args);
-            function_wrapper(function_type &&f) : f_(std::forward<function_type>(f)) {}
-            template<typename T, size_t N>
-            T get(const Vec &v) const { return boost::lexical_cast<T>(v[N].second); }
-            template <std::size_t... Indices>
-            result_type call2(const Vec &v, utility::tuple_indices<Indices...>)
-            { return utility::invoke(f_, get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(v)...); }
-            size_t get_arity() const { return arity; }
-            result_type call(const Vec &v)
-            { return call2(v, typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type()); }
-            std::function<Ret(Args...)> f_;
-        };
-    
-        template<typename Vec, typename F>
-        auto apply(F &&f, const Vec &v) -> typename utility::make_function_type<F>::result_type {
-            typedef detail::function_wrapper<Vec, utility::make_function_type<F>> wrapper;
-            return wrapper(utility::make_function(std::forward<F>(f))).call(v);
-        }
-    }
     template<typename Fn>
-    inline server::request_handler_type handler_(Fn &&func,
-                                                 std::function<void(server::response &)> post_proc=[](server::response &){})
+    inline server::request_handler_type handler_(Fn func)
+    {
+        return [func](server::request &req, server::response &resp){
+            try {
+                resp.body(detail::apply(func, req.params));
+            } catch(boost::bad_lexical_cast &e) {
+                resp.status_code(http_status_code::BAD_REQUEST);
+            } catch(std::exception &e) {
+                resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
+            } catch(...) {
+                // Unknown exception
+                return false;
+            }
+            return true;
+        };
+    }
+    
+    template<typename Fn>
+    inline server::request_handler_type handler_(Fn func,
+                                                 std::function<void(server::response &)> post_proc)
     {
         return [func, post_proc](server::request &req, server::response &resp){
             try {
-                resp.body(detail::apply(Fn(func), req.params));
+                resp.body(detail::apply(func, req.params));
                 post_proc(resp);
+            } catch(boost::bad_lexical_cast &e) {
+                resp.status_code(http_status_code::BAD_REQUEST);
+            } catch(std::exception &e) {
+                resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
+            } catch(...) {
+                // Unknown exception
+                return false;
+            }
+            return true;
+        };
+    }
+    
+    template<typename Fn>
+    inline server::request_handler_type handler_(Fn func,
+                                                 std::function<void(server::request &, server::response &)> post_proc)
+    {
+        return [func, post_proc](server::request &req, server::response &resp){
+            try {
+                resp.body(detail::apply(func, req.params));
+                post_proc(req, resp);
             } catch(boost::bad_lexical_cast &e) {
                 resp.status_code(http_status_code::BAD_REQUEST);
             } catch(std::exception &e) {
@@ -228,21 +265,16 @@ namespace fibio { namespace http {
     { return rule(std::forward<match_type>(m), std::forward<Fn>(func)); }
     
     template<typename Fn>
-    inline server::request_handler_type with_content_type(const std::string &ct, Fn &&func) {
-        return handler_(func, [ct](server::response &resp){
-            resp.content_type(ct);
-        });
-    }
+    inline server::request_handler_type with_content_type(const std::string &ct, Fn &&func)
+    { return handler_(func, [ct](server::response &resp){ resp.content_type(ct); }); }
     
     template<typename Fn>
-    inline server::request_handler_type html_(Fn &&func) {
-        return with_content_type("text/html", func);
-    }
+    inline server::request_handler_type html_(Fn &&func)
+    { return with_content_type("text/html", func); }
     
     template<typename Fn>
-    inline server::request_handler_type xml_(Fn &&func) {
-        return with_content_type("text/xml", func);
-    }
+    inline server::request_handler_type xml_(Fn &&func)
+    { return with_content_type("text/xml", func); }
     
     inline server::request_handler_type route(const routing_table_type &table,
                                               server::request_handler_type default_handler=stock_handler(http_status_code::NOT_FOUND))
