@@ -1100,6 +1100,12 @@ namespace fibio { namespace http {
                 *this = std::move(r);
             }
             
+            template<typename T>
+            wvalue(const T &t)
+            {
+                *this=t;
+            }
+            
             wvalue& operator = (wvalue&& r)
             {
                 t_ = r.t_;
