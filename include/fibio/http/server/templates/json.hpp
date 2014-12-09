@@ -256,7 +256,7 @@ namespace fibio { namespace http {
 
             explicit operator int() const
             {
-                return i();
+                return int(i());
             }
 
             type t() const
@@ -1031,7 +1031,7 @@ namespace fibio { namespace http {
             s[size] = 0;
             auto ret = load_nocopy_internal(s, size);
             if (ret)
-                ret.key_.force(s, size);
+                ret.key_.force(s, uint32_t(size));
             else
                 delete[] s;
             return ret;
@@ -1099,7 +1099,7 @@ namespace fibio { namespace http {
             {
                 *this = std::move(r);
             }
-
+            
             wvalue& operator = (wvalue&& r)
             {
                 t_ = r.t_;
@@ -1228,7 +1228,7 @@ namespace fibio { namespace http {
             }
 
             template <typename T>
-            wvalue& operator[](const std::vector<T>& v)
+            wvalue& operator=(const std::vector<T>& v)
             {
                 if (t_ != type::List)
                     reset();
@@ -1263,7 +1263,7 @@ namespace fibio { namespace http {
                     return 0;
                 if (!o)
                     return 0;
-                return o->count(str);
+                return int(o->count(str));
 			}
 
             wvalue& operator[](const std::string& str)
