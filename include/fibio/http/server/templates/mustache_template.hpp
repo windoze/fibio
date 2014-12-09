@@ -14,30 +14,39 @@
 #include <fibio/http/server/routing.hpp>
 
 namespace fibio { namespace http {
-    template<typename Fn>
-    inline server::request_handler_type mustache_(const std::string &tmpl, Fn &&fn) {
-        static_assert(std::is_convertible<typename std::result_of<Fn(server::request &)>::type, json::wvalue>::value,
-                      "Model functor must return json::wvalue object");
-        struct view {
-            bool operator()(server::request &req,
-                            server::response &resp)
+    namespace detail {
+        template<typename Ret, typename ...Args>
+        struct mustache_controller;
+        
+        template<typename Ret, typename ...Args>
+        struct mustache_controller<std::function<Ret(Args...)>> {
+            typedef std::function<Ret(Args...)> model_type;
+            mustache_controller(const std::string &tmpl, model_type &&func)
+            : view_(mustache::compile(tmpl))
+            , model_(std::forward<model_type>(func))
             {
-                try {
-                    resp.content_type("text/html");
-                    json::wvalue ctx=model(req);
-                    std::string s(t.render(ctx));
-                    resp.body_stream().write(&(s[0]), s.size());
-                    resp.body_stream().flush();
-                    return true;
-                } catch (std::exception &) {
-                    resp.status_code(common::http_status_code::INTERNAL_SERVER_ERROR);
-                }
-                return false;
+                static_assert(std::is_constructible<json::wvalue, Ret>::value,
+                              "Return value of model function must be compatible with json::wvalue");
             }
-            mustache::template_t t;
-            Fn model;
+            
+            std::string operator()(Args&&... args) {
+                json::wvalue ctx(model_(std::forward<Args>(args)...));
+                return view_.render(ctx);
+            }
+            
+            mustache::template_t view_;
+            model_type model_;
         };
-        return view{mustache::compile(tmpl), std::forward<Fn>(fn)};
+    }
+    
+    template<typename Fn>
+    server::request_handler_type mustache_(const std::string &tmpl,
+                                           Fn &&fn,
+                                           const std::string content_type="text/html")
+    {
+        typedef typename utility::make_function_type<Fn> model_type;
+        detail::mustache_controller<model_type> controller(tmpl, model_type(std::forward<Fn>(fn)));
+        return with_content_type(content_type, controller);
     }
 }}  // End of namespace fibio::http
 #endif
