@@ -40,7 +40,7 @@ namespace fibio { namespace http {
     }
     
     template<typename Fn>
-    server::request_handler_type mustache_(const std::string &tmpl,
+    server::request_handler mustache_(const std::string &tmpl,
                                            Fn &&fn,
                                            const std::string content_type="text/html")
     {

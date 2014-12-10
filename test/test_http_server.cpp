@@ -94,6 +94,7 @@ auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> hand
              get_("/mul2/:x/:y") >> [](val x, val y){return x.n*y.n;},    // custom type via boost::lexical_cast
              (path_("/test3/*p") && url_(iends_with{".html"})) >> handler,
              path_("/test3/*") >> stock_handler(http_status_code::FORBIDDEN),
+             path_("/test4") >> [](){ return 100; },
              !method_is(http_method::GET) >> stock_handler(http_status_code::BAD_REQUEST)
              );
 
@@ -205,6 +206,15 @@ void the_client() {
         resp.body_stream() >> r;
         assert(r==1008);
     }
+    {
+        //std::cout << "GET /test4" << std::endl;
+        ret=c.send_request(make_request(req, "/test4"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        int r;
+        resp.body_stream() >> r;
+        assert(r==100);
+    }
 }
 
 void the_url_client() {
@@ -246,6 +256,10 @@ void the_url_client() {
     int r;
     resp.body_stream() >> r;
     assert(r==1008);
+    c.request("http://127.0.0.1:23456/test4");
+    assert(resp.status_code==http_status_code::OK);
+    resp.body_stream() >> r;
+    assert(r==100);
 }
 
 void test_http_server() {

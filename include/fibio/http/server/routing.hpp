@@ -55,45 +55,74 @@ namespace fibio { namespace http {
         }
     }
     
-    typedef std::function<bool(server::request &)> match_type;
-    typedef std::pair<match_type, server::request_handler_type> routing_rule_type;
-    typedef std::list<routing_rule_type> routing_table_type;
+    typedef std::function<bool(server::request &)> match;
+    typedef std::pair<match, server::request_handler> routing_rule;
+    struct routing_table : std::list<routing_rule> {
+        typedef std::list<routing_rule> base_type;
+        using base_type::base_type;
+        routing_table()=default;
+        routing_table(const routing_table &)=default;
+        routing_table(routing_table &&)=default;
+        routing_table &operator=(const routing_table &)=default;
+        routing_table &operator=(routing_table &&)=default;
+        void push_back(const routing_rule &r) { base_type::push_back(r); }
+        void push_back(routing_rule &&r) { base_type::push_back(std::move(r)); }
+        void push_back(const routing_table &r) { insert(end(), r.begin(), r.end()); }
+        void push_back(routing_table &&r) { splice(end(), r); }
+
+        template<typename T>
+        static void make_routing_table_impl(routing_table &table, T &&t)
+        { table.push_back(std::move(t)); }
+        
+        template<typename T, typename... Args>
+        static void make_routing_table_impl(routing_table &table, T &&t, Args&&... args) {
+            table.push_back(std::move(t));
+            make_routing_table_impl(table, std::forward<Args>(args)...);
+        }
+        
+        template<typename... Args>
+        static routing_table make(Args&&... args) {
+            routing_table table;
+            make_routing_table_impl(table, std::forward<Args>(args)...);
+            return table;
+        }
+    };
     
     /**
      * Match functor operators
      */
-    inline match_type operator&&(const match_type &lhs, const match_type &rhs)
+    inline match operator&&(const match &lhs, const match &rhs)
     { return [=](server::request &req)->bool{ return lhs(req) && rhs(req); }; }
     
-    inline match_type operator||(const match_type &lhs, const match_type &rhs)
+    inline match operator||(const match &lhs, const match &rhs)
     { return [=](server::request &req)->bool{ return lhs(req) || rhs(req); }; }
     
-    inline match_type operator!(const match_type &m)
+    inline match operator!(const match &m)
     { return [=](server::request &req)->bool{ return !m(req); }; }
     
 
     /**
      * Match all
      */
-    inline match_type match_all()
+    inline match match_all()
     { return [=](server::request &)->bool{ return true; }; }
     
     /**
      * Match nothing
      */
-    inline match_type match_none()
+    inline match match_none()
     { return [=](server::request &)->bool{ return false; }; }
 
     /**
      * Match HTTP method
      */
-    inline match_type method_is(http_method m)
+    inline match method_is(http_method m)
     { return [=](server::request &req)->bool{ return req.method==m; }; }
     
     /**
      * Match HTTP version
      */
-    inline match_type version_is(http_version v)
+    inline match version_is(http_version v)
     { return [=](server::request &req)->bool{ return req.version==v; }; }
     
     /**
@@ -101,7 +130,7 @@ namespace fibio { namespace http {
      * !see http/common/string_pred.hpp
      */
     template<typename Predicate>
-    match_type url_(Predicate pred)
+    match url_(Predicate pred)
     { return [=](server::request &req)->bool { return pred(req.url); }; }
 
     /**
@@ -109,7 +138,7 @@ namespace fibio { namespace http {
      * !see http/common/string_pred.hpp
      */
     template<typename Predicate>
-    inline match_type header_(const std::string &h, Predicate pred)
+    inline match header_(const std::string &h, Predicate pred)
     { return [=](server::request &req)->bool { return detail::find_and_test(req.headers, h, pred); }; }
     
     /**
@@ -117,11 +146,11 @@ namespace fibio { namespace http {
      * !see http/common/string_pred.hpp
      */
     template<typename Predicate>
-    inline match_type param_(const std::string &p, Predicate pred)
+    inline match param_(const std::string &p, Predicate pred)
     { return [=](server::request &req)->bool { return detail::find_and_test(req.params, p, pred); }; }
     
     // Match path pattern and extract parameters into match_info
-    inline match_type path_(const std::string &tmpl) {
+    inline match path_(const std::string &tmpl) {
         typedef std::list<std::string> components_type;
         typedef components_type::const_iterator component_iterator;
         struct matcher {
@@ -175,29 +204,34 @@ namespace fibio { namespace http {
     }
     
     // Convenience
-    inline match_type get_(const std::string &pattern)
+    inline match get_(const std::string &pattern)
     { return method_is(http_method::GET) && path_(pattern); }
     
-    inline match_type post_(const std::string &pattern)
+    inline match post_(const std::string &pattern)
     { return method_is(http_method::POST) && path_(pattern); }
     
-    inline match_type put_(const std::string &pattern)
-    { return method_is(http_method::PUT) && path_(pattern); }
+    inline match put_(const std::string &pattern)
+    { return (method_is(http_method::PUT) || method_is(http_method::PATCH)) && path_(pattern); }
 
+    inline match delete_(const std::string &pattern)
+    { return (method_is(http_method::DELETE) || method_is(http_method::PURGE)) && path_(pattern); }
+    
     /**
      * Stock response with specific status code, can be used with http server or routing table
      */
-    server::request_handler_type stock_handler(http_status_code c)
+    server::request_handler stock_handler(http_status_code c)
     { return [=](server::request &, server::response &resp)->bool{ resp.status_code(c); return true; }; }
     
     template<typename Fn>
-    inline server::request_handler_type handler_(Fn func)
+    inline server::request_handler handler_(Fn func)
     {
         return [func](server::request &req, server::response &resp){
             try {
                 resp.body(detail::apply(func, req.params));
             } catch(boost::bad_lexical_cast &e) {
                 resp.status_code(http_status_code::BAD_REQUEST);
+            } catch(server_error &e) {
+                resp.status_code(e.code);
             } catch(std::exception &e) {
                 resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
             } catch(...) {
@@ -209,7 +243,7 @@ namespace fibio { namespace http {
     }
     
     template<typename Fn>
-    inline server::request_handler_type handler_(Fn func,
+    inline server::request_handler handler_(Fn func,
                                                  std::function<void(server::response &)> post_proc)
     {
         return [func, post_proc](server::request &req, server::response &resp){
@@ -229,8 +263,8 @@ namespace fibio { namespace http {
     }
     
     template<typename Fn>
-    inline server::request_handler_type handler_(Fn func,
-                                                 std::function<void(server::request &, server::response &)> post_proc)
+    inline server::request_handler handler_(Fn func,
+                                            std::function<void(server::request &, server::response &)> post_proc)
     {
         return [func, post_proc](server::request &req, server::response &resp){
             try {
@@ -252,32 +286,42 @@ namespace fibio { namespace http {
      * Routing table
      */
     template<typename Fn,
-        typename std::enable_if<!std::is_constructible<server::request_handler_type, Fn>::value>::type* = nullptr
+        typename std::enable_if<!std::is_constructible<server::request_handler, Fn>::value>::type* = nullptr
     >
-    inline routing_rule_type rule(match_type &&m, Fn &&func)
-    { return routing_rule_type{std::move(m), handler_(std::forward<Fn>(func))}; }
+    inline routing_rule rule(match &&m, Fn &&func)
+    { return routing_rule{std::move(m), handler_(std::forward<Fn>(func))}; }
     
-    inline routing_rule_type rule(match_type &&m, server::request_handler_type &&h)
-    { return routing_rule_type{std::forward<match_type>(m), std::forward<server::request_handler_type>(h)}; }
-    
-    template<typename Fn>
-    inline routing_rule_type operator >> (match_type &&m, Fn &&func)
-    { return rule(std::forward<match_type>(m), std::forward<Fn>(func)); }
+    inline routing_rule rule(match &&m, server::request_handler &&h)
+    { return routing_rule{std::forward<match>(m), std::forward<server::request_handler>(h)}; }
     
     template<typename Fn>
-    inline server::request_handler_type with_content_type(const std::string &ct, Fn &&func)
+    inline routing_rule operator >> (match &&m, Fn &&func)
+    { return rule(std::forward<match>(m), std::forward<Fn>(func)); }
+    
+    template<typename Fn>
+    inline server::request_handler with_content_type(const std::string &ct, Fn &&func)
     { return handler_(func, [ct](server::response &resp){ resp.content_type(ct); }); }
     
     template<typename Fn>
-    inline server::request_handler_type html_(Fn &&func)
+    inline server::request_handler html_(Fn &&func)
     { return with_content_type("text/html", func); }
     
     template<typename Fn>
-    inline server::request_handler_type xml_(Fn &&func)
+    inline server::request_handler xml_(Fn &&func)
     { return with_content_type("text/xml", func); }
     
-    inline server::request_handler_type route(const routing_table_type &table,
-                                              server::request_handler_type default_handler=stock_handler(http_status_code::NOT_FOUND))
+    inline server::request_handler route(const routing_table &table,
+                                         server::request_handler default_handler=stock_handler(http_status_code::NOT_FOUND))
+    {
+        return [=](server::request &req, server::response &resp)->bool {
+            parse_url(req.url, req.parsed_url);
+            for(auto &e : table) if(e.first(req)) return e.second(req, resp);
+            return default_handler(req, resp);
+        };
+    }
+    
+    inline server::request_handler route(routing_table &&table,
+                                         server::request_handler default_handler=stock_handler(http_status_code::NOT_FOUND))
     {
         return [=](server::request &req, server::response &resp)->bool {
             parse_url(req.url, req.parsed_url);
@@ -287,8 +331,8 @@ namespace fibio { namespace http {
     }
     
     template<typename... Rule>
-    inline server::request_handler_type route(Rule... r)
-    { return route(routing_table_type{r...}); }
+    inline server::request_handler route(Rule&&... r)
+    { return route(routing_table::make(std::forward<Rule>(r)...)); }
 }}  // End of namespace fibio::http
 
 #endif

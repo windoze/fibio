@@ -23,16 +23,23 @@ namespace fibio { namespace http {
     constexpr timeout_type DEFAULT_TIMEOUT=std::chrono::seconds(60);
     constexpr timeout_type NO_TIMEOUT=std::chrono::seconds(0);
     
+    struct server_error : std::runtime_error {
+        server_error(http_status_code c)
+        : std::runtime_error("HTTP server error")
+        , code(c) {}
+        http_status_code code;
+    };
+    
     struct server {
         typedef fibio::http::server_request request;
         typedef fibio::http::server_response response;
         typedef std::function<bool(request &req,
-                                   response &resp)> request_handler_type;
+                                   response &resp)> request_handler;
         
         struct settings {
             std::string address_="0.0.0.0";
             unsigned short port_=80;
-            request_handler_type default_request_handler_=[](request &, response &)->bool{ return false; };
+            request_handler default_request_handler_=[](request &, response &)->bool{ return false; };
             timeout_type read_timeout_=DEFAULT_TIMEOUT;
             timeout_type write_timeout_=DEFAULT_TIMEOUT;
             unsigned max_keep_alive_=DEFAULT_MAX_KEEP_ALIVE;
@@ -49,7 +56,7 @@ namespace fibio { namespace http {
         server &ssl(ssl::context &c) { s_.ctx_=&c; return *this; }
         server &timeout(timeout_type t) { s_.read_timeout_=s_.write_timeout_=t; return *this; }
         server &max_keepalive(unsigned m) { s_.max_keep_alive_=m; return *this; }
-        server &handler(request_handler_type h) { s_.default_request_handler_=h; return *this; }
+        server &handler(request_handler h) { s_.default_request_handler_=h; return *this; }
         
         server &start();
         void stop();

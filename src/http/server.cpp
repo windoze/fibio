@@ -165,7 +165,7 @@ namespace fibio { namespace http {
                           const std::string &addr,
                           unsigned short port,
                           const std::string &host,
-                          server::request_handler_type default_request_handler)
+                          server::request_handler default_request_handler)
             : host_(host)
             , acceptor_(addr.c_str(), port)
             , default_request_handler_(std::move(default_request_handler))
@@ -255,7 +255,7 @@ namespace fibio { namespace http {
             
             std::string host_;
             acceptor_type acceptor_;
-            server::request_handler_type default_request_handler_;
+            server::request_handler default_request_handler_;
             promise<void> exit_signal_;
             timeout_type read_timeout_=DEFAULT_TIMEOUT;
             timeout_type write_timeout_=DEFAULT_TIMEOUT;
