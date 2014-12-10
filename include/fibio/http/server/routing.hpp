@@ -38,13 +38,15 @@ namespace fibio { namespace http {
             typedef Ret result_type;
             static constexpr size_t arity=sizeof...(Args);
             function_wrapper(function_type &&f) : f_(std::forward<function_type>(f)) {}
-            size_t get_arity() const { return arity; }
             template<typename T, size_t N>
             T get(const server::request &req) const { return boost::lexical_cast<T>(req.params[N].second); }
             template <std::size_t... Indices>
             result_type call2(server::request &req, server::response &resp, utility::tuple_indices<Indices...>)
             { return utility::invoke(f_, get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(req)...); }
             void call(server::request &req, server::response &resp) {
+                if (arity!=req.params.size()) {
+                    throw server_error(http_status_code::BAD_REQUEST);
+                }
                 result_type r=call2(req,
                                     resp,
                                     typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type());
@@ -61,7 +63,6 @@ namespace fibio { namespace http {
             typedef void result_type;
             static constexpr size_t arity=sizeof...(Args);
             function_wrapper(function_type &&f) : f_(std::forward<function_type>(f)) {}
-            size_t get_arity() const { return arity; }
             template<typename T, size_t N>
             T get(const server::request &req) const { return boost::lexical_cast<T>(req.params[N].second); }
             template <std::size_t... Indices>
@@ -72,6 +73,9 @@ namespace fibio { namespace http {
                                 get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(req)...);
             }
             void call(server::request &req, server::response &resp){
+                if (arity!=req.params.size()) {
+                    throw server_error(http_status_code::BAD_REQUEST);
+                }
                 call2(req,
                       resp,
                       typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type());
