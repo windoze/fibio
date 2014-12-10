@@ -297,7 +297,7 @@ namespace fibio { namespace http {
     {
         return [func, post_proc](server::request &req, server::response &resp){
             try {
-                detail::apply(func, req.params);
+                detail::apply(req, resp, func);
                 post_proc(req, resp);
             } catch(boost::bad_lexical_cast &e) {
                 resp.status_code(http_status_code::BAD_REQUEST);
