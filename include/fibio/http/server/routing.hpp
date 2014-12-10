@@ -26,32 +26,63 @@ namespace fibio { namespace http {
             return false;
         }
 
-        template<typename Vec, typename Ret, class... Args>
+        // Helper functions 
+        template<typename Ret, class... Args>
         struct function_wrapper;
         
         // function_wrapper
-        template<typename Vec, typename Ret, class... Args>
-        struct function_wrapper<Vec, std::function<Ret(Args...)>> {
+        template<typename Ret, class... Args>
+        struct function_wrapper<std::function<Ret(Args...)>> {
             typedef std::function<Ret(Args...)> function_type;
             typedef std::tuple<typename std::decay<Args>::type...> arg_list_type;
             typedef Ret result_type;
             static constexpr size_t arity=sizeof...(Args);
             function_wrapper(function_type &&f) : f_(std::forward<function_type>(f)) {}
-            template<typename T, size_t N>
-            T get(const Vec &v) const { return boost::lexical_cast<T>(v[N].second); }
-            template <std::size_t... Indices>
-            result_type call2(const Vec &v, utility::tuple_indices<Indices...>)
-            { return utility::invoke(f_, get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(v)...); }
             size_t get_arity() const { return arity; }
-            result_type call(const Vec &v)
-            { return call2(v, typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type()); }
-            std::function<Ret(Args...)> f_;
+            template<typename T, size_t N>
+            T get(const server::request &req) const { return boost::lexical_cast<T>(req.params[N].second); }
+            template <std::size_t... Indices>
+            result_type call2(server::request &req, server::response &resp, utility::tuple_indices<Indices...>)
+            { return utility::invoke(f_, get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(req)...); }
+            void call(server::request &req, server::response &resp) {
+                result_type r=call2(req,
+                                    resp,
+                                    typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type());
+                resp.body(r);
+            }
+            function_type f_;
         };
         
-        template<typename Vec, typename F>
-        auto apply(F f, const Vec &v) -> typename utility::make_function_type<F>::result_type {
-            typedef detail::function_wrapper<Vec, utility::make_function_type<F>> wrapper;
-            return wrapper(utility::make_function(std::forward<F>(f))).call(v);
+        // function_wrapper for handlers require req and resp parameters
+        template<typename Ret, class... Args>
+        struct function_wrapper<std::function<Ret(server::request &, server::response &, Args...)>> {
+            typedef std::function<Ret(server::request &, server::response &, Args...)> function_type;
+            typedef std::tuple<typename std::decay<Args>::type...> arg_list_type;
+            typedef void result_type;
+            static constexpr size_t arity=sizeof...(Args);
+            function_wrapper(function_type &&f) : f_(std::forward<function_type>(f)) {}
+            size_t get_arity() const { return arity; }
+            template<typename T, size_t N>
+            T get(const server::request &req) const { return boost::lexical_cast<T>(req.params[N].second); }
+            template <std::size_t... Indices>
+            void call2(server::request &req, server::response &resp, utility::tuple_indices<Indices...>) {
+                utility::invoke(f_,
+                                req,
+                                resp,
+                                get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(req)...);
+            }
+            void call(server::request &req, server::response &resp){
+                call2(req,
+                      resp,
+                      typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type());
+            }
+            function_type f_;
+        };
+        
+        template<typename F>
+        void apply(server::request &req, server::response &resp, F f) {
+            typedef detail::function_wrapper<utility::make_function_type<F>> wrapper;
+            wrapper(utility::make_function(std::forward<F>(f))).call(req, resp);
         }
     }
     
@@ -227,7 +258,7 @@ namespace fibio { namespace http {
     {
         return [func](server::request &req, server::response &resp){
             try {
-                resp.body(detail::apply(func, req.params));
+                detail::apply(req, resp, func);
             } catch(boost::bad_lexical_cast &e) {
                 resp.status_code(http_status_code::BAD_REQUEST);
             } catch(server_error &e) {
@@ -243,12 +274,11 @@ namespace fibio { namespace http {
     }
     
     template<typename Fn>
-    inline server::request_handler handler_(Fn func,
-                                                 std::function<void(server::response &)> post_proc)
+    inline server::request_handler handler_(Fn func, std::function<void(server::response &)> post_proc)
     {
         return [func, post_proc](server::request &req, server::response &resp){
             try {
-                resp.body(detail::apply(func, req.params));
+                detail::apply(req, resp, func);
                 post_proc(resp);
             } catch(boost::bad_lexical_cast &e) {
                 resp.status_code(http_status_code::BAD_REQUEST);
@@ -263,12 +293,11 @@ namespace fibio { namespace http {
     }
     
     template<typename Fn>
-    inline server::request_handler handler_(Fn func,
-                                            std::function<void(server::request &, server::response &)> post_proc)
+    inline server::request_handler handler_(Fn func, std::function<void(server::request &, server::response &)> post_proc)
     {
         return [func, post_proc](server::request &req, server::response &resp){
             try {
-                resp.body(detail::apply(func, req.params));
+                detail::apply(func, req.params);
                 post_proc(req, resp);
             } catch(boost::bad_lexical_cast &e) {
                 resp.status_code(http_status_code::BAD_REQUEST);

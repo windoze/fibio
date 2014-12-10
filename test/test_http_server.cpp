@@ -84,17 +84,23 @@ std::istream &operator>>(std::istream &is, val &v) {
     return is;
 }
 
+void gen_handler(server::request &req, server::response &resp, int id) {
+    resp.body_stream() << "<HTML><BODY><H1>id=" << id << "</H1></BODY></HTML>";
+    resp.content_type("text/html");
+}
+
 auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> handler,
              get_("/test1/:id/test2") >> handler,
-             post_("/test2/*p") >> handler,
-             get_("/prize/:id") >> mustache_(s, test_model),
+             post_("/test2/*p") >> handler,                               // basic handler type
+             get_("/prize/:id") >> mustache_(s, test_model),              // mustache template
              get_("/add/:x/:y") >> add,                                   // plain function
              get_("/sub/:x/:y") >> sub(),                                 // functor
              get_("/mul/:x/:y") >> [](int x, int y){return x*y;},         // lambda
              get_("/mul2/:x/:y") >> [](val x, val y){return x.n*y.n;},    // custom type via boost::lexical_cast
              (path_("/test3/*p") && url_(iends_with{".html"})) >> handler,
              path_("/test3/*") >> stock_handler(http_status_code::FORBIDDEN),
-             path_("/test4") >> [](){ return 100; },
+             path_("/test4") >> [](){ return 100; },                      // no arguments
+             path_("/test5/:id") >> gen_handler,                          // handler with req/resp and additional parameters
              !method_is(http_method::GET) >> stock_handler(http_status_code::BAD_REQUEST)
              );
 
@@ -214,6 +220,15 @@ void the_client() {
         int r;
         resp.body_stream() >> r;
         assert(r==100);
+    }
+    {
+        //std::cout << "GET /test5/123" << std::endl;
+        ret=c.send_request(make_request(req, "/test5/123"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        std::string r;
+        resp.body_stream() >> r;
+        assert(r=="<HTML><BODY><H1>id=123</H1></BODY></HTML>");
     }
 }
 
