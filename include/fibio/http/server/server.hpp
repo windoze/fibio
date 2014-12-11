@@ -25,7 +25,13 @@ namespace fibio { namespace http {
     
     struct server_error : std::runtime_error {
         server_error(http_status_code c)
-        : std::runtime_error("HTTP server error")
+        : std::runtime_error("")
+        , code(c) {}
+        server_error(http_status_code c, const std::string &msg)
+        : std::runtime_error(msg)
+        , code(c) {}
+        server_error(http_status_code c, const char *msg)
+        : std::runtime_error(msg)
         , code(c) {}
         http_status_code code;
     };
