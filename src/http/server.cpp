@@ -293,10 +293,8 @@ namespace fibio { namespace http {
     }
     
     bool server_request::accept_compressed() const {
-        auto i=headers.find("Accept-Encoding");
-        if (i==headers.end()) return false;
         // TODO: Kinda buggy
-        return strcasestr(i->second.c_str(), "gzip")!=NULL;
+        return strcasestr(request::header("Accept-Encoding").c_str(), "gzip")!=NULL;
     }
     
     bool server_request::read(std::istream &is) {
@@ -367,40 +365,22 @@ namespace fibio { namespace http {
     }
     
     server_response &server_response::content_type(const std::string &ct) {
-        auto i=headers.find("content-type");
-        if (i==headers.end()) {
-            headers.insert(std::make_pair("Content-Type", ct));
+        if(ct.empty()) {
+            headers.erase("Content-Type");
         } else {
-            i->second.assign(ct);
+            set_header("Content-Type", ct);
         }
         return *this;
     }
     
     bool server_response::write_header(std::ostream &os) {
-        std::string ka;
-        if (keep_alive()) {
-            ka="keep-alive";
-        } else {
-            ka="close";
-        }
-        auto i=headers.find("connection");
-        if (i==headers.end()) {
-            headers.insert(std::make_pair("Connection", ka));
-        } else {
-            i->second.assign(ka);
-        }
+        response::set_header("Connection", keep_alive() ? "keep-alive" : "close");
         if (!common::response::write_header(os)) return false;
         return !os.eof() && !os.fail() && !os.bad();
     }
     
     bool server_response::write(std::ostream &os) {
-        // Set "content-length" header
-        auto i=headers.find("content-length");
-        if (i==headers.end()) {
-            headers.insert(std::make_pair("Content-Length", boost::lexical_cast<std::string>(content_length())));
-        } else {
-            i->second.assign(boost::lexical_cast<std::string>(content_length()));
-        }
+        response::set_header("Content-Length", boost::lexical_cast<std::string>(content_length()));
         // Write headers
         if (!write_header(os)) return false;
         // Write body

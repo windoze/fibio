@@ -541,6 +541,27 @@ namespace fibio { namespace http { namespace common {
         parsed_url=parsed_url_type();
     }
     
+    const std::string &request::header(const std::string &name) const {
+        static const std::string empty;
+        auto i=headers.find(name);
+        if (i==headers.end()) {
+            return empty;
+        }
+        return i->second;
+    }
+    
+    void request::add_header(const std::string &name, const std::string &value) {
+        headers.emplace(name, value);
+    }
+    
+    void request::set_header(const std::string &name, const std::string &value) {
+        auto i=headers.find(name);
+        if (i!=headers.end()) {
+            headers.erase(name);
+        }
+        add_header(name, value);
+    }
+    
     bool parse_url(const std::string url, parsed_url_type &parsed_url, bool parse_path, bool parse_query)
     {
         if (!(parsed_url.path.empty() && parsed_url.path_components.empty())) {
@@ -637,6 +658,27 @@ namespace fibio { namespace http { namespace common {
         headers.clear();
         content_length=0;
         keep_alive=false;
+    }
+    
+    const std::string &response::header(const std::string &name) const {
+        static const std::string empty;
+        auto i=headers.find(name);
+        if (i==headers.end()) {
+            return empty;
+        }
+        return i->second;
+    }
+    
+    void response::add_header(const std::string &name, const std::string &value) {
+        headers.emplace(name, value);
+    }
+    
+    void response::set_header(const std::string &name, const std::string &value) {
+        auto i=headers.find(name);
+        if (i!=headers.end()) {
+            headers.erase(name);
+        }
+        add_header(name, value);
     }
     
     bool response::read_header(std::istream &is) {

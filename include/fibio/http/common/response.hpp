@@ -15,6 +15,10 @@ namespace fibio { namespace http { namespace common {
     struct response {
         void clear();
         
+        const std::string &header(const std::string &name) const;
+        void add_header(const std::string &name, const std::string &value);
+        void set_header(const std::string &name, const std::string &value);
+        
         bool read_header(std::istream &is);
         bool write_header(std::ostream &os);
         

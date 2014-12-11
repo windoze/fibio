@@ -33,14 +33,10 @@ namespace fibio { namespace http {
     }
     
     client_request &client_request::content_type(const std::string &ct) {
-        if (ct.empty()) {
-            return *this;
-        }
-        auto i=headers.find("Content-Type");
-        if (i==headers.end()) {
-            headers.insert({"Content-Type", ct});
+        if(ct.empty()) {
+            headers.erase("Content-Type");
         } else {
-            i->second.assign(ct);
+            set_header("Content-Type", ct);
         }
         return *this;
     }
@@ -53,12 +49,7 @@ namespace fibio { namespace http {
     client_request &client_request::accept_compressed(bool c) {
         if (c) {
             // Support gzip only for now
-            common::header_map::iterator i=headers.find("Accept-Encoding");
-            if (i==headers.end()) {
-                headers.insert(std::make_pair("Accept-Encoding", "gzip"));
-            } else {
-                i->second="gzip";
-            }
+            set_header("Accept-Encoding", "gzip");
         } else {
             headers.erase("Accept-Encoding");
         }
@@ -66,30 +57,13 @@ namespace fibio { namespace http {
     }
     
     bool client_request::write_header(std::ostream &os) {
-        std::string ka;
-        if (keep_alive()) {
-            ka="keep-alive";
-        } else {
-            ka="close";
-        }
-        auto i=headers.find("connection");
-        if (i==headers.end()) {
-            headers.insert(std::make_pair("Connection", ka));
-        } else {
-            i->second.assign(ka);
-        }
+        set_header("Connection", keep_alive() ? "keep-alive" : "close");
         if (!common::request::write_header(os)) return false;
         return !os.eof() && !os.fail() && !os.bad();
     }
     
     bool client_request::write(std::ostream &os) {
-        // Set "content-length"
-        auto i=headers.find("content-length");
-        if (i==headers.end()) {
-            headers.insert(std::make_pair("Content-Length", boost::lexical_cast<std::string>(content_length())));
-        } else {
-            i->second.assign(boost::lexical_cast<std::string>(content_length()));
-        }
+        set_header("Content-Length", boost::lexical_cast<std::string>(content_length()));
         // Write header
         if (!write_header(os)) return false;
         // Write body
@@ -127,8 +101,7 @@ namespace fibio { namespace http {
             bio::filtering_istream *in=new bio::filtering_istream;
             if (auto_decompress_) {
                 // Support gzip only for now
-                auto i=headers.find("Content-Encoding");
-                if (i!=headers.end() && common::iequal()(i->second, std::string("gzip"))) {
+                if (common::iequal()(header("Content-Encoding"), "gzip")) {
                     in->push(boost::iostreams::gzip_decompressor());
                 }
             }
