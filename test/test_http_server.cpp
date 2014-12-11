@@ -90,6 +90,18 @@ bool gen_handler(server::request &req, server::response &resp, int id) {
     return true;
 }
 
+int rw=100;
+const int ro=200;
+std::vector<int> rwv{2,4,6};
+const std::vector<int> rov{3,5,7};
+namespace std {
+    // HACK: this operator has to be defined in std to follow the dependent name lookup rule
+    std::ostream &operator<<(std::ostream &os, const std::vector<int> &v) {
+        for(auto e : v) os << e << "\n";
+        return os;
+    }
+}
+
 auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> handler,
              get_("/test1/:id/test2") >> handler,
              post_("/test2/*p") >> handler,                               // basic handler type
@@ -102,6 +114,10 @@ auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> hand
              path_("/test3/*") >> stock_handler(http_status_code::FORBIDDEN),
              path_("/test4") >> [](){ return 100; },                      // no arguments
              path_("/test5/:id") >> gen_handler,                          // handler with req/resp and additional parameters
+             resource("/test6rw", rw),                                    // singleton resource
+             resource("/test6ro", ro),                                    // read-only singletin resource
+             resources("/test7rw", rwv),                                  // resource collection
+             resources("/test7ro", rov),                                  // read-only resource collection
              !method_is(http_method::GET) >> stock_handler(http_status_code::BAD_REQUEST)
              );
 
@@ -230,6 +246,42 @@ void the_client() {
         std::string r;
         resp.body_stream() >> r;
         assert(r=="<HTML><BODY><H1>id=123</H1></BODY></HTML>");
+    }
+    {
+        //std::cout << "GET /test6rw" << std::endl;
+        int r;
+        ret=c.send_request(make_request(req, "/test6rw"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        resp.body_stream() >> r;
+        assert(r==100 || r==200);
+        //std::cout << "PUT /test6rw" << std::endl;
+        req.clear();
+        req.url("/test6rw").method(http_method::PUT).version(http_version::HTTP_1_1).keep_alive(true).body(200);
+        ret=c.send_request(req, resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        //std::cout << "GET /test6rw" << std::endl;
+        ret=c.send_request(make_request(req, "/test6rw"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        resp.body_stream() >> r;
+        assert(r==200);
+    }
+    {
+        //std::cout << "GET /test6ro" << std::endl;
+        int r;
+        ret=c.send_request(make_request(req, "/test6ro"), resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        resp.body_stream() >> r;
+        assert(r==200);
+        //std::cout << "PUT /test6ro" << std::endl;
+        req.clear();
+        req.url("/test6ro").method(http_method::PUT).version(http_version::HTTP_1_1).keep_alive(true).body(300);
+        ret=c.send_request(req, resp);
+        assert(ret);
+        assert(resp.status_code!=http_status_code::OK);
     }
 }
 
