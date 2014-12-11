@@ -235,8 +235,16 @@ namespace fibio { namespace http {
                     resp.version(req.version);
                     resp.keep_alive(req.keep_alive);
                     if(count>=max_keep_alive_) resp.keep_alive(false);
-                    if(!default_request_handler_(req, resp)) {
-                        break;
+                    try {
+                        if(!default_request_handler_(req, resp)) break;
+                    } catch(boost::bad_lexical_cast &e) {
+                        resp.status_code(http_status_code::BAD_REQUEST);
+                    } catch(server_error &e) {
+                        resp.status_code(e.code);
+                        resp.body(e.what());
+                    } catch(std::exception &e) {
+                        resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
+                        resp.keep_alive(false);
                     }
                     resp.body_stream().flush();
                     c.send(resp);
@@ -246,6 +254,7 @@ namespace fibio { namespace http {
                     c.stream().flush();
                     // Keepalive counter
                     count++;
+                    if (!resp.keep_alive()) break;
                 }
                 c.close();
                 
