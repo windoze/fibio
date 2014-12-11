@@ -2,6 +2,7 @@
 //  mustache.hpp
 //  fibio
 //
+//  This file is part of Crow project(https://github.com/ipkn/crow), authored by ipkn, with some minor modifications
 //  Copyright (c) 2014, ipkn, all rights reserved.
 
 #pragma once

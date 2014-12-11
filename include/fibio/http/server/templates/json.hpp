@@ -2,6 +2,7 @@
 //  json.hpp
 //  fibio
 //
+//  This file is part of Crow project(https://github.com/ipkn/crow), authored by ipkn, with some minor modifications
 //  Copyright (c) 2014, ipkn, all rights reserved.
 
 //#define CROW_JSON_NO_ERROR_CHECK
