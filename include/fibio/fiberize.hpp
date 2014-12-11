@@ -25,9 +25,9 @@
 namespace fibio { namespace fibers {
     namespace detail {
         struct fiberized_std_stream_guard {
-#ifndef FIBIO_DONT_USE_FIBERIZED_STD_STREAM
+#if !defined(FIBIO_DONT_USE_FIBERIZED_STD_STREAM)
 
-#   ifdef BOOST_ASIO_HAS_WINDOWS_STREAM_HANDLE
+#   if defined(BOOST_ASIO_HAS_WINDOWS_STREAM_HANDLE)
             // Windows platform
             typedef boost::asio::windows::stream_handle stdstream_t;
             stdstream_t::native_handle_type get_std_in_handle()
@@ -52,9 +52,9 @@ namespace fibio { namespace fibers {
             typedef std::unique_ptr<sbuf_t> sbuf_ptr_t;
             
             inline fiberized_std_stream_guard(boost::asio::io_service &iosvc=fibio::asio::get_io_service())
-            : old_cin_buf_(0)
-            , old_cout_buf_(0)
-            , old_cerr_buf_(0)
+            : old_cin_buf_(nullptr)
+            , old_cout_buf_(nullptr)
+            , old_cerr_buf_(nullptr)
             , cin_buf_(new sbuf_t())
             , cout_buf_(new sbuf_t())
             , cerr_buf_(new sbuf_t())
@@ -122,16 +122,10 @@ namespace fibio { namespace fibers {
 
 namespace fibio {
     using fibers::fiberize;
-#ifndef FIBIO_DONT_USE_DEFAULT_MAIN
-    // Forward declaration of real entry point
-    int main(int argc, char *argv[]);
-#endif
 }
 
 #ifndef FIBIO_DONT_USE_DEFAULT_MAIN
-int main(int argc, char *argv[]) {
-    return fibio::fiberize(fibio::main, argc, argv);
-}
+#include <fibio/fiberized_main.hpp>
 #endif
 
 #endif

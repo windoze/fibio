@@ -67,6 +67,7 @@
 		2DACAAD919F3AE57004F6780 /* dh512.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7C19CFF7DA00B0257D /* dh512.pem */; };
 		2DACAADA19F3AE57004F6780 /* server.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7D19CFF7DA00B0257D /* server.pem */; };
 		2DC1C2CF1A398D6900F69603 /* restful.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DC1C2CE1A398D6900F69603 /* restful.hpp */; };
+		2DD1CE851A4132380024B80A /* fiberized_main.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DD1CE841A4132380024B80A /* fiberized_main.hpp */; };
 		2DD5665018DA1BC6002A259D /* test_fibers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5664E18DA1BC6002A259D /* test_fibers.cpp */; };
 		2DD5666318DB35D3002A259D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
 		2DD5666618DB35E5002A259D /* echo_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5666418DB35E5002A259D /* echo_server.cpp */; };
@@ -390,6 +391,7 @@
 		2DACAAAE19F3AB87004F6780 /* test_http_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_http_client; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DACAABA19F3ABAE004F6780 /* test_http_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_http_server; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DC1C2CE1A398D6900F69603 /* restful.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = restful.hpp; sourceTree = "<group>"; };
+		2DD1CE841A4132380024B80A /* fiberized_main.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = fiberized_main.hpp; sourceTree = "<group>"; };
 		2DD3B6DF18CCF8B7009E1F3E /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		2DD3B6E418CDC3E7009E1F3E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		2DD5664518DA1B99002A259D /* test_fibers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_fibers; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -766,6 +768,7 @@
 			children = (
 				2D7E686018CCCD5D00B7C4E5 /* fiber.hpp */,
 				2DED59FF18EDA8C3006E5FA8 /* fiberize.hpp */,
+				2DD1CE841A4132380024B80A /* fiberized_main.hpp */,
 				2D15D0A218E6C95800E64B99 /* future.hpp */,
 				2D5A309218E9605E00C5EB41 /* asio.hpp */,
 				2D5A308D18E86EAE00C5EB41 /* iostream.hpp */,
@@ -933,6 +936,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2DD1CE851A4132380024B80A /* fiberized_main.hpp in Headers */,
 				2DA969F91A2D827600289FA9 /* mustache.hpp in Headers */,
 				2D1E146D1A2EF5C2008AFB97 /* url_parser.hpp in Headers */,
 				2DA969F71A2D827600289FA9 /* json.hpp in Headers */,
