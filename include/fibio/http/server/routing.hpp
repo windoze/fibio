@@ -43,22 +43,21 @@ namespace fibio { namespace http {
             template <std::size_t... Indices>
             result_type call2(server::request &req, server::response &resp, utility::tuple_indices<Indices...>)
             { return utility::invoke(f_, get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(req)...); }
-            void call(server::request &req, server::response &resp) {
-                if (arity!=req.params.size()) {
-                    throw server_error(http_status_code::BAD_REQUEST);
-                }
+            bool call(server::request &req, server::response &resp) {
+                if (arity!=req.params.size()) { throw server_error(http_status_code::BAD_REQUEST); }
                 result_type r=call2(req,
                                     resp,
                                     typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type());
                 resp.body(r);
+                return true;
             }
             function_type f_;
         };
         
         // function_wrapper for handlers require req and resp parameters
-        template<typename Ret, class... Args>
-        struct function_wrapper<std::function<Ret(server::request &, server::response &, Args...)>> {
-            typedef std::function<Ret(server::request &, server::response &, Args...)> function_type;
+        template<class... Args>
+        struct function_wrapper<std::function<bool(server::request &, server::response &, Args...)>> {
+            typedef std::function<bool(server::request &, server::response &, Args...)> function_type;
             typedef std::tuple<typename std::decay<Args>::type...> arg_list_type;
             typedef void result_type;
             static constexpr size_t arity=sizeof...(Args);
@@ -66,27 +65,25 @@ namespace fibio { namespace http {
             template<typename T, size_t N>
             T get(const server::request &req) const { return boost::lexical_cast<T>(req.params[N].second); }
             template <std::size_t... Indices>
-            void call2(server::request &req, server::response &resp, utility::tuple_indices<Indices...>) {
-                utility::invoke(f_,
-                                req,
-                                resp,
-                                get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(req)...);
+            bool call2(server::request &req, server::response &resp, utility::tuple_indices<Indices...>) {
+                return utility::invoke(f_,
+                                       req,
+                                       resp,
+                                       get<typename std::tuple_element<Indices, arg_list_type>::type, Indices>(req)...);
             }
-            void call(server::request &req, server::response &resp){
-                if (arity!=req.params.size()) {
-                    throw server_error(http_status_code::BAD_REQUEST);
-                }
-                call2(req,
-                      resp,
-                      typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type());
+            bool call(server::request &req, server::response &resp){
+                if (arity!=req.params.size()) { throw server_error(http_status_code::BAD_REQUEST); }
+                return call2(req,
+                             resp,
+                             typename utility::make_tuple_indices<std::tuple_size<std::tuple<Args...>>::value>::type());
             }
             function_type f_;
         };
         
         template<typename F>
-        void apply(server::request &req, server::response &resp, F f) {
+        bool apply(server::request &req, server::response &resp, F f) {
             typedef detail::function_wrapper<utility::make_function_type<F>> wrapper;
-            wrapper(utility::make_function(std::forward<F>(f))).call(req, resp);
+            return wrapper(utility::make_function(std::forward<F>(f))).call(req, resp);
         }
     }
     
@@ -262,18 +259,15 @@ namespace fibio { namespace http {
     {
         return [func](server::request &req, server::response &resp){
             try {
-                detail::apply(req, resp, func);
+                return detail::apply(req, resp, func);
             } catch(boost::bad_lexical_cast &e) {
                 resp.status_code(http_status_code::BAD_REQUEST);
             } catch(server_error &e) {
                 resp.status_code(e.code);
             } catch(std::exception &e) {
                 resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
-            } catch(...) {
-                // Unknown exception
-                return false;
             }
-            return true;
+            return false;
         };
     }
     
@@ -282,17 +276,17 @@ namespace fibio { namespace http {
     {
         return [func, post_proc](server::request &req, server::response &resp){
             try {
-                detail::apply(req, resp, func);
+                bool ret=detail::apply(req, resp, func);
                 post_proc(resp);
+                return ret;
             } catch(boost::bad_lexical_cast &e) {
                 resp.status_code(http_status_code::BAD_REQUEST);
+            } catch(server_error &e) {
+                resp.status_code(e.code);
             } catch(std::exception &e) {
                 resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
-            } catch(...) {
-                // Unknown exception
-                return false;
             }
-            return true;
+            return false;
         };
     }
     
@@ -301,17 +295,17 @@ namespace fibio { namespace http {
     {
         return [func, post_proc](server::request &req, server::response &resp){
             try {
-                detail::apply(req, resp, func);
+                bool ret=detail::apply(req, resp, func);
                 post_proc(req, resp);
+                return ret;
             } catch(boost::bad_lexical_cast &e) {
                 resp.status_code(http_status_code::BAD_REQUEST);
+            } catch(server_error &e) {
+                resp.status_code(e.code);
             } catch(std::exception &e) {
                 resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
-            } catch(...) {
-                // Unknown exception
-                return false;
             }
-            return true;
+            return false;
         };
     }
     

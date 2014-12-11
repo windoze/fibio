@@ -84,9 +84,10 @@ std::istream &operator>>(std::istream &is, val &v) {
     return is;
 }
 
-void gen_handler(server::request &req, server::response &resp, int id) {
+bool gen_handler(server::request &req, server::response &resp, int id) {
     resp.body_stream() << "<HTML><BODY><H1>id=" << id << "</H1></BODY></HTML>";
     resp.content_type("text/html");
+    return true;
 }
 
 auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> handler,
