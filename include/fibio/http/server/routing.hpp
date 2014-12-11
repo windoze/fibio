@@ -255,57 +255,26 @@ namespace fibio { namespace http {
     { return [=](server::request &, server::response &resp)->bool{ resp.status_code(c); return true; }; }
     
     template<typename Fn>
-    inline server::request_handler handler_(Fn func)
-    {
-        return [func](server::request &req, server::response &resp){
-            try {
-                return detail::apply(req, resp, func);
-            } catch(boost::bad_lexical_cast &e) {
-                resp.status_code(http_status_code::BAD_REQUEST);
-            } catch(server_error &e) {
-                resp.status_code(e.code);
-            } catch(std::exception &e) {
-                resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
-            }
-            return false;
+    inline server::request_handler handler_(Fn func){
+        return [func](server::request &req, server::response &resp)
+        { return detail::apply(req, resp, func); };
+    }
+    
+    template<typename Fn>
+    inline server::request_handler handler_(Fn func, std::function<void(server::response &)> post_proc) {
+        return [func, post_proc](server::request &req, server::response &resp){
+            bool ret=detail::apply(req, resp, func);
+            post_proc(resp);
+            return ret;
         };
     }
     
     template<typename Fn>
-    inline server::request_handler handler_(Fn func, std::function<void(server::response &)> post_proc)
-    {
+    inline server::request_handler handler_(Fn func, std::function<void(server::request &, server::response &)> post_proc) {
         return [func, post_proc](server::request &req, server::response &resp){
-            try {
-                bool ret=detail::apply(req, resp, func);
-                post_proc(resp);
-                return ret;
-            } catch(boost::bad_lexical_cast &e) {
-                resp.status_code(http_status_code::BAD_REQUEST);
-            } catch(server_error &e) {
-                resp.status_code(e.code);
-            } catch(std::exception &e) {
-                resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
-            }
-            return false;
-        };
-    }
-    
-    template<typename Fn>
-    inline server::request_handler handler_(Fn func, std::function<void(server::request &, server::response &)> post_proc)
-    {
-        return [func, post_proc](server::request &req, server::response &resp){
-            try {
-                bool ret=detail::apply(req, resp, func);
-                post_proc(req, resp);
-                return ret;
-            } catch(boost::bad_lexical_cast &e) {
-                resp.status_code(http_status_code::BAD_REQUEST);
-            } catch(server_error &e) {
-                resp.status_code(e.code);
-            } catch(std::exception &e) {
-                resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
-            }
-            return false;
+            bool ret=detail::apply(req, resp, func);
+            post_proc(req, resp);
+            return ret;
         };
     }
     
