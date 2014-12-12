@@ -19,6 +19,46 @@
 namespace apache { namespace thrift {
     namespace server { template<typename Stream, bool buffered> class TFibioServer; }
     namespace transport {
+        namespace detail {
+            template<bool buffered>
+            struct io_ops;
+            
+            template<>
+            struct io_ops<true> {
+                template<typename Stream>
+                static uint32_t read(fibio::stream::fiberized_iostream<Stream> &s, uint8_t* buf, uint32_t len) {
+                    s.read((char *)buf, len);
+                    return s.gcount();
+                }
+                template<typename Stream>
+                static void write(fibio::stream::fiberized_iostream<Stream> &s, const uint8_t* buf, uint32_t len) {
+                    if(s) s.write((const char *)buf, len);
+                }
+            };
+
+            template<>
+            struct io_ops<false> {
+                template<typename Stream>
+                static uint32_t read(fibio::stream::fiberized_iostream<Stream> &s, uint8_t* buf, uint32_t len) {
+                    boost::system::error_code ec;
+                    uint32_t ret=boost::asio::async_read(s.stream_descriptor(),
+                                                         boost::asio::buffer(buf, len),
+                                                         fibio::asio::yield[ec]);
+                    if(ec) throw TTransportException(TTransportException::END_OF_FILE,
+                                                     "No more data to read.");
+                    return ret;
+                }
+                template<typename Stream>
+                static void write(fibio::stream::fiberized_iostream<Stream> &s, const uint8_t* buf, uint32_t len) {
+                    boost::system::error_code ec;
+                    boost::asio::async_write(s.stream_descriptor(),
+                                             boost::asio::buffer(buf, len),
+                                             fibio::asio::yield[ec]);
+                    if(ec) throw TTransportException(TTransportException::NOT_OPEN,
+                                                     "Cannot write.");
+                }
+            };
+        }
         template<typename Stream, bool buffered>
         class TFibioTransport : public TVirtualTransport<TFibioTransport<Stream, buffered>> {
         public:
@@ -49,33 +89,11 @@ namespace apache { namespace thrift {
 
             virtual void flush() override { if(buffered) stream_.flush(); }
 
-            uint32_t read(uint8_t* buf, uint32_t len) {
-                if(buffered) {
-                    stream_.read((char *)buf, len);
-                    return stream_.gcount();
-                } else {
-                    boost::system::error_code ec;
-                    uint32_t ret=boost::asio::async_read(stream_.stream_descriptor(),
-                                                         boost::asio::buffer(buf, len),
-                                                         fibio::asio::yield[ec]);
-                    if(ec) throw TTransportException(TTransportException::END_OF_FILE,
-                                                     "No more data to read.");
-                    return ret;
-                }
-            }
+            uint32_t read(uint8_t* buf, uint32_t len)
+            { return detail::io_ops<buffered>::read(stream_, buf, len); }
             
-            void write(const uint8_t* buf, uint32_t len) {
-                if(buffered) {
-                    if(stream_) stream_.write((const char *)buf, len);
-                } else {
-                    boost::system::error_code ec;
-                    boost::asio::async_write(stream_.stream_descriptor(),
-                                             boost::asio::buffer(buf, len),
-                                             fibio::asio::yield[ec]);
-                    if(ec) throw TTransportException(TTransportException::NOT_OPEN,
-                                                     "Cannot write.");
-                }
-            }
+            void write(const uint8_t* buf, uint32_t len)
+            { return detail::io_ops<buffered>::write(stream_, buf, len); }
 
         private:
             friend class server::TFibioServer<Stream, buffered>;
