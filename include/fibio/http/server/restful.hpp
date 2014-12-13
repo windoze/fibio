@@ -182,18 +182,10 @@ namespace fibio { namespace http {
         const T &t_;
     };
     
-    template<typename T>
-    routing_table resource(const std::string &prefix, T &t) {
-        return std::make_shared<resource_controller<T>>(prefix, t)->operator routing_table();
-    }
-    
-    template<typename T>
-    routing_table resource(const std::string &prefix, const T &t) {
-        return std::make_shared<const_resource_controller<T>>(prefix, t)->operator routing_table();
-    }
-    
     template<typename Collection>
     struct resource_key_generator;
+    
+    struct null_key_generator{};
     
     // Key generator for vector, key is not used
     template<typename T>
@@ -217,8 +209,8 @@ namespace fibio { namespace http {
         }
     };
     
-    // Collection resource
-    template<typename Collection, typename KeyGen=resource_key_generator<Collection>>
+    // Collection resource with key generator, key generator will generate a new key for posted new item.
+    template<typename Collection, typename KeyGen>
     struct resources_controller : std::enable_shared_from_this<resources_controller<Collection, KeyGen>> {
         typedef std::enable_shared_from_this<resources_controller<Collection, KeyGen>> base_type;
         typedef typename traits::collection_traits<Collection> traits_type;
@@ -260,7 +252,7 @@ namespace fibio { namespace http {
                                            if(i==std::end(p->c_)) throw(server_error(http_status_code::NOT_FOUND));
                                            return *i;
                                        },
-                                       // Update/create item
+                                       // Update/create item with supplied key
                                        put_(item_) >> [p](server::request &req, server::response &resp, key_type &&k){
                                            fibio::unique_lock<typename traits::resource_lock<Collection>::type> lk(p->mtx_);
                                            iterator i=traits_type::find(p->c_, k);
@@ -292,6 +284,73 @@ namespace fibio { namespace http {
         const std::string item_;
         Collection &c_;
         KeyGen kg_;
+    };
+    
+    // Collection resource without key generator, only way to create/update item is to PUT with key.
+    template<typename Collection>
+    struct resources_controller<Collection, null_key_generator>
+    : std::enable_shared_from_this<resources_controller<Collection, null_key_generator>>
+    {
+        typedef std::enable_shared_from_this<resources_controller<Collection, null_key_generator>> base_type;
+        typedef typename traits::collection_traits<Collection> traits_type;
+        typedef typename traits_type::key_type key_type;
+        typedef typename traits_type::value_type value_type;
+        typedef typename traits_type::iterator iterator;
+        typedef typename traits_type::const_iterator const_iterator;
+        
+        resources_controller(const std::string &prefix, Collection &c)
+        : prefix_(prefix)
+        , item_(prefix+"/:key")
+        , c_(c)
+        {}
+        
+        operator routing_table() {
+            auto p=base_type::shared_from_this();
+            return routing_table::make(
+                                       // Index
+                                       get_(prefix_) >> [p](server::request &, server::response &resp){
+                                           fibio::shared_lock<typename traits::resource_lock<Collection>::type> lk(p->mtx_);
+                                           resp.body_stream() << p->c_;
+                                           return true;
+                                       },
+                                       // Read item
+                                       get_(item_) >> [p](key_type &&k)->value_type{
+                                           fibio::shared_lock<typename traits::resource_lock<Collection>::type> lk(p->mtx_);
+                                           const_iterator i=traits_type::find(p->c_, k);
+                                           if(i==std::end(p->c_)) throw(server_error(http_status_code::NOT_FOUND));
+                                           return *i;
+                                       },
+                                       // Update/create item with supplied key
+                                       put_(item_) >> [p](server::request &req, server::response &resp, key_type &&k){
+                                           fibio::unique_lock<typename traits::resource_lock<Collection>::type> lk(p->mtx_);
+                                           iterator i=traits_type::find(p->c_, k);
+                                           if(i==std::end(p->c_)) {
+                                               // Create new item
+                                               value_type v;
+                                               req.body_stream() >> v;
+                                               k=traits_type::insert(p->c_, k, std::move(v));
+                                               resp.status_code(http_status_code::CREATED);
+                                               resp.header("Location", p->prefix_+"/"+boost::lexical_cast<std::string>(k));
+                                           } else {
+                                               // Update existing item
+                                               req.body_stream() >> *i;
+                                           }
+                                           return true;
+                                       },
+                                       // Delete item
+                                       delete_(item_) >> [p](server::request &, server::response &, key_type &&k){
+                                           fibio::unique_lock<typename traits::resource_lock<Collection>::type> lk(p->mtx_);
+                                           iterator i=traits_type::find(p->c_, k);
+                                           if(i==std::end(p->c_)) throw(server_error(http_status_code::NOT_FOUND));
+                                           p->c_.erase(i);
+                                           return true;
+                                       });
+        }
+        
+        typename traits::resource_lock<Collection>::type mtx_;
+        const std::string prefix_;
+        const std::string item_;
+        Collection &c_;
     };
     
     // Read-only collection resource
@@ -332,14 +391,73 @@ namespace fibio { namespace http {
         const std::string item_;
         const Collection &c_;
     };
+
+    /// Singleton resource
+    template<typename T>
+    routing_table resource(const std::string &prefix, T &t) {
+        static_assert(std::is_convertible<decltype(std::declval<std::istream&>() >> t), std::istream&>::value,
+                      "Type must be able to read from std::istream");
+        static_assert(std::is_convertible<decltype(std::declval<std::ostream&>() << t), std::ostream&>::value,
+                      "Type must be able to write to std::ostream");
+        return std::make_shared<resource_controller<T>>(prefix, t)->operator routing_table();
+    }
     
-    template<typename Collection, typename KeyGen=resource_key_generator<Collection>>
-    routing_table resources(const std::string &prefix, Collection &c, KeyGen kg=resource_key_generator<Collection>()) {
+    /// Singleton read only resource
+    template<typename T>
+    routing_table resource(const std::string &prefix, const T &t) {
+        static_assert(std::is_convertible<decltype(std::declval<std::ostream&>() << t), std::ostream&>::value,
+                      "Type must be able to write to std::ostream");
+        return std::make_shared<const_resource_controller<T>>(prefix, t)->operator routing_table();
+    }
+    
+    /// Resource collection without key generator, can only use PUT to create or update item with supplied key
+    template<typename Collection>
+    routing_table resources(const std::string &prefix, Collection &c) {
+        typedef traits::collection_traits<Collection> traits_type;
+        typedef typename traits_type::value_type element;
+        static_assert(std::is_convertible<decltype(std::declval<std::istream&>()
+                                                   >> std::declval<element&>()), std::istream&>::value,
+                      "Element must be able to read from std::istream");
+        static_assert(std::is_convertible<decltype(std::declval<std::ostream&>()
+                                                   << std::declval<const element&>()), std::ostream&>::value,
+                      "Element must be able to write to std::ostream");
+        static_assert(std::is_convertible<decltype(std::declval<std::ostream&>()
+                                                   << std::declval<const Collection&>()), std::ostream&>::value,
+                      "Collection must be able to write to std::ostream");
+        return std::make_shared<resources_controller<Collection, null_key_generator>>(prefix, c)->operator routing_table();
+    }
+    
+    /// Resource collection with key generator, key will be generated when using POST to create new item
+    /// Following function will be called to generate a new key
+    /// key_type kg(Collection &)
+    template<typename Collection, typename KeyGen>
+    routing_table resources(const std::string &prefix, Collection &c, KeyGen kg) {
+        typedef traits::collection_traits<Collection> traits_type;
+        typedef typename traits_type::value_type element;
+        static_assert(std::is_convertible<decltype(std::declval<std::istream&>()
+                                                   >> std::declval<element&>()), std::istream&>::value,
+                      "Element must be able to read from std::istream");
+        static_assert(std::is_convertible<decltype(std::declval<std::ostream&>()
+                                                   << std::declval<const element&>()), std::ostream&>::value,
+                      "Element must be able to write to std::ostream");
+        static_assert(std::is_convertible<decltype(std::declval<std::ostream&>()
+                                                   << std::declval<const Collection&>()), std::ostream&>::value,
+                      "Collection must be able to write to std::ostream");
+        static_assert(std::is_convertible<decltype(kg(c)), typename resources_controller<Collection, KeyGen>::key_type>::value,
+                      "KeyGen(c) must return key_type");
         return std::make_shared<resources_controller<Collection, KeyGen>>(prefix, c, kg)->operator routing_table();
     }
     
+    /// Read only resource collection
     template<typename Collection>
     routing_table resources(const std::string &prefix, const Collection &c) {
+        typedef traits::collection_traits<Collection> traits_type;
+        typedef typename traits_type::value_type element;
+        static_assert(std::is_convertible<decltype(std::declval<std::ostream&>()
+                                                   << std::declval<const element&>()), std::ostream&>::value,
+                      "Element must be able to write to std::ostream");
+        static_assert(std::is_convertible<decltype(std::declval<std::ostream&>() << c), std::ostream&>::value,
+                      "Collection must be able to write to std::ostream");
         return std::make_shared<const_resources_controller<Collection>>(prefix, c)->operator routing_table();
     }
 }}  // End of namespace fibio::http
