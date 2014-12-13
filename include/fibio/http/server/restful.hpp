@@ -153,7 +153,7 @@ namespace fibio { namespace http {
                                        },
                                        put_(prefix_) >> [p](server::request &req, server::response &){
                                            fibio::unique_lock<typename traits::resource_lock<T>::type> lk(p->mtx_);
-                                           req.body_stream() >> (p->t_);
+                                           req >> (p->t_);
                                            return true;
                                        });
         }
@@ -239,7 +239,7 @@ namespace fibio { namespace http {
                                        post_(prefix_) >>[p](server::request &req, server::response &resp){
                                            fibio::unique_lock<typename traits::resource_lock<Collection>::type> lk(p->mtx_);
                                            value_type v;
-                                           req.body_stream() >> v;
+                                           req >> v;
                                            key_type k=traits_type::insert(p->c_, p->kg_(p->c_), std::move(v));
                                            resp.status_code(http_status_code::CREATED);
                                            resp.header("Location", p->prefix_+"/"+boost::lexical_cast<std::string>(k));
@@ -259,13 +259,13 @@ namespace fibio { namespace http {
                                            if(i==std::end(p->c_)) {
                                                // Create new item
                                                value_type v;
-                                               req.body_stream() >> v;
+                                               req >> v;
                                                k=traits_type::insert(p->c_, k, std::move(v));
                                                resp.status_code(http_status_code::CREATED);
                                                resp.header("Location", p->prefix_+"/"+boost::lexical_cast<std::string>(k));
                                            } else {
                                                // Update existing item
-                                               req.body_stream() >> *i;
+                                               req >> *i;
                                            }
                                            return true;
                                        },
@@ -327,13 +327,13 @@ namespace fibio { namespace http {
                                            if(i==std::end(p->c_)) {
                                                // Create new item
                                                value_type v;
-                                               req.body_stream() >> v;
+                                               req >> v;
                                                k=traits_type::insert(p->c_, k, std::move(v));
                                                resp.status_code(http_status_code::CREATED);
                                                resp.header("Location", p->prefix_+"/"+boost::lexical_cast<std::string>(k));
                                            } else {
                                                // Update existing item
-                                               req.body_stream() >> *i;
+                                               req >> *i;
                                            }
                                            return true;
                                        },

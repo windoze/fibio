@@ -16,52 +16,6 @@
 #include <fibio/http/common/cookie.hpp>
 
 namespace fibio { namespace http {
-    namespace detail {
-        /*
-        struct param_map {
-            typedef std::vector<std::pair<const std::string, std::string>> map_type;
-            std::pair<const std::string, std::string> element;
-            typedef const std::string key_type;
-            typedef std::string value_type;
-            
-            typedef std::string &reference;
-            typedef const std::string &const_reference;
-            typedef map_type::iterator iterator;
-            typedef map_type::const_iterator const_iterator;
-            const_iterator begin() const { return data.begin(); }
-            const_iterator end() const { return data.end(); }
-            const_reference operator[] (const key_type &k) const {
-                static const value_type empty="";
-                for(auto &e : data) { if(e.first==k) return e.second; }
-                return empty;
-            }
-            
-            reference operator[](size_t i) { return data[i].second; }
-            const_reference operator[](size_t i) const { return data[i].second; }
-            
-            iterator insert(const element &e) {
-                iterator ret=find(e.first);
-                if(ret==end()) {
-                    data.push_back(e);
-                    return data.begin()+data.size();
-                }
-                ret->second=e.second;
-                return ret;
-            }
-            
-            void push_back()
-            
-            iterator find(const key_type &k)
-            { return std::find_if(begin(), end(), [](const element &e)->bool{return e.first==k}); }
-            const_iterator find const (const key_type &k)
-            { return std::find_if(begin(), end(), [](const element &e)->bool{return e.first==k}); }
-            
-            const_iterator fi
-            
-            map_type data;
-        };
-         */
-    }
     struct server_request : common::request {
         void clear();
         
@@ -96,7 +50,11 @@ namespace fibio { namespace http {
             return i->second;
         }
         
-        //std::map<std::string, std::string> params;
+        template<typename T>
+        std::istream &operator>>(T &t) {
+            return body_stream() >> t;
+        }
+        
         std::vector<std::pair<std::string, std::string>> params;
         
     //private:
