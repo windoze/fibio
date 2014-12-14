@@ -39,10 +39,10 @@ void test_sort(client &c) {
     c.flushdb();
     c.lpush("mylist", {"c"});
     c.lpush("mylist", {"b", "a"});
-    client::sort_criteria crit;
-    crit.alpha=true;
-    c.sort("mylist", crit);
-    assert((c.lrange("mylist", 0, 100)==std::list<std::string>{"a", "b", "c"}));
+    assert((c.sort("mylist", client::sort_criteria().alpha())==std::list<std::string>{"a", "b", "c"}));
+    assert((c.sort("mylist", client::sort_criteria().alpha().desc())==std::list<std::string>{"c", "b", "a"}));
+    assert(c.sort("mylist", client::sort_criteria().alpha().desc(), "mylist2")==3);
+    assert((c.lrange("mylist2", 0, 100)==std::list<std::string>{"c", "b", "a"}));
 }
 
 void test_pub() {

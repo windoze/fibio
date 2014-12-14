@@ -924,31 +924,53 @@ namespace fibio { namespace redis {
         return extract<int64_t>(call(cmd));
     }
     
-    std::list<std::string> client::sort(const std::string &key, client::sort_criteria &&crit) {
+    std::list<std::string> client::sort(const std::string &key, const client::sort_criteria &crit) {
         array cmd=make_array("SORT", key);
-        if (!crit.by_pattern.empty()) {
-            cmd << "BY" << crit.by_pattern;
+        if (!crit.by_pattern_.empty()) {
+            cmd << "BY" << crit.by_pattern_;
         }
-        if (crit.count>0) {
-            cmd << "LIMIT" << crit.offset << crit.count;
+        if (crit.count_>0) {
+            cmd << "LIMIT" << crit.offset_ << crit.count_;
         }
-        if (!crit.get_patterns.empty()) {
-            for (const auto &i : crit.get_patterns) {
+        if (!crit.get_patterns_.empty()) {
+            for (const auto &i : crit.get_patterns_) {
                 cmd << "GET" << i;
             }
         }
-        if (crit.asc) {
+        if (crit.asc_) {
             //cmd << "ASC";
         } else {
             cmd << "DESC";
         }
-        if (crit.alpha) {
+        if (crit.alpha_) {
             cmd << "ALPHA";
         }
-        if (!crit.destination.empty()) {
-            cmd << "STORE" << crit.destination;
-        }
         return extract<std::list<std::string>>(call(cmd));
+    }
+    
+    int64_t client::sort(const std::string &key, const sort_criteria &crit, const std::string &destination) {
+        array cmd=make_array("SORT", key);
+        if (!crit.by_pattern_.empty()) {
+            cmd << "BY" << crit.by_pattern_;
+        }
+        if (crit.count_>0) {
+            cmd << "LIMIT" << crit.offset_ << crit.count_;
+        }
+        if (!crit.get_patterns_.empty()) {
+            for (const auto &i : crit.get_patterns_) {
+                cmd << "GET" << i;
+            }
+        }
+        if (crit.asc_) {
+            //cmd << "ASC";
+        } else {
+            cmd << "DESC";
+        }
+        if (crit.alpha_) {
+            cmd << "ALPHA";
+        }
+        cmd << "STORE" << destination;
+        return extract<int64_t>(call(cmd));
     }
     
     void subscribing_fiber(tcp_stream &s, message_queue &q) {

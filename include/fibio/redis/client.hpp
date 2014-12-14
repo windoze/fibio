@@ -105,18 +105,53 @@ namespace fibio { namespace redis {
         
         // Sorting
         struct sort_criteria {
-            std::string by_pattern;
-            int64_t offset=0;
-            int64_t count=-1;
-            std::list<std::string> get_patterns;
-            bool asc=true;
-            bool alpha=false;
-            std::string destination;
+            sort_criteria &by(const std::string &pattern) {
+                by_pattern_=pattern;
+                return *this;
+            }
+            
+            sort_criteria &limit(int64_t offset, int64_t count) {
+                offset_=offset;
+                count_=count;
+                return *this;
+            }
+            
+            sort_criteria &get(const std::string &pattern) {
+                get_patterns_.push_back(pattern);
+                return *this;
+            }
+            
+            sort_criteria &get(const std::list<std::string> &patterns) {
+                get_patterns_.insert(get_patterns_.end(), patterns.begin(), patterns.end());
+                return *this;
+            }
+            
+            sort_criteria &asc() {
+                asc_=true;
+                return *this;
+            }
+            
+            sort_criteria &desc() {
+                asc_=false;
+                return *this;
+            }
+            
+            sort_criteria &alpha(bool alpha=true) {
+                alpha_=alpha;
+                return *this;
+            }
+            
+            std::string by_pattern_;
+            int64_t offset_=0;
+            int64_t count_=-1;
+            std::list<std::string> get_patterns_;
+            bool asc_=true;
+            bool alpha_=false;
         };
-        std::list<std::string> sort(const std::string &key, sort_criteria &&crit);
-        std::list<std::string> sort(const std::string &key, const sort_criteria &crit) {
-            return sort(key, sort_criteria(crit));
-        }
+        // Sort
+        std::list<std::string> sort(const std::string &key, const sort_criteria &crit);
+        // Sort and store
+        int64_t sort(const std::string &key, const sort_criteria &crit, const std::string &destination);
         
         // Commands
         int64_t append(const std::string &key,
