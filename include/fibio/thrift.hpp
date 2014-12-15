@@ -27,12 +27,22 @@ namespace apache { namespace thrift {
             struct io_ops<true> {
                 template<typename Stream>
                 static uint32_t read(fibio::stream::fiberized_iostream<Stream> &s, uint8_t* buf, uint32_t len) {
+                    if(!s) {
+                        throw TTransportException(TTransportException::NOT_OPEN,
+                                                  "Cannot read.");
+                    }
                     s.read((char *)buf, len);
-                    return s.gcount();
+                    if (s.gcount()<len) {
+                        throw TTransportException(TTransportException::END_OF_FILE,
+                                                  "No more data to read.");
+                    }
+                    return len;
                 }
                 template<typename Stream>
                 static void write(fibio::stream::fiberized_iostream<Stream> &s, const uint8_t* buf, uint32_t len) {
-                    if(s) s.write((const char *)buf, len);
+                    if(!s) throw TTransportException(TTransportException::NOT_OPEN,
+                                                     "Cannot write.");
+                    s.write((const char *)buf, len);
                 }
             };
 
