@@ -149,8 +149,11 @@ namespace fibio { namespace fibers {
         }
     }
     
-    cv_status condition_variable::wait_usec(std::unique_lock<mutex>& lock, uint64_t usec) {
+    cv_status condition_variable::wait_usec(std::unique_lock<mutex>& lock, int64_t usec) {
         CHECK_CURRENT_FIBER;
+        if (usec<0) {
+            BOOST_THROW_EXCEPTION(fibio::invalid_argument());
+        }
         if (detail::fiber_object::current_fiber_) {
             return impl_->wait_usec(lock.mutex()->impl_.get(), detail::fiber_object::current_fiber_->shared_from_this(), usec);
         }

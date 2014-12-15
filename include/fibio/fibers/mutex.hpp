@@ -86,7 +86,7 @@ namespace fibio { namespace fibers {
         /// non-copyable
         timed_mutex(const timed_mutex&) = delete;
         void operator=(const timed_mutex&) = delete;
-        bool try_lock_usec(uint64_t usec);
+        bool try_lock_usec(int64_t usec);
         struct impl_deleter {
             void operator()(detail::timed_mutex_object *p);
         };
@@ -165,7 +165,7 @@ namespace fibio { namespace fibers {
         /// non-copyable
         recursive_timed_mutex(const recursive_timed_mutex&) = delete;
         void operator=(const recursive_timed_mutex&) = delete;
-        bool try_lock_usec(uint64_t usec);
+        bool try_lock_usec(int64_t usec);
         struct impl_deleter {
             void operator()(detail::recursive_timed_mutex_object *p);
         };

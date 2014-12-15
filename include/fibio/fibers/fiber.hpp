@@ -232,7 +232,7 @@ namespace fibio { namespace fibers {
     
     namespace this_fiber {
         namespace detail {
-            void sleep_usec(uint64_t usec);
+            void sleep_usec(int64_t usec);
 
             /**
              * returns the io_service associated with the current fiber

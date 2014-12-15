@@ -105,7 +105,7 @@ namespace fibio { namespace fibers {
         /// non-copyable
         condition_variable(const condition_variable&) = delete;
         void operator=(const condition_variable&) = delete;
-        cv_status wait_usec(std::unique_lock<mutex>& lock, uint64_t usec);
+        cv_status wait_usec(std::unique_lock<mutex>& lock, int64_t usec);
         struct impl_deleter {
             void operator()(detail::condition_variable_object *p);
         };

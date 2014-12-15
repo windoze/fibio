@@ -415,8 +415,11 @@ namespace fibio { namespace fibers {
         return false;
     }
     
-    bool timed_mutex::try_lock_usec(uint64_t usec) {
+    bool timed_mutex::try_lock_usec(int64_t usec) {
         CHECK_CURRENT_FIBER;
+        if (usec<0) {
+            BOOST_THROW_EXCEPTION(fibio::invalid_argument());
+        }
         if (detail::fiber_object::current_fiber_) {
             return impl_->try_lock_usec(detail::fiber_object::current_fiber_->shared_from_this(), usec);
         }
@@ -475,8 +478,11 @@ namespace fibio { namespace fibers {
         return false;
     }
     
-    bool recursive_timed_mutex::try_lock_usec(uint64_t usec) {
+    bool recursive_timed_mutex::try_lock_usec(int64_t usec) {
         CHECK_CURRENT_FIBER;
+        if (usec<0) {
+            BOOST_THROW_EXCEPTION(fibio::invalid_argument());
+        }
         if (detail::fiber_object::current_fiber_) {
             return impl_->try_lock_usec(detail::fiber_object::current_fiber_->shared_from_this(), usec);
         }

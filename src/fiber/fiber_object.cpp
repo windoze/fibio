@@ -479,8 +479,11 @@ namespace fibio { namespace fibers {
         }
         
         namespace detail {
-            void sleep_usec(uint64_t usec) {
+            void sleep_usec(int64_t usec) {
                 if (::fibio::fibers::detail::fiber_object::current_fiber_) {
+                    if (usec<0) {
+                        BOOST_THROW_EXCEPTION(fibio::invalid_argument());
+                    }
                     ::fibio::fibers::detail::fiber_object::current_fiber_->sleep_usec(usec);
                 } else {
                     BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
