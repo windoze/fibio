@@ -232,7 +232,7 @@ namespace fibio { namespace fibers {
     
     namespace this_fiber {
         namespace detail {
-            void sleep_usec(int64_t usec);
+            void sleep_rel(fibers::detail::duration_t d);
 
             /**
              * returns the io_service associated with the current fiber
@@ -266,7 +266,7 @@ namespace fibio { namespace fibers {
          */
         template< class Rep, class Period >
         void sleep_for( const std::chrono::duration<Rep,Period>& sleep_duration ) {
-            detail::sleep_usec(std::chrono::duration_cast<std::chrono::microseconds>(sleep_duration).count());
+            detail::sleep_rel(std::chrono::duration_cast<fibers::detail::duration_t>(sleep_duration));
         }
         
         /**
@@ -274,7 +274,7 @@ namespace fibio { namespace fibers {
          */
         template< class Clock, class Duration >
         void sleep_until( const std::chrono::time_point<Clock,Duration>& sleep_time ) {
-            detail::sleep_usec(std::chrono::duration_cast<std::chrono::microseconds>(sleep_time - std::chrono::steady_clock::now()).count());
+            sleep_for(sleep_time-Clock::now());
         }
 
         /**

@@ -252,14 +252,9 @@ namespace fibio { namespace fibers { namespace detail {
     
     void propagate_exception(fiber_ptr_t f) {
         std::exception_ptr e;
-        if (f->uncaught_exception_ != std::exception_ptr()) {
-            // Propagate uncaught exception in f to this fiber
-            e=f->uncaught_exception_;
-            // Clean uncaught exception in f
-            f->uncaught_exception_=std::exception_ptr();
-        }
-        // throw propagated exception
-        if (e != std::exception_ptr()) {
+        std::swap(e, f->uncaught_exception_);
+        // throw exception
+        if (e) {
             std::rethrow_exception(e);
         }
     }
@@ -285,14 +280,14 @@ namespace fibio { namespace fibers { namespace detail {
         propagate_exception(f);
     }
 
-    void fiber_object::sleep_usec(uint64_t usec) {
+    void fiber_object::sleep_rel(duration_t d) {
         // Shortcut
-        if (usec==0) {
+        if (d==duration_t::zero()) {
             return;
         }
         CHECK_CALLER(this);
         timer_t sleep_timer(get_io_service());
-        sleep_timer.expires_from_now(std::chrono::microseconds(usec));
+        sleep_timer.expires_from_now(d);
         sleep_timer.async_wait(std::bind(&fiber_object::activate, shared_from_this()));
 
         pause();
@@ -397,7 +392,7 @@ namespace fibio { namespace fibers {
     {}
     
     fiber& fiber::operator=(fiber &&other) noexcept {
-        if (joinable()) {
+        if (impl_) {
             // This fiber is still active, std::thread will call std::terminate in the case
             std::terminate();
         }
@@ -479,12 +474,12 @@ namespace fibio { namespace fibers {
         }
         
         namespace detail {
-            void sleep_usec(int64_t usec) {
+            void sleep_rel(fibers::detail::duration_t d) {
                 if (::fibio::fibers::detail::fiber_object::current_fiber_) {
-                    if (usec<0) {
+                    if (d<fibers::detail::duration_t::zero()) {
                         BOOST_THROW_EXCEPTION(fibio::invalid_argument());
                     }
-                    ::fibio::fibers::detail::fiber_object::current_fiber_->sleep_usec(usec);
+                    ::fibio::fibers::detail::fiber_object::current_fiber_->sleep_rel(d);
                 } else {
                     BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
                 }

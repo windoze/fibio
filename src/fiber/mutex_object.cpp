@@ -213,7 +213,7 @@ namespace fibio { namespace fibers { namespace detail {
         this_fiber->resume();
     }
 
-    bool timed_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
+    bool timed_mutex_object::try_lock_rel(fiber_ptr_t this_fiber, duration_t d) {
         CHECK_CALLER(this_fiber);
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_==this_fiber) {
@@ -227,7 +227,7 @@ namespace fibio { namespace fibers { namespace detail {
         // This mutex is locked
         // Add this fiber into waiting queue
         timer_t t(this_fiber->get_io_service());
-        t.expires_from_now(std::chrono::microseconds(usec));
+        t.expires_from_now(d);
         t.async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timed_mutex_timeout_handler,
                                                                     this_fiber,
                                                                     this,
@@ -333,7 +333,7 @@ namespace fibio { namespace fibers { namespace detail {
         this_fiber->resume();
     }
 
-    bool recursive_timed_mutex_object::try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec) {
+    bool recursive_timed_mutex_object::try_lock_rel(fiber_ptr_t this_fiber, duration_t d) {
         CHECK_CALLER(this_fiber);
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_==this_fiber) {
@@ -349,7 +349,7 @@ namespace fibio { namespace fibers { namespace detail {
         // This mutex is locked
         // Add this fiber into waiting queue
         timer_t t(this_fiber->get_io_service());
-        t.expires_from_now(std::chrono::microseconds(usec));
+        t.expires_from_now(d);
         t.async_wait(this_fiber->get_fiber_strand().wrap(std::bind(recursive_timed_mutex_timeout_handler,
                                                                     this_fiber,
                                                                     this,
@@ -415,13 +415,13 @@ namespace fibio { namespace fibers {
         return false;
     }
     
-    bool timed_mutex::try_lock_usec(int64_t usec) {
+    bool timed_mutex::try_lock_rel(detail::duration_t d) {
         CHECK_CURRENT_FIBER;
-        if (usec<0) {
+        if (d<detail::duration_t::zero()) {
             BOOST_THROW_EXCEPTION(fibio::invalid_argument());
         }
         if (detail::fiber_object::current_fiber_) {
-            return impl_->try_lock_usec(detail::fiber_object::current_fiber_->shared_from_this(), usec);
+            return impl_->try_lock_rel(detail::fiber_object::current_fiber_->shared_from_this(), d);
         }
         return false;
     }
@@ -478,13 +478,13 @@ namespace fibio { namespace fibers {
         return false;
     }
     
-    bool recursive_timed_mutex::try_lock_usec(int64_t usec) {
+    bool recursive_timed_mutex::try_lock_rel(detail::duration_t d) {
         CHECK_CURRENT_FIBER;
-        if (usec<0) {
+        if (d<detail::duration_t::zero()) {
             BOOST_THROW_EXCEPTION(fibio::invalid_argument());
         }
         if (detail::fiber_object::current_fiber_) {
-            return impl_->try_lock_usec(detail::fiber_object::current_fiber_->shared_from_this(), usec);
+            return impl_->try_lock_rel(detail::fiber_object::current_fiber_->shared_from_this(), d);
         }
         return false;
     }

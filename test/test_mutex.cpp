@@ -47,7 +47,7 @@ timed_mutex tm;
 void child() {
     this_fiber::yield();
     bool ret=tm.try_lock_for(std::chrono::milliseconds(10));
-    ret=tm.try_lock_for(std::chrono::seconds(2));
+    ret=tm.try_lock_until(std::chrono::system_clock::now()+std::chrono::seconds(2));
     assert(ret);
     tm.unlock();
     //printf("child()\n");
@@ -63,11 +63,38 @@ void parent() {
     //printf("parent():2\n");
 }
 
+recursive_timed_mutex rtm;
+
+void rchild() {
+    this_fiber::yield();
+    bool ret=rtm.try_lock_for(std::chrono::milliseconds(10));
+    ret=rtm.try_lock_until(std::chrono::steady_clock::now()+std::chrono::seconds(2));
+    assert(ret);
+    rtm.unlock();
+    //printf("child()\n");
+}
+
+void rparent() {
+    bool ret=rtm.try_lock();
+    ret=rtm.try_lock();
+    assert(ret);
+    rtm.unlock();
+    rtm.unlock();
+    fiber f(rchild);
+    rtm.lock();
+    this_fiber::sleep_for(std::chrono::seconds(1));
+    rtm.unlock();
+    //printf("parent():1\n");
+    f.join();
+    //printf("parent():2\n");
+}
+
 int fibio::main(int argc, char *argv[]) {
     this_fiber::get_scheduler().add_worker_thread(3);
 
     fiber_group fibers;
     fibers.create_fiber(parent);
+    fibers.create_fiber(rparent);
     for (int i=0; i<10; i++) {
         fibers.create_fiber(f, i);
     }

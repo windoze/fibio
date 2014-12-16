@@ -66,7 +66,7 @@ namespace fibio { namespace fibers {
          */
         template<class Rep, class Period>
         bool try_lock_for(const std::chrono::duration<Rep,Period>& timeout_duration ) {
-            return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count());
+            return try_lock_rel(std::chrono::duration_cast<detail::duration_t>(timeout_duration));
         }
         
         /**
@@ -75,7 +75,7 @@ namespace fibio { namespace fibers {
          */
         template< class Clock, class Duration >
         bool try_lock_until(const std::chrono::time_point<Clock,Duration>& timeout_time ) {
-            return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::steady_clock::now()).count());
+            return try_lock_for(timeout_time-Clock::now());
         }
         
         /**
@@ -86,7 +86,7 @@ namespace fibio { namespace fibers {
         /// non-copyable
         timed_mutex(const timed_mutex&) = delete;
         void operator=(const timed_mutex&) = delete;
-        bool try_lock_usec(int64_t usec);
+        bool try_lock_rel(detail::duration_t d);
         struct impl_deleter {
             void operator()(detail::timed_mutex_object *p);
         };
@@ -149,7 +149,7 @@ namespace fibio { namespace fibers {
          */
         template<class Rep, class Period>
         bool try_lock_for(const std::chrono::duration<Rep,Period>& timeout_duration) {
-            return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count());
+            return try_lock_rel(std::chrono::duration_cast<detail::duration_t>(timeout_duration));
         }
         
         /**
@@ -158,14 +158,14 @@ namespace fibio { namespace fibers {
          */
         template<class Clock, class Duration>
         bool try_lock_until(const std::chrono::time_point<Clock,Duration>& timeout_time) {
-            return try_lock_usec(std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::steady_clock::now()).count());
+            return try_lock_for(timeout_time-Clock::now());
         }
         
     private:
         /// non-copyable
         recursive_timed_mutex(const recursive_timed_mutex&) = delete;
         void operator=(const recursive_timed_mutex&) = delete;
-        bool try_lock_usec(int64_t usec);
+        bool try_lock_rel(detail::duration_t d);
         struct impl_deleter {
             void operator()(detail::recursive_timed_mutex_object *p);
         };

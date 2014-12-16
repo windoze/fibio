@@ -54,8 +54,7 @@ namespace fibio { namespace fibers {
          */
         template< class Rep, class Period >
         cv_status wait_for(std::unique_lock<mutex>& lock, const std::chrono::duration<Rep,Period>& timeout_duration) {
-            return wait_usec(lock,
-                             std::chrono::duration_cast<std::chrono::microseconds>(timeout_duration).count());
+            return wait_rel(lock, std::chrono::duration_cast<detail::duration_t>(timeout_duration));
         }
         
         /**
@@ -80,8 +79,7 @@ namespace fibio { namespace fibers {
          */
         template< class Clock, class Duration >
         cv_status wait_until(std::unique_lock<mutex>& lock, const std::chrono::time_point<Clock,Duration>& timeout_time) {
-            return wait_usec(lock,
-                             std::chrono::duration_cast<std::chrono::microseconds>(timeout_time - std::chrono::steady_clock::now()).count());
+            return wait_for(lock, timeout_time-Clock::now());
         }
         
         /**
@@ -105,7 +103,7 @@ namespace fibio { namespace fibers {
         /// non-copyable
         condition_variable(const condition_variable&) = delete;
         void operator=(const condition_variable&) = delete;
-        cv_status wait_usec(std::unique_lock<mutex>& lock, int64_t usec);
+        cv_status wait_rel(std::unique_lock<mutex>& lock, detail::duration_t d);
         struct impl_deleter {
             void operator()(detail::condition_variable_object *p);
         };

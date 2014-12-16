@@ -47,7 +47,7 @@ namespace fibio { namespace fibers { namespace detail {
     struct timed_mutex_object {
         void lock(fiber_ptr_t this_fiber);
         bool try_lock(fiber_ptr_t this_fiber);
-        bool try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec);
+        bool try_lock_rel(fiber_ptr_t this_fiber, duration_t d);
         void unlock(fiber_ptr_t this_fiber);
         
         spinlock mtx_;
@@ -66,7 +66,7 @@ namespace fibio { namespace fibers { namespace detail {
         
         void lock(fiber_ptr_t this_fiber);
         bool try_lock(fiber_ptr_t this_fiber);
-        bool try_lock_usec(fiber_ptr_t this_fiber, uint64_t usec);
+        bool try_lock_rel(fiber_ptr_t this_fiber, duration_t d);
         void unlock(fiber_ptr_t this_fiber);
         
         spinlock mtx_;

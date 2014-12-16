@@ -105,7 +105,7 @@ namespace fibio { namespace fibers { namespace detail {
         void yield(fiber_ptr_t hint=fiber_ptr_t());
         void join(fiber_ptr_t f);
         void join_and_rethrow(fiber_ptr_t f);
-        void sleep_usec(uint64_t usec);
+        void sleep_rel(duration_t d);
         
         // Implementations
         void runner_wrapper(caller_t &c);

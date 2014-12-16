@@ -9,9 +9,12 @@
 #ifndef fibio_fibers_detail_forward_hpp
 #define fibio_fibers_detail_forward_hpp
 
+#include <chrono>
 #include <boost/asio/io_service.hpp>
 
 namespace fibio { namespace fibers { namespace detail {
+    typedef std::chrono::steady_clock::duration duration_t;
+    typedef std::chrono::steady_clock::time_point time_point_t;
     struct scheduler_object;
     struct fiber_object;
     struct mutex_object;

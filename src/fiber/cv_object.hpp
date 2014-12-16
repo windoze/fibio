@@ -19,7 +19,7 @@
 namespace fibio { namespace fibers { namespace detail {
     struct condition_variable_object/* : std::enable_shared_from_this<condition_variable_object> */{
         void wait(mutex_object *m, fiber_ptr_t this_fiber);
-        cv_status wait_usec(mutex_object *m, fiber_ptr_t this_fiber, uint64_t usec);
+        cv_status wait_rel(mutex_object *m, fiber_ptr_t this_fiber, duration_t d);
         void notify_one();
         void notify_all();
         

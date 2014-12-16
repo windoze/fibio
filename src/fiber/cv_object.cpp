@@ -64,7 +64,7 @@ namespace fibio { namespace fibers { namespace detail {
         this_fiber->resume();
     }
     
-    cv_status condition_variable_object::wait_usec(mutex_object *m, fiber_ptr_t this_fiber, uint64_t usec) {
+    cv_status condition_variable_object::wait_rel(mutex_object *m, fiber_ptr_t this_fiber, duration_t d) {
         //CHECK_CALLER(this_fiber);
         cv_status ret=cv_status::no_timeout;
         if (this_fiber!=m->owner_) {
@@ -75,7 +75,7 @@ namespace fibio { namespace fibers { namespace detail {
         {
             std::lock_guard<spinlock> lock(mtx_);
             suspended_.push_back(suspended_item({m, this_fiber, &t}));
-            t.expires_from_now(std::chrono::microseconds(usec));
+            t.expires_from_now(d);
             t.async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timeout_handler,
                                                                        this_fiber,
                                                                        this,
@@ -149,13 +149,13 @@ namespace fibio { namespace fibers {
         }
     }
     
-    cv_status condition_variable::wait_usec(std::unique_lock<mutex>& lock, int64_t usec) {
+    cv_status condition_variable::wait_rel(std::unique_lock<mutex>& lock, detail::duration_t d) {
         CHECK_CURRENT_FIBER;
-        if (usec<0) {
+        if (d<detail::duration_t::zero()) {
             BOOST_THROW_EXCEPTION(fibio::invalid_argument());
         }
         if (detail::fiber_object::current_fiber_) {
-            return impl_->wait_usec(lock.mutex()->impl_.get(), detail::fiber_object::current_fiber_->shared_from_this(), usec);
+            return impl_->wait_rel(lock.mutex()->impl_.get(), detail::fiber_object::current_fiber_->shared_from_this(), d);
         }
         return cv_status::timeout;
     }
