@@ -9,7 +9,6 @@
 #ifndef fibio_fiber_object_hpp
 #define fibio_fiber_object_hpp
 
-#define BOOST_COROUTINES_UNIDIRECT
 #include <memory>
 #include <chrono>
 #include <deque>
