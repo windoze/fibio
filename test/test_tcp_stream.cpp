@@ -20,7 +20,7 @@ using namespace fibio;
 
 void child() {
     this_fiber::sleep_for(std::chrono::seconds(1));
-    stream::tcp_stream str;
+    tcp_stream str;
     boost::system::error_code ec=str.connect("127.0.0.1:12345");
     assert(!ec);
     str << "hello" << std::endl;
@@ -41,7 +41,7 @@ void parent() {
 
     tcp_stream_acceptor acc("127.0.0.1:12345");
     boost::system::error_code ec;
-    stream::tcp_stream str;
+    tcp_stream str;
     acc(str, ec);
     assert(!ec);
     std::string line;
