@@ -44,8 +44,7 @@ namespace fibio { namespace fibers { namespace detail {
     public:
         void inline allocate( boost::coroutines::stack_context &sc, std::size_t size) {
             allocator.allocate(sc, size);
-            auto res = stack_ids.insert(std::make_pair(sc.sp,
-                                                       VALGRIND_STACK_REGISTER(sc.sp, (((char*)sc.sp) - sc.size))));
+            auto res = stack_ids.insert({sc.sp, VALGRIND_STACK_REGISTER(sc.sp, (((char*)sc.sp) - sc.size))});
             (void)res;
             assert(res.second);
         }
@@ -348,9 +347,9 @@ namespace fibio { namespace fibers { namespace detail {
 
 namespace fibio { namespace fibers {
     void fiber::start() {
-        if (detail::fiber_object::current_fiber_) {
+        if (auto cf=detail::fiber_object::current_fiber_) {
             // use current scheduler if we're in a fiber
-            impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(data_.release());
+            impl_=cf->sched_->make_fiber(data_.release());
         } else {
             // use default scheduler if we're not in a fiber
             impl_=scheduler::get_instance().impl_->make_fiber(data_.release());
@@ -358,17 +357,17 @@ namespace fibio { namespace fibers {
     }
     
     void fiber::start(attributes attr) {
-        if (detail::fiber_object::current_fiber_) {
+        if (auto cf=detail::fiber_object::current_fiber_) {
             // use current scheduler if we're in a fiber
             switch(attr.policy) {
                 case attributes::scheduling_policy::normal: {
                     // Create an isolated fiber
-                    impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(data_.release());
+                    impl_=cf->sched_->make_fiber(data_.release());
                     break;
                 }
                 case attributes::scheduling_policy::stick_with_parent: {
                     // Create a fiber shares strand with parent
-                    impl_=detail::fiber_object::current_fiber_->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
+                    impl_=cf->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
                                                                                    data_.release());
                     break;
                 }

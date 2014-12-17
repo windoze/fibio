@@ -56,7 +56,7 @@ namespace fibio { namespace fibers { namespace detail {
         scheduler_ptr_t pthis(shared_from_this());
         check_timer->async_wait(std::bind(&scheduler_object::on_check_timer, pthis, std::placeholders::_1));
         for(size_t i=0; i<nthr; i++) {
-            threads_.push_back(std::thread(std::bind(run_in_this_thread, pthis)));
+            threads_.push_back(std::thread(run_in_this_thread, pthis));
         }
     }
     
