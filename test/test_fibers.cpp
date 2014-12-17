@@ -12,6 +12,13 @@
 #include <thread>
 #include <fibio/fiber.hpp>
 
+// By defining this, fibio will not replace stream buffers for std streams
+// Then blocking of std streams will block a thread of scheduler.
+// This is needed if you're using multiple scheduler, and more than one of them
+// need to access std streams
+#define FIBIO_DONT_USE_FIBERIZED_STD_STREAM
+#include <fibio/fiberize.hpp>
+
 using namespace fibio;
 
 std::mutex cout_mtx;
@@ -117,6 +124,7 @@ void main_fiber(/*int argc, char *argv[]*/) {
     assert(d5.n==0);
     // d6.n changed
     assert(d6.n=400);
+    // We need a lock as the std::cout is shared across 3 schedulers
     std::lock_guard<std::mutex> lk(cout_mtx);
     std::cout << "main_fiber exiting" << std::endl;
 }
@@ -131,13 +139,16 @@ void thr_entry() {
         std::lock_guard<std::mutex> lk(cout_mtx);
         std::cerr << "Exception: " << e.what() << "\n";
     }
+    return;
 }
 
-int main() {
-    // Create 2 schedulers
+int fibio::main(int argc, char *argv[]) {
+    // Create 2 schedulers from a fiber belongs to the default scheduler
     std::thread t1(thr_entry);
     std::thread t2(thr_entry);
     t1.join();
     t2.join();
+    
+    std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }

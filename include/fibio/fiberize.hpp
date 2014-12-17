@@ -16,9 +16,16 @@
 #include <fibio/fibers/fiber.hpp>
 #include <fibio/stream/streambuf.hpp>
 
+/// Define this to stop using fiberized std stream
+//#define FIBIO_DONT_USE_FIBERIZED_STD_STREAM
+
+/// Define this to stop using default main implementation
+//#define FIBIO_DONT_USE_DEFAULT_MAIN
+
 namespace fibio { namespace fibers {
     namespace detail {
         struct fiberized_std_stream_guard {
+#ifndef FIBIO_DONT_USE_FIBERIZED_STD_STREAM
             typedef stream::fiberized_streambuf<boost::asio::posix::stream_descriptor> sbuf_t;
             typedef std::unique_ptr<sbuf_t> sbuf_ptr_t;
             
@@ -58,6 +65,7 @@ namespace fibio { namespace fibers {
             sbuf_ptr_t cin_buf_;
             sbuf_ptr_t cout_buf_;
             sbuf_ptr_t cerr_buf_;
+#endif
         };
     }   // End of namespace fibio::fibers::detail
     
