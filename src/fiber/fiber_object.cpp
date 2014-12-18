@@ -16,11 +16,16 @@
 #include "fiber_object.hpp"
 #include "scheduler_object.hpp"
 
-#if defined(HAVE_VALGRIND_H) && (BOOST_VERSION<105700)
+#if defined(HAVE_VALGRIND_H)
+#   if BOOST_VERSION>=105700
+// For boost 1.57 and up, enable built-in valgrind support
+#       define BOOST_USE_VALGRIND
+#   else
 #include <unordered_map>
 #include <boost/coroutine/stack_allocator.hpp>
 #include <boost/coroutine/stack_context.hpp>
 #include "valgrind.h"
+#   endif
 #endif  // defined(HAVE_VALGRIND_H)
 
 static const auto NOT_A_FIBER=fibio::fiber_exception(boost::system::errc::no_such_process);
