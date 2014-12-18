@@ -145,4 +145,10 @@ namespace fibio { namespace fibers { namespace detail {
     };
 }}} // End of namespace fibio::fibers::detail
 
+namespace fibio { namespace fibers {
+    inline detail::fiber_object *current_fiber() {
+        return detail::fiber_object::current_fiber_;
+    }
+}}
+
 #endif

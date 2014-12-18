@@ -9,12 +9,16 @@
 #include <fibio/fibers/mutex.hpp>
 #include "mutex_object.hpp"
 
+
 namespace fibio { namespace fibers { namespace detail {
+    static const auto NOPERM=lock_error(boost::system::errc::operation_not_permitted);
+    static const auto DEADLOCK=lock_error(boost::system::errc::resource_deadlock_would_occur);
+
     void mutex_object::lock(fiber_ptr_t this_fiber) {
         CHECK_CALLER(this_fiber);
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_==this_fiber) {
-            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::resource_deadlock_would_occur));
+            BOOST_THROW_EXCEPTION(DEADLOCK);
         } else if(!owner_) {
             // This mutex is not locked
             // Acquire the mutex
@@ -33,7 +37,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_!=this_fiber) {
             // This fiber doesn't own the mutex
-            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::operation_not_permitted));
+            BOOST_THROW_EXCEPTION(NOPERM);
         }
         if (suspended_.empty()) {
             // Nobody is waiting
@@ -89,7 +93,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_!=this_fiber) {
             // This fiber doesn't own the mutex
-            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::operation_not_permitted));
+            BOOST_THROW_EXCEPTION(NOPERM);
         }
         --level_;
         if (level_>0) {
@@ -133,7 +137,7 @@ namespace fibio { namespace fibers { namespace detail {
         CHECK_CALLER(this_fiber);
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_==this_fiber) {
-            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::resource_deadlock_would_occur));
+            BOOST_THROW_EXCEPTION(DEADLOCK);
         } else if(!owner_) {
             // This mutex is not locked
             // Acquire the mutex
@@ -168,7 +172,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_!=this_fiber) {
             // This fiber doesn't own the mutex
-            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::operation_not_permitted));
+            BOOST_THROW_EXCEPTION(NOPERM);
         }
         if (suspended_.empty()) {
             // Nobody is waiting
@@ -217,7 +221,7 @@ namespace fibio { namespace fibers { namespace detail {
         CHECK_CALLER(this_fiber);
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_==this_fiber) {
-            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::resource_deadlock_would_occur));
+            BOOST_THROW_EXCEPTION(DEADLOCK);
         } else if(!owner_) {
             // This mutex is not locked
             // Acquire the mutex
@@ -265,7 +269,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(mtx_);
         if (owner_!=this_fiber) {
             // This fiber doesn't own the mutex
-            BOOST_THROW_EXCEPTION(lock_error(boost::system::errc::operation_not_permitted));
+            BOOST_THROW_EXCEPTION(NOPERM);
         }
         --level_;
         if(level_>0) {
@@ -369,22 +373,22 @@ namespace fibio { namespace fibers {
     
     void mutex::lock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            impl_->lock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            impl_->lock(cf->shared_from_this());
         }
     }
     
     void mutex::unlock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            impl_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            impl_->unlock(cf->shared_from_this());
         }
     }
     
     bool mutex::try_lock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            return impl_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            return impl_->try_lock(cf->shared_from_this());
         }
         return false;
     }
@@ -395,22 +399,22 @@ namespace fibio { namespace fibers {
     
     void timed_mutex::lock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            impl_->lock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            impl_->lock(cf->shared_from_this());
         }
     }
     
     void timed_mutex::unlock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            impl_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            impl_->unlock(cf->shared_from_this());
         }
     }
     
     bool timed_mutex::try_lock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            return impl_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            return impl_->try_lock(cf->shared_from_this());
         }
         return false;
     }
@@ -420,8 +424,8 @@ namespace fibio { namespace fibers {
         if (d<detail::duration_t::zero()) {
             BOOST_THROW_EXCEPTION(fibio::invalid_argument());
         }
-        if (detail::fiber_object::current_fiber_) {
-            return impl_->try_lock_rel(detail::fiber_object::current_fiber_->shared_from_this(), d);
+        if (auto cf=current_fiber()) {
+            return impl_->try_lock_rel(cf->shared_from_this(), d);
         }
         return false;
     }
@@ -432,22 +436,22 @@ namespace fibio { namespace fibers {
     
     void recursive_mutex::lock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            impl_->lock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            impl_->lock(cf->shared_from_this());
         }
     }
     
     void recursive_mutex::unlock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            impl_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            impl_->unlock(cf->shared_from_this());
         }
     }
     
     bool recursive_mutex::try_lock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            return impl_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            return impl_->try_lock(cf->shared_from_this());
         }
         return false;
     }
@@ -458,22 +462,22 @@ namespace fibio { namespace fibers {
     
     void recursive_timed_mutex::lock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            impl_->lock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            impl_->lock(cf->shared_from_this());
         }
     }
     
     void recursive_timed_mutex::unlock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            impl_->unlock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            impl_->unlock(cf->shared_from_this());
         }
     }
     
     bool recursive_timed_mutex::try_lock() {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            return impl_->try_lock(detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            return impl_->try_lock(cf->shared_from_this());
         }
         return false;
     }
@@ -483,8 +487,8 @@ namespace fibio { namespace fibers {
         if (d<detail::duration_t::zero()) {
             BOOST_THROW_EXCEPTION(fibio::invalid_argument());
         }
-        if (detail::fiber_object::current_fiber_) {
-            return impl_->try_lock_rel(detail::fiber_object::current_fiber_->shared_from_this(), d);
+        if (auto cf=current_fiber()) {
+            return impl_->try_lock_rel(cf->shared_from_this(), d);
         }
         return false;
     }

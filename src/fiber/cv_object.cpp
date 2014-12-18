@@ -10,6 +10,7 @@
 #include <boost/system/error_code.hpp>
 
 namespace fibio { namespace fibers { namespace detail {
+    static const auto NOPERM=condition_error(boost::system::errc::operation_not_permitted);
     struct fibio_relock_guard {
         inline fibio_relock_guard(mutex_object *mtx, fiber_ptr_t f)
         : mtx_(mtx)
@@ -27,7 +28,7 @@ namespace fibio { namespace fibers { namespace detail {
         CHECK_CALLER(this_fiber);
         if (this_fiber!=m->owner_) {
             // This fiber doesn't own the mutex
-            BOOST_THROW_EXCEPTION(condition_error(boost::system::errc::operation_not_permitted));
+            BOOST_THROW_EXCEPTION(NOPERM);
         }
         {
             std::lock_guard<spinlock> lock(mtx_);
@@ -69,7 +70,7 @@ namespace fibio { namespace fibers { namespace detail {
         cv_status ret=cv_status::no_timeout;
         if (this_fiber!=m->owner_) {
             // This fiber doesn't own the mutex
-            BOOST_THROW_EXCEPTION(condition_error(boost::system::errc::operation_not_permitted));
+            BOOST_THROW_EXCEPTION(NOPERM);
         }
         timer_t t(this_fiber->get_io_service());
         {
@@ -108,8 +109,8 @@ namespace fibio { namespace fibers { namespace detail {
         }
         // Only yield if currently in a fiber
         // CV can be used to notify a fiber from not-a-fiber, i.e. foreign thread
-        if (fiber_object::current_fiber_) {
-            fiber_object::current_fiber_->yield();
+        if (auto cf=current_fiber()) {
+            cf->yield();
         }
     }
     
@@ -131,8 +132,8 @@ namespace fibio { namespace fibers { namespace detail {
         }
         // Only yield if currently in a fiber
         // CV can be used to notify a fiber from not-a-fiber, i.e. foreign thread
-        if (fiber_object::current_fiber_) {
-            fiber_object::current_fiber_->yield();
+        if (auto cf=current_fiber()) {
+            cf->yield();
         }
     }
 }}} // End of namespace fibio::fibers::detail
@@ -144,8 +145,8 @@ namespace fibio { namespace fibers {
     
     void condition_variable::wait(std::unique_lock<mutex>& lock) {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
-            impl_->wait(lock.mutex()->impl_.get(), detail::fiber_object::current_fiber_->shared_from_this());
+        if (auto cf=current_fiber()) {
+            impl_->wait(lock.mutex()->impl_.get(), cf->shared_from_this());
         }
     }
     
@@ -154,8 +155,8 @@ namespace fibio { namespace fibers {
         if (d<detail::duration_t::zero()) {
             BOOST_THROW_EXCEPTION(fibio::invalid_argument());
         }
-        if (detail::fiber_object::current_fiber_) {
-            return impl_->wait_rel(lock.mutex()->impl_.get(), detail::fiber_object::current_fiber_->shared_from_this(), d);
+        if (auto cf=current_fiber()) {
+            return impl_->wait_rel(lock.mutex()->impl_.get(), cf->shared_from_this(), d);
         }
         return cv_status::timeout;
     }
@@ -197,9 +198,9 @@ namespace fibio { namespace fibers {
                                    std::unique_lock<mutex> lk)
     {
         CHECK_CURRENT_FIBER;
-        if (detail::fiber_object::current_fiber_) {
+        if (auto cf=current_fiber()) {
             cleanup_handler *h=new cleanup_handler(cond, std::move(lk));
-            detail::fiber_object::current_fiber_->add_cleanup_function(std::bind(run_cleanup_handler, h));
+            cf->add_cleanup_function(std::bind(run_cleanup_handler, h));
         }
     }
 }}  // End of namespace fibio::fibers

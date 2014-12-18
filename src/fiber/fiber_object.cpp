@@ -23,6 +23,9 @@
 #include "valgrind.h"
 #endif  // defined(HAVE_VALGRIND_H)
 
+static const auto NOT_A_FIBER=fibio::fiber_exception(boost::system::errc::no_such_process);
+static const auto DEADLOCK=fibio::fiber_exception(boost::system::errc::resource_deadlock_would_occur);
+
 namespace fibio { namespace fibers { namespace detail {
 #ifdef BOOST_USE_SEGMENTED_STACKS
 #   define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_segmented_stack_allocator
@@ -238,7 +241,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(f->mtx_);
         if (this==f.get()) {
             // The fiber is joining itself
-            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::resource_deadlock_would_occur));
+            BOOST_THROW_EXCEPTION(DEADLOCK);
         } else if (f->state_==STOPPED) {
             // f is already stopped, do nothing
             return;
@@ -263,7 +266,7 @@ namespace fibio { namespace fibers { namespace detail {
         std::lock_guard<spinlock> lock(f->mtx_);
         if (this==f.get()) {
             // The fiber is joining itself
-            throw fiber_exception(boost::system::errc::resource_deadlock_would_occur);
+            BOOST_THROW_EXCEPTION(DEADLOCK);
         } else if (f->state_==STOPPED) {
             // f is already stopped
             propagate_exception(f);
@@ -339,7 +342,7 @@ namespace fibio { namespace fibers { namespace detail {
     fiber_base::ptr_t get_current_fiber_ptr() {
         if(!fiber_object::current_fiber_) {
             // Not a fiber
-            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+            BOOST_THROW_EXCEPTION(NOT_A_FIBER);
         }
         return std::static_pointer_cast<fiber_base>(fiber_object::current_fiber_->shared_from_this());
     }
@@ -347,7 +350,7 @@ namespace fibio { namespace fibers { namespace detail {
 
 namespace fibio { namespace fibers {
     void fiber::start() {
-        if (auto cf=detail::fiber_object::current_fiber_) {
+        if (auto cf=current_fiber()) {
             // use current scheduler if we're in a fiber
             impl_=cf->sched_->make_fiber(data_.release());
         } else {
@@ -357,7 +360,7 @@ namespace fibio { namespace fibers {
     }
     
     void fiber::start(attributes attr) {
-        if (auto cf=detail::fiber_object::current_fiber_) {
+        if (auto cf=current_fiber()) {
             // use current scheduler if we're in a fiber
             switch(attr.policy) {
                 case attributes::scheduling_policy::normal: {
@@ -367,8 +370,7 @@ namespace fibio { namespace fibers {
                 }
                 case attributes::scheduling_policy::stick_with_parent: {
                     // Create a fiber shares strand with parent
-                    impl_=cf->sched_->make_fiber(detail::fiber_object::current_fiber_->fiber_strand_,
-                                                                                   data_.release());
+                    impl_=cf->sched_->make_fiber(current_fiber()->fiber_strand_, data_.release());
                     break;
                 }
                 default:
@@ -411,8 +413,8 @@ namespace fibio { namespace fibers {
     bool fiber::joinable() const noexcept {
         // Return true iff this is a fiber and not the current calling fiber
         // and 2 fibers are in the same scheduler
-        return (impl_ && detail::fiber_object::current_fiber_!=impl_.get())
-        && (impl_->sched_==detail::fiber_object::current_fiber_->sched_);
+        return (impl_ && current_fiber()!=impl_.get())
+        && (impl_->sched_==current_fiber()->sched_);
     }
     
     fiber::id fiber::get_id() const noexcept {
@@ -421,26 +423,26 @@ namespace fibio { namespace fibers {
     
     void fiber::join(bool propagate_exception) {
         if (!impl_) {
-            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+            BOOST_THROW_EXCEPTION(NOT_A_FIBER);
         }
-        if (impl_.get()==detail::fiber_object::current_fiber_) {
-            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::resource_deadlock_would_occur));
+        if (impl_.get()==current_fiber()) {
+            BOOST_THROW_EXCEPTION(DEADLOCK);
         }
         if (!joinable()) {
             BOOST_THROW_EXCEPTION(invalid_argument());
         }
-        if (detail::fiber_object::current_fiber_) {
+        if (current_fiber()) {
             if (propagate_exception) {
-                detail::fiber_object::current_fiber_->join_and_rethrow(impl_);
+                current_fiber()->join_and_rethrow(impl_);
             } else {
-                detail::fiber_object::current_fiber_->join(impl_);
+                current_fiber()->join(impl_);
             }
         }
     }
     
     void fiber::detach() {
-        if (!(impl_ && detail::fiber_object::current_fiber_!=impl_.get())) {
-            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+        if (!(impl_ && current_fiber()!=impl_.get())) {
+            BOOST_THROW_EXCEPTION(NOT_A_FIBER);
         }
         detail::fiber_ptr_t this_fiber=impl_;
         impl_->get_fiber_strand().post(std::bind(&detail::fiber_object::detach, impl_));
@@ -457,67 +459,67 @@ namespace fibio { namespace fibers {
     
     namespace this_fiber {
         void yield() {
-            if (::fibio::fibers::detail::fiber_object::current_fiber_) {
-                ::fibio::fibers::detail::fiber_object::current_fiber_->yield();
+            if (auto cf=current_fiber()) {
+                cf->yield();
             } else {
-                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+                BOOST_THROW_EXCEPTION(NOT_A_FIBER);
             }
         }
         
         fiber::id get_id() {
-            return reinterpret_cast<fiber::id>(::fibio::fibers::detail::fiber_object::current_fiber_);
+            return reinterpret_cast<fiber::id>(current_fiber());
         }
         
         bool is_a_fiber() noexcept(true) {
-            return ::fibio::fibers::detail::fiber_object::current_fiber_;
+            return current_fiber();
         }
         
         namespace detail {
             void sleep_rel(fibers::detail::duration_t d) {
-                if (::fibio::fibers::detail::fiber_object::current_fiber_) {
+                if (auto cf=current_fiber()) {
                     if (d<fibers::detail::duration_t::zero()) {
                         BOOST_THROW_EXCEPTION(fibio::invalid_argument());
                     }
-                    ::fibio::fibers::detail::fiber_object::current_fiber_->sleep_rel(d);
+                    cf->sleep_rel(d);
                 } else {
-                    BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+                    BOOST_THROW_EXCEPTION(NOT_A_FIBER);
                 }
             }
             
             boost::asio::io_service &get_io_service() {
-                if (::fibio::fibers::detail::fiber_object::current_fiber_) {
-                    return ::fibio::fibers::detail::fiber_object::current_fiber_->get_io_service();
+                if (auto cf=current_fiber()) {
+                    return cf->get_io_service();
                 }
-                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+                BOOST_THROW_EXCEPTION(NOT_A_FIBER);
             }
             
             boost::asio::strand &get_strand() {
-                if (::fibio::fibers::detail::fiber_object::current_fiber_) {
-                    return ::fibio::fibers::detail::fiber_object::current_fiber_->get_fiber_strand();
+                if (auto cf=current_fiber()) {
+                    return cf->get_fiber_strand();
                 }
-                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+                BOOST_THROW_EXCEPTION(NOT_A_FIBER);
             }
         }   // End of namespace detail
         
         std::string get_name() {
-            if (::fibio::fibers::detail::fiber_object::current_fiber_) {
-                return ::fibio::fibers::detail::fiber_object::current_fiber_->get_name();
+            if (auto cf=current_fiber()) {
+                return cf->get_name();
             }
-            BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+            BOOST_THROW_EXCEPTION(NOT_A_FIBER);
         }
         
         void set_name(const std::string &name) {
-            if (!::fibio::fibers::detail::fiber_object::current_fiber_) {
-                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+            if (auto cf=current_fiber()) {
+                cf->set_name(name);
             }
-            ::fibio::fibers::detail::fiber_object::current_fiber_->set_name(name);
+            BOOST_THROW_EXCEPTION(NOT_A_FIBER);
         }
         
         scheduler get_scheduler() {
-            if (!::fibio::fibers::detail::fiber_object::current_fiber_) {
-                BOOST_THROW_EXCEPTION(fiber_exception(boost::system::errc::no_such_process));
+            if (auto cf=current_fiber()) {
+                return scheduler(cf->sched_);
             }
-            return scheduler(::fibio::fibers::detail::fiber_object::current_fiber_->sched_);
+            BOOST_THROW_EXCEPTION(NOT_A_FIBER);
         }
     }   // End of namespace this_fiber
 }}  // End of namespace fibio::fibers
