@@ -26,6 +26,13 @@
 #include <fibio/fibers/detail/fiber_data.hpp>
 #include <fibio/fibers/detail/spinlock.hpp>
 
+#ifdef __APPLE_CC__
+// Clang on OS X doesn't support thread_local
+#   define THREAD_LOCAL __thread
+#else
+#   define THREAD_LOCAL thread_local
+#endif
+
 #if defined(DEBUG) && !defined(NDEBUG)
 #   define CHECK_CALLER(f) do { if (!f->caller_) BOOST_ASSERT(false); } while(0)
 #else
@@ -116,7 +123,7 @@ namespace fibio { namespace fibers { namespace detail {
         
         scheduler_ptr_t get_scheduler() { return sched_; }
         
-        static __thread fiber_object *current_fiber_;
+        static THREAD_LOCAL fiber_object *current_fiber_;
 
         scheduler_ptr_t sched_;
         strand_ptr_t fiber_strand_;

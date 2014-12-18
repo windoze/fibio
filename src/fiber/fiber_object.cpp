@@ -66,7 +66,7 @@ namespace fibio { namespace fibers { namespace detail {
     typedef BOOST_COROUTINE_STACK_ALLOCATOR<boost::coroutines::stack_traits> fibio_stack_allocator;
 #endif  // !defined(HAVE_VALGRIND_H)
     
-    __thread fiber_object *fiber_object::current_fiber_=0;
+    THREAD_LOCAL fiber_object *fiber_object::current_fiber_=0;
     
     fiber_object::fiber_object(scheduler_ptr_t sched, fiber_data_base *entry)
     : sched_(sched)
