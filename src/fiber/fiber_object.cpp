@@ -16,7 +16,7 @@
 #include "fiber_object.hpp"
 #include "scheduler_object.hpp"
 
-#ifdef HAVE_VALGRIND_H
+#if defined(HAVE_VALGRIND_H) && (BOOST_VERSION<105700)
 #include <unordered_map>
 #include <boost/coroutine/stack_allocator.hpp>
 #include <boost/coroutine/stack_context.hpp>
@@ -35,7 +35,8 @@ namespace fibio { namespace fibers { namespace detail {
 
     // Define a fibio_stack_allocator, use valgrind_stack_allocator when building
     //  with valgrind support
-#ifdef HAVE_VALGRIND_H
+    // Valgrind support is built-in since Boost 1.57
+#if defined(HAVE_VALGRIND_H) && (BOOST_VERSION<105700)
     // Wraps boost::coroutine::stack_allocator, and if Valgrind is installed
     // will register stacks, so that Valgrind is not confused.
     template<typename traitsT>
