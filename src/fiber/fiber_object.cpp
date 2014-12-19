@@ -125,6 +125,24 @@ namespace fibio { namespace fibers { namespace detail {
         caller_=&c;
         try {
             entry_->run();
+            // Exec cleanup functions before fiber exiting
+            cleanup_queue_t temp;
+            {
+                // Move joining queue content out
+                std::lock_guard<spinlock> lock(mtx_);
+                temp.swap(cleanup_queue_);
+            }
+            for (std::function<void()> f: temp) {
+                f();
+            }
+            // Clean up FSS
+            for (auto &v: fss_) {
+                if (v.second.first && v.second.second) {
+                    (*(v.second.first))(v.second.second);
+                }
+            }
+            // Make sure all fiber arguments are destroyed before exiting
+            entry_.reset();
         } catch(const boost::coroutines::detail::forced_unwind&) {
             // Boost.Coroutine requirement
             throw;
@@ -173,17 +191,11 @@ namespace fibio { namespace fibers { namespace detail {
             {
                 // Move joining queue content out
                 std::lock_guard<spinlock> lock(mtx_);
-                temp.swap(cleanup_queue_);
+                temp.swap(join_queue_);
             }
             // Fiber ended, clean up joining queue
             for (std::function<void()> f: temp) {
                 f();
-            }
-            // Clean up FSS
-            for (auto &v: fss_) {
-                if (v.second.first && v.second.second) {
-                    (*(v.second.first))(v.second.second);
-                }
             }
             // Post exit message to scheduler
             get_fiber_strand().post(std::bind(&scheduler_object::on_fiber_exit, sched_, shared_from_this()));
@@ -252,7 +264,7 @@ namespace fibio { namespace fibers { namespace detail {
             // f is already stopped, do nothing
             return;
         } else {
-            f->cleanup_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
+            f->join_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
         }
 
         { relock_guard<spinlock> relock(f->mtx_); pause(); }
@@ -279,7 +291,7 @@ namespace fibio { namespace fibers { namespace detail {
             return;
         } else {
             // std::cout << "fiber(pthis) blocked" << std::endl;
-            f->cleanup_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
+            f->join_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
         }
 
         { relock_guard<spinlock> relock(f->mtx_); pause(); }

@@ -130,6 +130,7 @@ namespace fibio { namespace fibers { namespace detail {
         runner_t runner_;
         caller_t *caller_;
         cleanup_queue_t cleanup_queue_;
+        cleanup_queue_t join_queue_;
         fss_map_t fss_;
         fiber_ptr_t this_ref_;
         std::string name_;
