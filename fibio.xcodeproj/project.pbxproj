@@ -41,7 +41,6 @@
 		2D82CD7F19CFF82500B0257D /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D15CFD818E4375200E64B99 /* libssl.dylib */; };
 		2D86E78919FA4A29009B5623 /* test_cookie.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2D86E78819FA4A29009B5623 /* test_cookie.cpp */; };
 		2D86E78A19FA4B54009B5623 /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
-		2DA969F71A2D827600289FA9 /* json.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DA969F41A2D827600289FA9 /* json.hpp */; };
 		2DA969F81A2D827600289FA9 /* mustache_template.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DA969F51A2D827600289FA9 /* mustache_template.hpp */; };
 		2DA969F91A2D827600289FA9 /* mustache.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DA969F61A2D827600289FA9 /* mustache.hpp */; };
 		2DACAA9319F3AB05004F6780 /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DACAA7E19F3AB05004F6780 /* client.cpp */; };
@@ -67,6 +66,7 @@
 		2DACAAD919F3AE57004F6780 /* dh512.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7C19CFF7DA00B0257D /* dh512.pem */; };
 		2DACAADA19F3AE57004F6780 /* server.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7D19CFF7DA00B0257D /* server.pem */; };
 		2DB790751A43D875009D4CEF /* spinlock.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DB790741A43D875009D4CEF /* spinlock.hpp */; };
+		2DB790771A4426E6009D4CEF /* json.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DB790761A4426E6009D4CEF /* json.hpp */; };
 		2DC1C2CF1A398D6900F69603 /* restful.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DC1C2CE1A398D6900F69603 /* restful.hpp */; };
 		2DD5665018DA1BC6002A259D /* test_fibers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5664E18DA1BC6002A259D /* test_fibers.cpp */; };
 		2DD5666318DB35D3002A259D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
@@ -362,7 +362,6 @@
 		2D86E78119FA4A0E009B5623 /* test_cookie */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_cookie; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D86E78819FA4A29009B5623 /* test_cookie.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_cookie.cpp; sourceTree = "<group>"; };
 		2DA969EC1A2C5C6000289FA9 /* template.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = template.hpp; sourceTree = "<group>"; };
-		2DA969F41A2D827600289FA9 /* json.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = json.hpp; sourceTree = "<group>"; };
 		2DA969F51A2D827600289FA9 /* mustache_template.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mustache_template.hpp; sourceTree = "<group>"; };
 		2DA969F61A2D827600289FA9 /* mustache.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mustache.hpp; sourceTree = "<group>"; };
 		2DACAA5D19F3AAD6004F6780 /* client.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = client.hpp; sourceTree = "<group>"; };
@@ -389,6 +388,7 @@
 		2DACAAAE19F3AB87004F6780 /* test_http_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_http_client; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DACAABA19F3ABAE004F6780 /* test_http_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_http_server; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DB790741A43D875009D4CEF /* spinlock.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = spinlock.hpp; sourceTree = "<group>"; };
+		2DB790761A4426E6009D4CEF /* json.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = json.hpp; sourceTree = "<group>"; };
 		2DC1C2CE1A398D6900F69603 /* restful.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = restful.hpp; sourceTree = "<group>"; };
 		2DD3B6DF18CCF8B7009E1F3E /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		2DD3B6E418CDC3E7009E1F3E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -858,7 +858,6 @@
 		2DA969F11A2D821C00289FA9 /* templates */ = {
 			isa = PBXGroup;
 			children = (
-				2DA969F41A2D827600289FA9 /* json.hpp */,
 				2DA969F51A2D827600289FA9 /* mustache_template.hpp */,
 				2DA969F61A2D827600289FA9 /* mustache.hpp */,
 			);
@@ -888,6 +887,7 @@
 		2DACAA6019F3AAD6004F6780 /* common */ = {
 			isa = PBXGroup;
 			children = (
+				2DB790761A4426E6009D4CEF /* json.hpp */,
 				2DACAA6119F3AAD6004F6780 /* common_types.hpp */,
 				2DACAA6219F3AAD6004F6780 /* content_type.hpp */,
 				2DACAA6319F3AAD6004F6780 /* request.hpp */,
@@ -932,9 +932,9 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2DB790771A4426E6009D4CEF /* json.hpp in Headers */,
 				2DA969F91A2D827600289FA9 /* mustache.hpp in Headers */,
 				2D1E146D1A2EF5C2008AFB97 /* url_parser.hpp in Headers */,
-				2DA969F71A2D827600289FA9 /* json.hpp in Headers */,
 				2D1E146F1A2F078A008AFB97 /* http_parser_merged.h in Headers */,
 				2DA969F81A2D827600289FA9 /* mustache_template.hpp in Headers */,
 				2DB790751A43D875009D4CEF /* spinlock.hpp in Headers */,

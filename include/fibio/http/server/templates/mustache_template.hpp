@@ -9,7 +9,7 @@
 #ifndef fibio_http_server_template_hpp
 #define fibio_http_server_template_hpp
 
-#include <fibio/http/server/templates/json.hpp>
+#include <fibio/http/common/json.hpp>
 #include <fibio/http/server/templates/mustache.hpp>
 #include <fibio/http/server/routing.hpp>
 

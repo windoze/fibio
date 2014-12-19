@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iterator>
 #include <functional>
-#include <fibio/http/server/templates/json.hpp>
+#include <fibio/http/common/json.hpp>
 
 namespace fibio { namespace http {
     namespace mustache
