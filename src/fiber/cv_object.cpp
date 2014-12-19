@@ -52,12 +52,9 @@ namespace fibio { namespace fibers { namespace detail {
             std::lock_guard<spinlock> lock(this_cv->mtx_);
             ret=cv_status::timeout;
             // Find and remove this fiber from waiting queue
-            auto i=std::find_if(this_cv->suspended_.begin(),
-                                this_cv->suspended_.end(),
-                                std::bind(is_this_fiber<condition_variable_object::suspended_item>,
-                                          this_fiber,
-                                          std::placeholders::_1)
-                                );
+            auto i=std::find(this_cv->suspended_.begin(),
+                             this_cv->suspended_.end(),
+                             this_fiber);
             if (i!=this_cv->suspended_.end()) {
                 this_cv->suspended_.erase(i);
             }

@@ -60,8 +60,6 @@ namespace fibio { namespace fibers { namespace detail {
     struct recursive_timed_mutex_object;
     struct condition_variable_object;
     
-    typedef std::deque<fiber_ptr_t> waiting_queue_t;
-    
     struct fss_cleanup_function;
     typedef const void *fss_key_t;
     typedef std::pair<std::shared_ptr<fss_cleanup_function>,void*> fss_value_t;
@@ -94,7 +92,6 @@ namespace fibio { namespace fibers { namespace detail {
         void set_state(state_t s) {
             if (caller_) {
                 // We're in fiber context, switch to scheduler context to make state take effect
-                //(*caller_)(std::bind(&fiber_object::raw_set_state, shared_from_this(), s));
                 (*caller_)(s);
             } else {
                 // We're in scheduler context

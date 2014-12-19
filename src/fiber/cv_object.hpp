@@ -28,6 +28,7 @@ namespace fibio { namespace fibers { namespace detail {
             mutex_object *m_;
             fiber_ptr_t f_;
             timer_t *t_;
+            bool operator==(fiber_ptr_t f) const { return f_==f; }
         };
         std::deque<suspended_item> suspended_;
     };

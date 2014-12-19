@@ -202,12 +202,9 @@ namespace fibio { namespace fibers { namespace detail {
         if (this_mutex->owner_!=this_fiber) {
             // This fiber doesn't own the mutex
             // Find and remove this fiber from waiting queue
-            auto i=std::find_if(this_mutex->suspended_.begin(),
-                                this_mutex->suspended_.end(),
-                                std::bind(is_this_fiber<timed_mutex_object::suspended_item>,
-                                          this_fiber,
-                                          std::placeholders::_1)
-                                );
+            auto i=std::find(this_mutex->suspended_.begin(),
+                             this_mutex->suspended_.end(),
+                             this_fiber);
             if (i!=this_mutex->suspended_.end()) {
                 this_mutex->suspended_.erase(i);
             }
@@ -322,12 +319,9 @@ namespace fibio { namespace fibers { namespace detail {
         if (this_mutex->owner_!=this_fiber) {
             // This fiber doesn't own the mutex
             // Find and remove this fiber from waiting queue
-            auto i=std::find_if(this_mutex->suspended_.begin(),
-                                this_mutex->suspended_.end(),
-                                std::bind(is_this_fiber<recursive_timed_mutex_object::suspended_item>,
-                                          this_fiber,
-                                          std::placeholders::_1)
-                                );
+            auto i=std::find(this_mutex->suspended_.begin(),
+                             this_mutex->suspended_.end(),
+                             this_fiber);
             if (i!=this_mutex->suspended_.end()) {
                 this_mutex->suspended_.erase(i);
             }
