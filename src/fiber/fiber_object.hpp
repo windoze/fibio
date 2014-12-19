@@ -54,12 +54,6 @@ namespace fibio { namespace fibers { namespace detail {
     struct fiber_object;
     typedef std::shared_ptr<fiber_object> fiber_ptr_t;
     
-    struct mutex_object;
-    struct timed_mutex_object;
-    struct recursive_mutex_object;
-    struct recursive_timed_mutex_object;
-    struct condition_variable_object;
-    
     struct fss_cleanup_function;
     typedef const void *fss_key_t;
     typedef std::pair<std::shared_ptr<fss_cleanup_function>,void*> fss_value_t;
@@ -153,6 +147,11 @@ namespace fibio { namespace fibers { namespace detail {
 namespace fibio { namespace fibers {
     inline detail::fiber_object *current_fiber() {
         return detail::fiber_object::current_fiber_;
+    }
+    
+    inline detail::fiber_ptr_t current_fiber_ptr() {
+        CHECK_CURRENT_FIBER;
+        return current_fiber()->shared_from_this();
     }
 }}
 

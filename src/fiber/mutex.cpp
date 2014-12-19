@@ -1,5 +1,5 @@
 //
-//  mutex_object.cpp
+//  mutex.cpp
 //  fibio
 //
 //  Created by Chen Xu on 14-3-4.
@@ -10,16 +10,11 @@
 #include "fiber_object.hpp"
 
 namespace fibio { namespace fibers {
-    inline detail::fiber_ptr_t thisfiber() {
-        CHECK_CURRENT_FIBER;
-        return current_fiber()->shared_from_this();
-    }
-    
     static const auto NOPERM=lock_error(boost::system::errc::operation_not_permitted);
     static const auto DEADLOCK=lock_error(boost::system::errc::resource_deadlock_would_occur);
 
     void mutex::lock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_==tf) {
             BOOST_THROW_EXCEPTION(DEADLOCK);
@@ -37,7 +32,7 @@ namespace fibio { namespace fibers {
     }
     
     void mutex::unlock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_!=tf) {
             // This fiber doesn't own the mutex
@@ -57,7 +52,7 @@ namespace fibio { namespace fibers {
     }
     
     bool mutex::try_lock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_==tf) {
             // This fiber already owns the mutex
@@ -71,7 +66,7 @@ namespace fibio { namespace fibers {
     }
     
     void recursive_mutex::lock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_==tf) {
             ++level_;
@@ -93,7 +88,7 @@ namespace fibio { namespace fibers {
     }
     
     void recursive_mutex::unlock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_!=tf) {
             // This fiber doesn't own the mutex
@@ -120,7 +115,7 @@ namespace fibio { namespace fibers {
     }
     
     bool recursive_mutex::try_lock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_==tf) {
             // This fiber already owns the mutex, increase recursive level
@@ -138,7 +133,7 @@ namespace fibio { namespace fibers {
     }
     
     void timed_mutex::lock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_==tf) {
             BOOST_THROW_EXCEPTION(DEADLOCK);
@@ -156,7 +151,7 @@ namespace fibio { namespace fibers {
     }
     
     bool timed_mutex::try_lock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_==tf) {
             // This fiber already owns the mutex
@@ -172,7 +167,7 @@ namespace fibio { namespace fibers {
     }
     
     void timed_mutex::unlock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_!=tf) {
             // This fiber doesn't own the mutex
@@ -218,7 +213,7 @@ namespace fibio { namespace fibers {
     }
     
     bool timed_mutex::try_lock_rel(detail::duration_t d) {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_==tf) {
             BOOST_THROW_EXCEPTION(DEADLOCK);
@@ -245,7 +240,7 @@ namespace fibio { namespace fibers {
     }
 
     void recursive_timed_mutex::lock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_==tf) {
             ++level_;
@@ -265,7 +260,7 @@ namespace fibio { namespace fibers {
     }
     
     void recursive_timed_mutex::unlock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_!=tf) {
             // This fiber doesn't own the mutex
@@ -299,7 +294,7 @@ namespace fibio { namespace fibers {
     }
     
     bool recursive_timed_mutex::try_lock() {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_==tf) {
             // This fiber already owns the mutex, increase recursive level
@@ -332,7 +327,7 @@ namespace fibio { namespace fibers {
     }
     
     bool recursive_timed_mutex::try_lock_rel(detail::duration_t d) {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         std::lock_guard<detail::spinlock> lock(mtx_);
         if (owner_==tf) {
             ++level_;

@@ -1,5 +1,5 @@
 //
-//  cv_object.cpp
+//  condition.cpp
 //  fibio
 //
 //  Created by Chen Xu on 14-3-4.
@@ -11,15 +11,10 @@
 #include "fiber_object.hpp"
 
 namespace fibio { namespace fibers {
-    inline detail::fiber_ptr_t thisfiber() {
-        CHECK_CURRENT_FIBER;
-        return current_fiber()->shared_from_this();
-    }
-
     static const auto NOPERM=condition_error(boost::system::errc::operation_not_permitted);
     
     void condition_variable::wait(std::unique_lock<mutex>& lock) {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         mutex *m=lock.mutex();
         if (tf!=m->owner_) {
             // This fiber doesn't own the mutex
@@ -56,7 +51,7 @@ namespace fibio { namespace fibers {
     }
     
     cv_status condition_variable::wait_rel(std::unique_lock<mutex>& lock, detail::duration_t d) {
-        auto tf=thisfiber();
+        auto tf=current_fiber_ptr();
         mutex *m=lock.mutex();
         cv_status ret=cv_status::no_timeout;
         if (tf!=m->owner_) {

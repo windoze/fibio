@@ -20,11 +20,6 @@ namespace fibio { namespace fibers { namespace detail {
     struct scheduler_object;
     struct fiber_object;
     typedef std::shared_ptr<fiber_object> fiber_ptr_t;
-    struct mutex_object;
-    struct recursive_mutex_object;
-    struct timed_mutex_object;
-    struct recursive_timed_mutex_object;
-    struct condition_variable_object;
 }}} // End of namespace fibio::fibers::detail
 
 namespace fibio { namespace fibers { namespace this_fiber { namespace detail {
