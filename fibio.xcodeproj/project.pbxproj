@@ -66,6 +66,7 @@
 		2DACAAD819F3AE57004F6780 /* ca.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7B19CFF7DA00B0257D /* ca.pem */; };
 		2DACAAD919F3AE57004F6780 /* dh512.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7C19CFF7DA00B0257D /* dh512.pem */; };
 		2DACAADA19F3AE57004F6780 /* server.pem in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D82CD7D19CFF7DA00B0257D /* server.pem */; };
+		2DB790751A43D875009D4CEF /* spinlock.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DB790741A43D875009D4CEF /* spinlock.hpp */; };
 		2DC1C2CF1A398D6900F69603 /* restful.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 2DC1C2CE1A398D6900F69603 /* restful.hpp */; };
 		2DD5665018DA1BC6002A259D /* test_fibers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DD5664E18DA1BC6002A259D /* test_fibers.cpp */; };
 		2DD5666318DB35D3002A259D /* libfibio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D1319B618D0A2360086156F /* libfibio.dylib */; };
@@ -345,11 +346,9 @@
 		2D7E687118CCCD5D00B7C4E5 /* streambuf.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = streambuf.hpp; sourceTree = "<group>"; };
 		2D7E687218CCCD5D00B7C4E5 /* iostream.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = iostream.hpp; sourceTree = "<group>"; };
 		2D7E687618CCCD5D00B7C4E5 /* cv_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cv_object.cpp; sourceTree = "<group>"; };
-		2D7E687718CCCD5D00B7C4E5 /* cv_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = cv_object.hpp; sourceTree = "<group>"; };
 		2D7E687818CCCD5D00B7C4E5 /* fiber_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fiber_object.cpp; sourceTree = "<group>"; };
 		2D7E687918CCCD5D00B7C4E5 /* fiber_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = fiber_object.hpp; sourceTree = "<group>"; };
 		2D7E687A18CCCD5D00B7C4E5 /* mutex_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = mutex_object.cpp; sourceTree = "<group>"; };
-		2D7E687B18CCCD5D00B7C4E5 /* mutex_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mutex_object.hpp; sourceTree = "<group>"; };
 		2D7E687C18CCCD5D00B7C4E5 /* scheduler_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = scheduler_object.cpp; sourceTree = "<group>"; };
 		2D7E687D18CCCD5D00B7C4E5 /* scheduler_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = scheduler_object.hpp; sourceTree = "<group>"; };
 		2D7E688318CCCD5D00B7C4E5 /* TODO.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = TODO.md; sourceTree = "<group>"; };
@@ -389,6 +388,7 @@
 		2DACAAA819F3AB60004F6780 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		2DACAAAE19F3AB87004F6780 /* test_http_client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_http_client; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DACAABA19F3ABAE004F6780 /* test_http_server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_http_server; sourceTree = BUILT_PRODUCTS_DIR; };
+		2DB790741A43D875009D4CEF /* spinlock.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = spinlock.hpp; sourceTree = "<group>"; };
 		2DC1C2CE1A398D6900F69603 /* restful.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = restful.hpp; sourceTree = "<group>"; };
 		2DD3B6DF18CCF8B7009E1F3E /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		2DD3B6E418CDC3E7009E1F3E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -811,6 +811,7 @@
 		2D7E686318CCCD5D00B7C4E5 /* detail */ = {
 			isa = PBXGroup;
 			children = (
+				2DB790741A43D875009D4CEF /* spinlock.hpp */,
 				2D7E686418CCCD5D00B7C4E5 /* forward.hpp */,
 				2DD5666718DB54F7002A259D /* fiber_data.hpp */,
 				2D5A307018E7162D00C5EB41 /* fiber_base.hpp */,
@@ -844,11 +845,9 @@
 			isa = PBXGroup;
 			children = (
 				2D7E687618CCCD5D00B7C4E5 /* cv_object.cpp */,
-				2D7E687718CCCD5D00B7C4E5 /* cv_object.hpp */,
 				2D7E687818CCCD5D00B7C4E5 /* fiber_object.cpp */,
 				2D7E687918CCCD5D00B7C4E5 /* fiber_object.hpp */,
 				2D7E687A18CCCD5D00B7C4E5 /* mutex_object.cpp */,
-				2D7E687B18CCCD5D00B7C4E5 /* mutex_object.hpp */,
 				2D7E687C18CCCD5D00B7C4E5 /* scheduler_object.cpp */,
 				2D7E687D18CCCD5D00B7C4E5 /* scheduler_object.hpp */,
 				2D5A306718E6E21600C5EB41 /* future.cpp */,
@@ -938,6 +937,7 @@
 				2DA969F71A2D827600289FA9 /* json.hpp in Headers */,
 				2D1E146F1A2F078A008AFB97 /* http_parser_merged.h in Headers */,
 				2DA969F81A2D827600289FA9 /* mustache_template.hpp in Headers */,
+				2DB790751A43D875009D4CEF /* spinlock.hpp in Headers */,
 				2DFC92F01A1341A2004A9FF8 /* thrift.hpp in Headers */,
 				2DC1C2CF1A398D6900F69603 /* restful.hpp in Headers */,
 			);

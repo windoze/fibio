@@ -1,3 +1,14 @@
+//
+//  spinlock.hpp
+//  fibio
+//
+//  Created by Chen Xu on 14-6-20.
+//  Copyright (c) 2014 0d0a.com. All rights reserved.
+//
+
+#ifndef fibio_fibers_detail_spinlock_hpp
+#define fibio_fibers_detail_spinlock_hpp
+
 #include <boost/atomic.hpp>
  
 namespace fibio { namespace fibers { namespace detail {
@@ -21,3 +32,4 @@ namespace fibio { namespace fibers { namespace detail {
     };
 }}} // End of namespace fibio::fibers::detail
 
+#endif

@@ -20,7 +20,7 @@ namespace fibio { namespace fibers {
 
     struct condition_variable {
         /// constructor
-        condition_variable();
+        condition_variable()=default;
         
         /**
          * notifies one waiting fiber
@@ -104,10 +104,18 @@ namespace fibio { namespace fibers {
         condition_variable(const condition_variable&) = delete;
         void operator=(const condition_variable&) = delete;
         cv_status wait_rel(std::unique_lock<mutex>& lock, detail::duration_t d);
-        struct impl_deleter {
-            void operator()(detail::condition_variable_object *p);
+        void timeout_handler(detail::fiber_ptr_t this_fiber,
+                             detail::timer_t *t,
+                             cv_status &ret,
+                             boost::system::error_code ec);
+        detail::spinlock mtx_;
+        struct suspended_item {
+            mutex *m_;
+            detail::fiber_ptr_t f_;
+            detail::timer_t *t_;
+            bool operator==(detail::fiber_ptr_t f) const { return f_==f; }
         };
-        std::unique_ptr<detail::condition_variable_object, impl_deleter> impl_;
+        std::deque<suspended_item> suspended_;
     };
 
     /**

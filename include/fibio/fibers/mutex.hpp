@@ -9,16 +9,18 @@
 #ifndef fibio_mutex_hpp
 #define fibio_mutex_hpp
 
+#include <deque>
 #include <memory>
 #include <chrono>
 #include <mutex>
 #include <fibio/fibers/detail/forward.hpp>
+#include <fibio/fibers/detail/spinlock.hpp>
 
 namespace fibio { namespace fibers {
     class mutex {
     public:
         /// constructor
-        mutex();
+        mutex()=default;
         
         /**
          * locks the mutex, blocks if the mutex is not available
@@ -38,17 +40,16 @@ namespace fibio { namespace fibers {
         /// non-copyable
         mutex(const mutex&) = delete;
         void operator=(const mutex&) = delete;
-        struct impl_deleter {
-            void operator()(detail::mutex_object *p);
-        };
-        std::unique_ptr<detail::mutex_object, impl_deleter> impl_;
+        detail::spinlock mtx_;
+        detail::fiber_ptr_t owner_;
+        std::deque<detail::fiber_ptr_t> suspended_;
         friend struct condition_variable;
     };
     
     class timed_mutex {
     public:
         /// constructor
-        timed_mutex();
+        timed_mutex()=default;
 
         /**
          * locks the mutex, blocks if the mutex is not available
@@ -87,16 +88,23 @@ namespace fibio { namespace fibers {
         timed_mutex(const timed_mutex&) = delete;
         void operator=(const timed_mutex&) = delete;
         bool try_lock_rel(detail::duration_t d);
-        struct impl_deleter {
-            void operator()(detail::timed_mutex_object *p);
+        void timeout_handler(detail::fiber_ptr_t this_fiber,
+                             boost::system::error_code ec);
+        
+        detail::spinlock mtx_;
+        detail::fiber_ptr_t owner_;
+        struct suspended_item {
+            detail::fiber_ptr_t f_;
+            detail::timer_t *t_;
+            bool operator==(detail::fiber_ptr_t f) const { return f_==f; }
         };
-        std::unique_ptr<detail::timed_mutex_object, impl_deleter> impl_;
+        std::deque<suspended_item> suspended_;
     };
     
     class recursive_mutex {
     public:
         /// constructor
-        recursive_mutex();
+        recursive_mutex()=default;
 
         /**
          * locks the mutex, blocks if the mutex is not available
@@ -117,16 +125,17 @@ namespace fibio { namespace fibers {
         /// non-copyable
         recursive_mutex(const recursive_mutex&) = delete;
         void operator=(const recursive_mutex&) = delete;
-        struct impl_deleter {
-            void operator()(detail::recursive_mutex_object *p);
-        };
-        std::unique_ptr<detail::recursive_mutex_object, impl_deleter> impl_;
+
+        detail::spinlock mtx_;
+        size_t level_=0;
+        detail::fiber_ptr_t owner_;
+        std::deque<detail::fiber_ptr_t> suspended_;
     };
     
     class recursive_timed_mutex {
     public:
         /// constructor
-        recursive_timed_mutex();
+        recursive_timed_mutex()=default;
 
         /**
          * locks the mutex, blocks if the mutex is not available
@@ -166,10 +175,16 @@ namespace fibio { namespace fibers {
         recursive_timed_mutex(const recursive_timed_mutex&) = delete;
         void operator=(const recursive_timed_mutex&) = delete;
         bool try_lock_rel(detail::duration_t d);
-        struct impl_deleter {
-            void operator()(detail::recursive_timed_mutex_object *p);
+        void timeout_handler(detail::fiber_ptr_t this_fiber, boost::system::error_code ec);
+        detail::spinlock mtx_;
+        size_t level_;
+        detail::fiber_ptr_t owner_;
+        struct suspended_item {
+            detail::fiber_ptr_t f_;
+            detail::timer_t *t_;
+            bool operator==(detail::fiber_ptr_t f) const { return f_==f; }
         };
-        std::unique_ptr<detail::recursive_timed_mutex_object, impl_deleter> impl_;
+        std::deque<suspended_item> suspended_;
     };
 }}  // End of namespace fibio::fibers
 

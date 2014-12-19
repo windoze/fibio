@@ -10,13 +10,16 @@
 #define fibio_fibers_detail_forward_hpp
 
 #include <chrono>
+#include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/asio/io_service.hpp>
 
 namespace fibio { namespace fibers { namespace detail {
     typedef std::chrono::steady_clock::duration duration_t;
     typedef std::chrono::steady_clock::time_point time_point_t;
+    typedef boost::asio::basic_waitable_timer<std::chrono::steady_clock> timer_t;
     struct scheduler_object;
     struct fiber_object;
+    typedef std::shared_ptr<fiber_object> fiber_ptr_t;
     struct mutex_object;
     struct recursive_mutex_object;
     struct timed_mutex_object;

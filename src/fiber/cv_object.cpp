@@ -6,89 +6,82 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#include "cv_object.hpp"
 #include <boost/system/error_code.hpp>
+#include <fibio/fibers/condition_variable.hpp>
+#include "fiber_object.hpp"
 
-namespace fibio { namespace fibers { namespace detail {
+namespace fibio { namespace fibers {
+    inline detail::fiber_ptr_t thisfiber() {
+        CHECK_CURRENT_FIBER;
+        return current_fiber()->shared_from_this();
+    }
+
     static const auto NOPERM=condition_error(boost::system::errc::operation_not_permitted);
-    struct fibio_relock_guard {
-        inline fibio_relock_guard(mutex_object *mtx, fiber_ptr_t f)
-        : mtx_(mtx)
-        , this_fiber(f)
-        { mtx_->unlock(this_fiber); }
-        
-        inline ~fibio_relock_guard()
-        { mtx_->lock(this_fiber); }
-        
-        mutex_object *mtx_;
-        fiber_ptr_t this_fiber;
-    };
     
-    void condition_variable_object::wait(mutex_object *m, fiber_ptr_t this_fiber) {
-        CHECK_CALLER(this_fiber);
-        if (this_fiber!=m->owner_) {
+    void condition_variable::wait(std::unique_lock<mutex>& lock) {
+        auto tf=thisfiber();
+        mutex *m=lock.mutex();
+        if (tf!=m->owner_) {
             // This fiber doesn't own the mutex
             BOOST_THROW_EXCEPTION(NOPERM);
         }
         {
-            std::lock_guard<spinlock> lock(mtx_);
+            std::lock_guard<detail::spinlock> lock(mtx_);
             // The "suspension of this fiber" is actually happened here, not the pause()
             // as other will see there is a fiber in the waiting queue.
-            suspended_.push_back(suspended_item({m, this_fiber, 0}));
+            suspended_.push_back(suspended_item({m, tf, 0}));
         }
-        fibio_relock_guard lk(m, this_fiber);
-        this_fiber->pause();
+        { detail::relock_guard<mutex> relock(*m); tf->pause(); }
     }
     
-    static inline void timeout_handler(fiber_ptr_t this_fiber,
-                                condition_variable_object *this_cv,
-                                timer_t *t,
-                                cv_status &ret,
-                                boost::system::error_code ec)
+    void condition_variable::timeout_handler(detail::fiber_ptr_t this_fiber,
+                                             detail::timer_t *t,
+                                             cv_status &ret,
+                                             boost::system::error_code ec)
     {
         if(!ec) {
             // Timeout
             // Timeout handler, find and remove this fiber from waiting queue
-            std::lock_guard<spinlock> lock(this_cv->mtx_);
+            std::lock_guard<detail::spinlock> lock(mtx_);
             ret=cv_status::timeout;
             // Find and remove this fiber from waiting queue
-            auto i=std::find(this_cv->suspended_.begin(),
-                             this_cv->suspended_.end(),
+            auto i=std::find(suspended_.begin(),
+                             suspended_.end(),
                              this_fiber);
-            if (i!=this_cv->suspended_.end()) {
-                this_cv->suspended_.erase(i);
+            if (i!=suspended_.end()) {
+                suspended_.erase(i);
             }
         }
         this_fiber->resume();
     }
     
-    cv_status condition_variable_object::wait_rel(mutex_object *m, fiber_ptr_t this_fiber, duration_t d) {
-        //CHECK_CALLER(this_fiber);
+    cv_status condition_variable::wait_rel(std::unique_lock<mutex>& lock, detail::duration_t d) {
+        auto tf=thisfiber();
+        mutex *m=lock.mutex();
         cv_status ret=cv_status::no_timeout;
-        if (this_fiber!=m->owner_) {
+        if (tf!=m->owner_) {
             // This fiber doesn't own the mutex
             BOOST_THROW_EXCEPTION(NOPERM);
         }
-        timer_t t(this_fiber->get_io_service());
+        detail::timer_t t(tf->get_io_service());
         {
-            std::lock_guard<spinlock> lock(mtx_);
-            suspended_.push_back(suspended_item({m, this_fiber, &t}));
+            std::lock_guard<detail::spinlock> lock(mtx_);
+            suspended_.push_back(suspended_item({m, tf, &t}));
             t.expires_from_now(d);
-            t.async_wait(this_fiber->get_fiber_strand().wrap(std::bind(timeout_handler,
-                                                                       this_fiber,
-                                                                       this,
-                                                                       &t,
-                                                                       std::ref(ret),
-                                                                       std::placeholders::_1)));
+            t.async_wait(tf->get_fiber_strand().wrap(std::bind(&condition_variable::timeout_handler,
+                                                                        this,
+                                                                        tf,
+                                                                        &t,
+                                                                        std::ref(ret),
+                                                                        std::placeholders::_1)));
         }
-        fibio_relock_guard lk(m, this_fiber);
-        this_fiber->pause();
+        { detail::relock_guard<mutex> relock(*m); tf->pause(); }
         return ret;
     }
-
-    void condition_variable_object::notify_one() {
+    
+    void condition_variable::notify_one() {
         {
-            std::lock_guard<spinlock> lock(mtx_);
+            std::lock_guard<detail::spinlock> lock(mtx_);
             if (suspended_.empty()) {
                 return;
             }
@@ -111,9 +104,9 @@ namespace fibio { namespace fibers { namespace detail {
         }
     }
     
-    void condition_variable_object::notify_all() {
+    void condition_variable::notify_all() {
         {
-            std::lock_guard<spinlock> lock(mtx_);
+            std::lock_guard<detail::spinlock> lock(mtx_);
             while (!suspended_.empty()) {
                 suspended_item p(suspended_.front());
                 suspended_.pop_front();
@@ -133,43 +126,7 @@ namespace fibio { namespace fibers { namespace detail {
             cf->yield();
         }
     }
-}}} // End of namespace fibio::fibers::detail
 
-namespace fibio { namespace fibers {
-    condition_variable::condition_variable()
-    : impl_(new detail::condition_variable_object)
-    {}
-    
-    void condition_variable::wait(std::unique_lock<mutex>& lock) {
-        CHECK_CURRENT_FIBER;
-        if (auto cf=current_fiber()) {
-            impl_->wait(lock.mutex()->impl_.get(), cf->shared_from_this());
-        }
-    }
-    
-    cv_status condition_variable::wait_rel(std::unique_lock<mutex>& lock, detail::duration_t d) {
-        CHECK_CURRENT_FIBER;
-        if (d<detail::duration_t::zero()) {
-            BOOST_THROW_EXCEPTION(fibio::invalid_argument());
-        }
-        if (auto cf=current_fiber()) {
-            return impl_->wait_rel(lock.mutex()->impl_.get(), cf->shared_from_this(), d);
-        }
-        return cv_status::timeout;
-    }
-    
-    void condition_variable::notify_one() {
-        impl_->notify_one();
-    }
-    
-    void condition_variable::notify_all() {
-        impl_->notify_all();
-    }
-    
-    void condition_variable::impl_deleter::operator()(detail::condition_variable_object *p) {
-        delete p;
-    }
-    
     struct cleanup_handler {
         condition_variable &c_;
         std::unique_lock<mutex> l_;
