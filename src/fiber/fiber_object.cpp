@@ -118,37 +118,55 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void fiber_object::runner_wrapper(caller_t &c) {
+        struct cleaner {
+            cleaner(spinlock &mtx,
+                    cleanup_queue_t &q,
+                    fss_map_t &fss)
+            : mtx_(mtx)
+            , q_(q)
+            , fss_(fss)
+            {}
+            
+            ~cleaner()
+            try {
+                // No exception should be thrown in destructor
+                cleanup_queue_t temp;
+                {
+                    // Move cleanup queue content out
+                    std::lock_guard<spinlock> lock(mtx_);
+                    temp.swap(q_);
+                }
+                for (std::function<void()> f: temp) {
+                    f();
+                }
+                for (auto &v: fss_) {
+                    if (v.second.first && v.second.second) {
+                        (*(v.second.first))(v.second.second);
+                    }
+                }
+            } catch(...) {
+                // TODO: Error
+            }
+            spinlock &mtx_;
+            cleanup_queue_t &q_;
+            fss_map_t &fss_;
+        };
         // Need this to complete constructor without running entry_
         c(READY);
         
         // Now we're out of constructor
         caller_=&c;
         try {
+            cleaner c(mtx_, cleanup_queue_, fss_);
             entry_->run();
-            // Exec cleanup functions before fiber exiting
-            cleanup_queue_t temp;
-            {
-                // Move joining queue content out
-                std::lock_guard<spinlock> lock(mtx_);
-                temp.swap(cleanup_queue_);
-            }
-            for (std::function<void()> f: temp) {
-                f();
-            }
-            // Clean up FSS
-            for (auto &v: fss_) {
-                if (v.second.first && v.second.second) {
-                    (*(v.second.first))(v.second.second);
-                }
-            }
-            // Make sure all fiber arguments are destroyed before exiting
-            entry_.reset();
         } catch(const boost::coroutines::detail::forced_unwind&) {
             // Boost.Coroutine requirement
             throw;
         } catch(...) {
             uncaught_exception_=std::current_exception();
         }
+        // Clean fiber arguments before fiber destroy
+        entry_.reset();
         // Fiber function exits, set state to STOPPED
         c(STOPPED);
         caller_=0;
