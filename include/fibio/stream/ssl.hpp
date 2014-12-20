@@ -60,9 +60,9 @@ namespace fibio { namespace stream {
         }
         
         void accept(stream_type &s, boost::system::error_code &ec) {
-            acc_.async_accept(s.streambuf().next_layer(), asio::yield[ec]);
+            acc_.async_accept(s.rdbuf()->next_layer(), asio::yield[ec]);
             if(ec) return;
-            s.streambuf().async_handshake(boost::asio::ssl::stream_base::server, asio::yield[ec]);
+            s.rdbuf()->async_handshake(boost::asio::ssl::stream_base::server, asio::yield[ec]);
         }
         
         boost::system::error_code operator()(stream_type &s)

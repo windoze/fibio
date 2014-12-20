@@ -106,20 +106,20 @@ namespace fibio { namespace stream {
 
         iostream()
         : streambase_t()
-        , closable_stream(this->sbuf_.get())
+        , closable_stream(rdbuf())
         {}
         
         // For SSL stream, construct with ssl::context
         template<typename Arg>
         iostream(Arg &arg)
         : streambase_t(arg)
-        , closable_stream(this->sbuf_.get())
+        , closable_stream(rdbuf())
         {}
         
         // Movable
         iostream(iostream &&src)//=default;
         : streambase_t(std::move(src))
-        , closable_stream(this->sbuf_.get())
+        , closable_stream(rdbuf())
         {}
         
         // Non-copyable
@@ -128,11 +128,11 @@ namespace fibio { namespace stream {
         
         template <typename... T>
         boost::system::error_code open(T... x) {
-            return streambuf().lowest_layer().open(x...);
+            return rdbuf()->lowest_layer().open(x...);
         }
         
         boost::system::error_code connect(const endpoint_type &ep) {
-            return streambuf().connect(ep);
+            return rdbuf()->connect(ep);
         }
 
         boost::system::error_code connect(const std::string &host, const std::string &service) {
@@ -143,44 +143,41 @@ namespace fibio { namespace stream {
             query_type q(host, service);
             typename resolver_type::iterator i=r.async_resolve(q, asio::yield[ec]);
             if (ec) return ec;
-            return streambuf().connect(i->endpoint());
+            return rdbuf()->connect(i->endpoint());
         }
         
         boost::system::error_code connect(const char *access_point) {
-            return streambuf().connect(detail::make_endpoint<endpoint_type>(access_point));
+            return rdbuf()->connect(detail::make_endpoint<endpoint_type>(access_point));
         }
         
         boost::system::error_code connect(const std::string &access_point) {
-            return streambuf().connect(detail::make_endpoint<endpoint_type>(access_point));
+            return rdbuf()->connect(detail::make_endpoint<endpoint_type>(access_point));
         }
         
         /**
          * Close underlying stream device, flushing if necessary
          */
         inline void close() {
-            if(streambuf().lowest_layer().is_open()) {
+            if(rdbuf()->lowest_layer().is_open()) {
                 flush();
             }
-            streambuf().lowest_layer().close();
+            rdbuf()->lowest_layer().close();
         }
         
         inline bool is_open() const
-        { return this->sbuf_->lowest_layer().is_open(); }
+        { return rdbuf()->lowest_layer().is_open(); }
         
-        inline streambuf_t &streambuf()
-        { return *(this->sbuf_); }
-        
-        inline const streambuf_t &streambuf() const
-        { return *(this->sbuf_); }
+        inline streambuf_t *rdbuf() const
+        { return this->sbuf_.get(); }
         
         inline stream_type &stream_descriptor()
-        { return streambuf(); }
+        { return *rdbuf(); }
         
         void set_duplex_mode(duplex_mode dm)
-        { this->sbuf_.set_duplex_mode(dm); }
+        { rdbuf()->set_duplex_mode(dm); }
         
         duplex_mode get_duplex_mode() const
-        { return this->sbuf_.get_duplex_mode(); }
+        { return rdbuf()->get_duplex_mode(); }
     };
     
     template<typename Stream>
@@ -253,7 +250,7 @@ namespace fibio { namespace stream {
         }
         
         void accept(stream_type &s, boost::system::error_code &ec)
-        { acc_.async_accept(s.streambuf(), asio::yield[ec]); }
+        { acc_.async_accept(*(s.rdbuf()), asio::yield[ec]); }
         
         stream_type operator()()
         { return accept(); }
