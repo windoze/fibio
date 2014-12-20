@@ -31,7 +31,7 @@ namespace fibio { namespace stream {
     };
     
     template<typename Stream>
-    class fiberized_streambuf_base
+    class streambuf_base
     : public std::streambuf
     , public Stream
     {
@@ -39,18 +39,29 @@ namespace fibio { namespace stream {
     public:
         typedef Stream stream_type;
 
-        fiberized_streambuf_base()
+        streambuf_base()
         : base_type(asio::get_io_service())
+        { init_buffers(); }
+        
+        explicit streambuf_base(boost::asio::io_service &iosvc)
+        : base_type(iosvc)
         { init_buffers(); }
         
         // For SSL stream, construct with ssl::context
         template<typename Arg>
-        fiberized_streambuf_base(Arg &arg)
+        streambuf_base(Arg &arg)
         : std::streambuf()
         , base_type(asio::get_io_service(), arg)
         { init_buffers(); }
 
-        fiberized_streambuf_base(fiberized_streambuf_base &&other)
+        // For SSL stream, construct with ssl::context
+        template<typename Arg>
+        streambuf_base(boost::asio::io_service &iosvc, Arg &arg)
+        : std::streambuf()
+        , base_type(iosvc, arg)
+        { init_buffers(); }
+        
+        streambuf_base(streambuf_base &&other)
         // FIXME: GCC 4.8.1 on Ubuntu, std::streambuf doesn't have move constructor
         // and have copy constructor declared as private, that prevents the generation
         // of default move constructor, and makes only untouched(newly-created)
@@ -66,7 +77,7 @@ namespace fibio { namespace stream {
         { init_buffers(); }
         
         /// Destructor flushes buffered data.
-        ~fiberized_streambuf_base() {
+        ~streambuf_base() {
             if (pptr() != pbase())
                 overflow(traits_type::eof());
         }
@@ -208,19 +219,19 @@ namespace fibio { namespace stream {
     };
     
     template<typename Stream>
-    class fiberized_streambuf
-    : public fiberized_streambuf_base<Stream>
+    class streambuf
+    : public streambuf_base<Stream>
     {
-        typedef fiberized_streambuf_base<Stream> base_type;
+        typedef streambuf_base<Stream> base_type;
     public:
         using base_type::base_type;
     };
     
     template<typename Protocol>
-    class fiberized_streambuf<boost::asio::basic_stream_socket<Protocol>>
-    : public fiberized_streambuf_base<boost::asio::basic_stream_socket<Protocol>>
+    class streambuf<boost::asio::basic_stream_socket<Protocol>>
+    : public streambuf_base<boost::asio::basic_stream_socket<Protocol>>
     {
-        typedef fiberized_streambuf_base<boost::asio::basic_stream_socket<Protocol>> base_type;
+        typedef streambuf_base<boost::asio::basic_stream_socket<Protocol>> base_type;
     public:
 
         using base_type::base_type;
@@ -234,13 +245,13 @@ namespace fibio { namespace stream {
     };
 
     template<typename Stream>
-    class fiberized_streambuf<boost::asio::ssl::stream<Stream>>
-    : public fiberized_streambuf_base<boost::asio::ssl::stream<Stream>>
+    class streambuf<boost::asio::ssl::stream<Stream>>
+    : public streambuf_base<boost::asio::ssl::stream<Stream>>
     {
-        typedef fiberized_streambuf_base<boost::asio::ssl::stream<Stream>> base_type;
+        typedef streambuf_base<boost::asio::ssl::stream<Stream>> base_type;
     public:
         template<typename Context>
-        fiberized_streambuf(Context &ctx)
+        streambuf(Context &ctx)
         : base_type(ctx)
         {}
         

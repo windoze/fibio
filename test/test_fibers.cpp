@@ -12,11 +12,11 @@
 #include <thread>
 #include <fibio/fiber.hpp>
 
-// By defining this, fibio will not replace stream buffers for std streams
-// Then blocking of std streams will block a thread of scheduler.
-// This is needed if you're using multiple scheduler, and more than one of them
+// By defining this, fibio will not replace stream buffers for std streams,
+// blocking of std streams will block a thread of scheduler.
+// This is needed if you're using multiple schedulers, and more than one of them
 // need to access std streams
-#define FIBIO_DONT_USE_FIBERIZED_STD_STREAM
+#define FIBIO_DONT_FIBERIZE_STD_STREAM
 #include <fibio/fiberize.hpp>
 
 using namespace fibio;

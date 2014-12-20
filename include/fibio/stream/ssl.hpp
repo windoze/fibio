@@ -15,8 +15,8 @@
 namespace fibio { namespace stream {
     // Acceptor for SSL over stream socket
     template<typename Stream>
-    struct stream_acceptor<fiberized_iostream<boost::asio::ssl::stream<Stream>>> {
-        typedef fiberized_iostream<boost::asio::ssl::stream<Stream>> stream_type;
+    struct stream_acceptor<iostream<boost::asio::ssl::stream<Stream>>> {
+        typedef iostream<boost::asio::ssl::stream<Stream>> stream_type;
         typedef Stream socket_type;
         typedef typename socket_type::protocol_type::acceptor acceptor_type;
         typedef typename socket_type::protocol_type::endpoint endpoint_type;
@@ -75,8 +75,8 @@ namespace fibio { namespace stream {
     };
     
     template<typename Socket>
-    struct stream_traits<stream::fiberized_iostream<boost::asio::ssl::stream<Socket>>> {
-        typedef stream::fiberized_iostream<boost::asio::ssl::stream<Socket>> stream_type;
+    struct stream_traits<stream::iostream<boost::asio::ssl::stream<Socket>>> {
+        typedef stream::iostream<boost::asio::ssl::stream<Socket>> stream_type;
         typedef typename stream_type::stream_type socket_type;
         typedef stream_acceptor<stream_type> acceptor_type;
         typedef typename acceptor_type::endpoint_type endpoint_type;
@@ -95,7 +95,7 @@ namespace fibio { namespace ssl {
     using boost::asio::ssl::verify_context;
     typedef boost::asio::ssl::stream_base::handshake_type handshake_type;
     
-    typedef stream::fiberized_iostream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> tcp_stream;
+    typedef stream::iostream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> tcp_stream;
     typedef stream::stream_acceptor<tcp_stream> tcp_stream_acceptor;
     typedef stream::listener<tcp_stream> tcp_listener;
 }}

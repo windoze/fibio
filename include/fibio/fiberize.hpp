@@ -17,25 +17,25 @@
 #include <fibio/stream/streambuf.hpp>
 
 /// Define this to stop using fiberized std stream
-//#define FIBIO_DONT_USE_FIBERIZED_STD_STREAM
+//#define FIBIO_DONT_FIBERIZE_STD_STREAM
 
 /// Define this to stop using default main implementation
 //#define FIBIO_DONT_USE_DEFAULT_MAIN
 
 namespace fibio { namespace fibers {
     namespace detail {
-        struct fiberized_std_stream_guard {
-#ifndef FIBIO_DONT_USE_FIBERIZED_STD_STREAM
-            typedef stream::fiberized_streambuf<boost::asio::posix::stream_descriptor> sbuf_t;
+        struct std_stream_guard {
+#ifndef FIBIO_DONT_FIBERIZE_STD_STREAM
+            typedef stream::streambuf<boost::asio::posix::stream_descriptor> sbuf_t;
             typedef std::unique_ptr<sbuf_t> sbuf_ptr_t;
             
-            inline fiberized_std_stream_guard(boost::asio::io_service &iosvc=fibio::asio::get_io_service())
+            explicit inline std_stream_guard(boost::asio::io_service &iosvc)
             : old_cin_buf_(0)
             , old_cout_buf_(0)
             , old_cerr_buf_(0)
-            , cin_buf_(new sbuf_t())
-            , cout_buf_(new sbuf_t())
-            , cerr_buf_(new sbuf_t())
+            , cin_buf_(new sbuf_t(iosvc))
+            , cout_buf_(new sbuf_t(iosvc))
+            , cerr_buf_(new sbuf_t(iosvc))
             {
                 old_cin_buf_=std::cin.rdbuf(cin_buf_.get());
                 old_cout_buf_=std::cout.rdbuf(cout_buf_.get());
@@ -47,7 +47,7 @@ namespace fibio { namespace fibers {
                 std::cerr.rdbuf()->pubsetbuf(0, 0);
             }
 
-            inline ~fiberized_std_stream_guard()
+            inline ~std_stream_guard()
             {
                 std::cout.flush();
                 std::cerr.flush();
@@ -65,6 +65,8 @@ namespace fibio { namespace fibers {
             sbuf_ptr_t cin_buf_;
             sbuf_ptr_t cout_buf_;
             sbuf_ptr_t cerr_buf_;
+#else
+            explicit inline std_stream_guard(boost::asio::io_service &iosvc){}
 #endif
         };
     }   // End of namespace fibio::fibers::detail
@@ -77,7 +79,7 @@ namespace fibio { namespace fibers {
         try {
             sched.start();
             fibio::fiber f(sched, [&](){
-                detail::fiberized_std_stream_guard guard;
+                detail::std_stream_guard guard(sched.get_io_service());
                 ret=fn(std::forward<Args>(args)...);
             });
             sched.join();

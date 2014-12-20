@@ -23,7 +23,7 @@ namespace fibio { namespace stream {
     namespace detail {
         template<typename Stream>
         struct iostream_base {
-            typedef fiberized_streambuf<Stream> streambuf_t;
+            typedef streambuf<Stream> streambuf_t;
             iostream_base() : sbuf_(new streambuf_t) {}
             iostream_base(iostream_base &&other)
             : sbuf_(std::move(other.sbuf_))
@@ -93,38 +93,38 @@ namespace fibio { namespace stream {
     };
     
     template<typename Stream>
-    class fiberized_iostream
+    class iostream
     : public detail::iostream_base<Stream>
     , public closable_stream
     {
-        typedef fiberized_streambuf<Stream> streambuf_t;
+        typedef streambuf<Stream> streambuf_t;
         typedef detail::iostream_base<Stream> streambase_t;
     public:
         typedef typename streambuf_t::stream_type stream_type;
         typedef typename stream_type::lowest_layer_type::protocol_type protocol_type;
         typedef typename protocol_type::endpoint endpoint_type;
 
-        fiberized_iostream()
+        iostream()
         : streambase_t()
         , closable_stream(this->sbuf_.get())
         {}
         
         // For SSL stream, construct with ssl::context
         template<typename Arg>
-        fiberized_iostream(Arg &arg)
+        iostream(Arg &arg)
         : streambase_t(arg)
         , closable_stream(this->sbuf_.get())
         {}
         
         // Movable
-        fiberized_iostream(fiberized_iostream &&src)//=default;
+        iostream(iostream &&src)//=default;
         : streambase_t(std::move(src))
         , closable_stream(this->sbuf_.get())
         {}
         
         // Non-copyable
-        fiberized_iostream(const fiberized_iostream&) = delete;
-        fiberized_iostream& operator=(const fiberized_iostream&) = delete;
+        iostream(const iostream&) = delete;
+        iostream& operator=(const iostream&) = delete;
         
         template <typename... T>
         boost::system::error_code open(T... x) {
@@ -184,15 +184,15 @@ namespace fibio { namespace stream {
     };
     
     template<typename Stream>
-    fiberized_iostream<Stream> &operator<<(fiberized_iostream<Stream> &is, duplex_mode dm) {
+    iostream<Stream> &operator<<(iostream<Stream> &is, duplex_mode dm) {
         is.set_duplex_mode(dm);
         return is;
     }
 
     // streams
-    typedef fiberized_iostream<boost::asio::ip::tcp::socket> tcp_stream;
-    typedef fiberized_iostream<boost::asio::posix::stream_descriptor> posix_stream;
-    typedef fiberized_iostream<boost::asio::local::stream_protocol::socket> local_stream;
+    typedef iostream<boost::asio::ip::tcp::socket> tcp_stream;
+    typedef iostream<boost::asio::posix::stream_descriptor> posix_stream;
+    typedef iostream<boost::asio::local::stream_protocol::socket> local_stream;
     
     template<typename Stream>
     struct stream_acceptor {
