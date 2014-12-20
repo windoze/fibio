@@ -26,7 +26,7 @@ namespace apache { namespace thrift {
             template<>
             struct io_ops<true> {
                 template<typename Stream>
-                static uint32_t read(fibio::stream::fiberized_iostream<Stream> &s, uint8_t* buf, uint32_t len) {
+                static uint32_t read(fibio::stream::iostream<Stream> &s, uint8_t* buf, uint32_t len) {
                     if(!s) {
                         throw TTransportException(TTransportException::NOT_OPEN,
                                                   "Cannot read.");
@@ -39,7 +39,7 @@ namespace apache { namespace thrift {
                     return len;
                 }
                 template<typename Stream>
-                static void write(fibio::stream::fiberized_iostream<Stream> &s, const uint8_t* buf, uint32_t len) {
+                static void write(fibio::stream::iostream<Stream> &s, const uint8_t* buf, uint32_t len) {
                     if(!s) throw TTransportException(TTransportException::NOT_OPEN,
                                                      "Cannot write.");
                     s.write((const char *)buf, len);
@@ -49,7 +49,7 @@ namespace apache { namespace thrift {
             template<>
             struct io_ops<false> {
                 template<typename Stream>
-                static uint32_t read(fibio::stream::fiberized_iostream<Stream> &s, uint8_t* buf, uint32_t len) {
+                static uint32_t read(fibio::stream::iostream<Stream> &s, uint8_t* buf, uint32_t len) {
                     boost::system::error_code ec;
                     uint32_t ret=boost::asio::async_read(s.stream_descriptor(),
                                                          boost::asio::buffer(buf, len),
@@ -59,7 +59,7 @@ namespace apache { namespace thrift {
                     return ret;
                 }
                 template<typename Stream>
-                static void write(fibio::stream::fiberized_iostream<Stream> &s, const uint8_t* buf, uint32_t len) {
+                static void write(fibio::stream::iostream<Stream> &s, const uint8_t* buf, uint32_t len) {
                     boost::system::error_code ec;
                     boost::asio::async_write(s.stream_descriptor(),
                                              boost::asio::buffer(buf, len),
@@ -72,7 +72,7 @@ namespace apache { namespace thrift {
         template<typename Stream, bool buffered>
         class TFibioTransport : public TVirtualTransport<TFibioTransport<Stream, buffered>> {
         public:
-            typedef fibio::stream::fiberized_iostream<Stream> fibio_stream;
+            typedef fibio::stream::iostream<Stream> fibio_stream;
             typedef fibio::stream::stream_traits<fibio_stream> traits_type;
             typedef typename traits_type::endpoint_type endpoint_type;
             typedef fibio::stream::listener<fibio_stream> listener_type;
@@ -128,7 +128,7 @@ namespace apache { namespace thrift {
         template<typename Stream, bool buffered>
         class TFibioServer : public TServer {
         public:
-            typedef fibio::stream::fiberized_iostream<Stream> fibio_stream;
+            typedef fibio::stream::iostream<Stream> fibio_stream;
             typedef fibio::stream::stream_traits<fibio_stream> traits_type;
             typedef typename traits_type::endpoint_type endpoint_type;
             typedef fibio::stream::listener<fibio_stream> listener_type;
