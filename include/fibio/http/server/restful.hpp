@@ -9,7 +9,7 @@
 #ifndef fibio_http_server_restful_hpp
 #define fibio_http_server_restful_hpp
 
-#include <fibio/fibers/shared_timed_mutex.hpp>
+#include <fibio/fibers/shared_mutex.hpp>
 #include <fibio/http/server/routing.hpp>
 
 namespace fibio { namespace http {

@@ -11,7 +11,7 @@
 
 #include <list>
 #include <algorithm>
-#include <fibio/fibers/shared_timed_mutex.hpp>
+#include <fibio/fibers/shared_mutex.hpp>
 
 namespace fibio { namespace fibers {
     /// fiber_group

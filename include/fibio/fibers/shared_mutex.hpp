@@ -1,5 +1,5 @@
 //
-//  shared_timed_mutex.hpp
+//  shared_mutex.hpp
 //  fibio
 //
 //  Created by Chen Xu on 14-3-20. Copied and modified from Boost.Thread
@@ -11,8 +11,8 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef fibio_shared_timed_mutex_hpp
-#define fibio_shared_timed_mutex_hpp
+#ifndef fibio_shared_mutex_hpp
+#define fibio_shared_mutex_hpp
 
 #include <fibio/fibers/exceptions.hpp>
 #include <fibio/fibers/mutex.hpp>
