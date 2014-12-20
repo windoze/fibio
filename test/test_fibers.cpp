@@ -59,6 +59,55 @@ void ex() {
     throw std::string("exception from child fiber");
 }
 
+void test_interrupted1() {
+    try {
+        this_fiber::sleep_for(std::chrono::seconds(1));
+        assert(false);
+    } catch(fiber_interrupted) {
+        // Interrupted
+    }
+}
+
+void test_interruptor1() {
+    fiber f(test_interrupted1);
+    f.interrupt();
+    f.join();
+}
+
+void test_interrupted2() {
+    try {
+        this_fiber::disable_interruption d1;
+        this_fiber::sleep_for(std::chrono::seconds(1));
+        assert(true);
+    } catch(fiber_interrupted) {
+        assert(false);
+    }
+}
+
+void test_interruptor2() {
+    fiber f(test_interrupted2);
+    f.interrupt();
+    f.join();
+}
+
+void test_interrupted3() {
+    try {
+        this_fiber::disable_interruption d1;
+        this_fiber::restore_interruption r1;
+        this_fiber::sleep_for(std::chrono::seconds(1));
+        assert(false);
+    } catch(fiber_interrupted) {
+        // Interrupted
+        assert(true);
+    }
+}
+
+void test_interruptor3() {
+    fiber f(test_interrupted3);
+    f.interrupt();
+    f.join();
+}
+
 void main_fiber(/*int argc, char *argv[]*/) {
     fiber_group fibers;
     
@@ -109,6 +158,11 @@ void main_fiber(/*int argc, char *argv[]*/) {
         assert(false);
     }
      */
+    
+    // Test interruption
+    fibers.create_fiber(test_interruptor1);
+    fibers.create_fiber(test_interruptor2);
+    fibers.create_fiber(test_interruptor3);
     
     fibers.join_all();
     

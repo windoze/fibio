@@ -118,7 +118,7 @@ namespace fibio { namespace fibers { namespace detail {
 
         scheduler_ptr_t sched_;
         strand_ptr_t fiber_strand_;
-        spinlock mtx_;
+        mutable spinlock mtx_;
         std::atomic<state_t> state_;
         std::unique_ptr<fiber_data_base> entry_;
         runner_t runner_;
@@ -129,6 +129,11 @@ namespace fibio { namespace fibers { namespace detail {
         fiber_ptr_t this_ref_;
         std::string name_;
         std::exception_ptr uncaught_exception_;
+        
+        // Interruption support
+        void interrupt();
+        int interrupt_disable_level_=0;
+        bool interrupt_requested_=false;
     };
     
     template<typename Lockable>
@@ -145,7 +150,7 @@ namespace fibio { namespace fibers { namespace detail {
 }}} // End of namespace fibio::fibers::detail
 
 namespace fibio { namespace fibers {
-    inline detail::fiber_object *current_fiber() {
+    inline detail::fiber_object *current_fiber() BOOST_NOEXCEPT {
         return detail::fiber_object::current_fiber_;
     }
     

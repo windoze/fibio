@@ -18,15 +18,15 @@ namespace fibio { namespace fibers { namespace detail {
         boost::atomic<LockState> state_;
 
     public:
-        spinlock() : state_(Unlocked) {}
+        spinlock() noexcept : state_(Unlocked) {}
   
-        void lock() {
+        void lock() noexcept {
             while (state_.exchange(Locked, boost::memory_order_acquire) == Locked) {
                 /* busy-wait */
             }
         }
 
-        void unlock() {
+        void unlock() noexcept {
             state_.store(Unlocked, boost::memory_order_release);
         }
     };

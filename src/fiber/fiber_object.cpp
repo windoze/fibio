@@ -231,6 +231,12 @@ namespace fibio { namespace fibers { namespace detail {
         BOOST_ASSERT(current_fiber_==this);
         
         set_state(BLOCKED);
+        
+        // Check interruption when resumed
+        std::lock_guard<spinlock> lock(mtx_);
+        if (interrupt_disable_level_==0 && interrupt_requested_) {
+            BOOST_THROW_EXCEPTION(fiber_interrupted());
+        }
     }
     
     inline void activate_fiber(fiber_ptr_t this_fiber) {
@@ -336,7 +342,18 @@ namespace fibio { namespace fibers { namespace detail {
         cleanup_queue_.push_back(std::move(f));
     }
     
-    void set_fss_data(void const* key,std::shared_ptr<fss_cleanup_function> func,void* fss_data,bool cleanup_existing) {
+    void fiber_object::interrupt() {
+        std::lock_guard<spinlock> lock(mtx_);
+        if (interrupt_disable_level_==0) {
+            interrupt_requested_=true;
+        }
+    }
+    
+    void set_fss_data(void const* key,
+                      std::shared_ptr<fss_cleanup_function> func,
+                      void* fss_data,
+                      bool cleanup_existing)
+    {
         if (fiber_object::current_fiber_) {
             if (!func && !fss_data) {
                 // Remove fss if both func and data are NULL
@@ -493,6 +510,16 @@ namespace fibio { namespace fibers {
         return std::thread::hardware_concurrency();
     }
     
+    void fiber::interrupt() {
+        if (!impl_) {
+            BOOST_THROW_EXCEPTION(NOT_A_FIBER);
+        }
+        std::lock_guard<detail::spinlock> lock(impl_->mtx_);
+        if (impl_->interrupt_disable_level_==0) {
+            impl_->interrupt_requested_=true;
+        }
+    }
+    
     namespace this_fiber {
         void yield() {
             if (auto cf=current_fiber()) {
@@ -532,30 +559,91 @@ namespace fibio { namespace fibers {
             boost::asio::strand &get_strand() {
                 if (auto cf=current_fiber()) {
                     return cf->get_fiber_strand();
+                } else {
+                    BOOST_THROW_EXCEPTION(NOT_A_FIBER);
                 }
-                BOOST_THROW_EXCEPTION(NOT_A_FIBER);
             }
         }   // End of namespace detail
         
         std::string get_name() {
             if (auto cf=current_fiber()) {
                 return cf->get_name();
+            } else {
+                BOOST_THROW_EXCEPTION(NOT_A_FIBER);
             }
-            BOOST_THROW_EXCEPTION(NOT_A_FIBER);
         }
         
         void set_name(const std::string &name) {
             if (auto cf=current_fiber()) {
                 cf->set_name(name);
+            } else {
+                BOOST_THROW_EXCEPTION(NOT_A_FIBER);
             }
-            BOOST_THROW_EXCEPTION(NOT_A_FIBER);
         }
         
         scheduler get_scheduler() {
             if (auto cf=current_fiber()) {
                 return scheduler(cf->sched_);
+            } else {
+                BOOST_THROW_EXCEPTION(NOT_A_FIBER);
             }
-            BOOST_THROW_EXCEPTION(NOT_A_FIBER);
+        }
+        
+        disable_interruption::disable_interruption() {
+            if (auto cf=current_fiber()) {
+                std::lock_guard<fibers::detail::spinlock> lock(cf->mtx_);
+                cf->interrupt_disable_level_++;
+            } else {
+                BOOST_THROW_EXCEPTION(NOT_A_FIBER);
+            }
+        }
+        
+        disable_interruption::~disable_interruption() {
+            if (auto cf=current_fiber()) {
+                std::lock_guard<fibers::detail::spinlock> lock(cf->mtx_);
+                cf->interrupt_disable_level_--;
+            }
+        }
+        
+        restore_interruption::restore_interruption() {
+            if (auto cf=current_fiber()) {
+                std::lock_guard<fibers::detail::spinlock> lock(cf->mtx_);
+                std::swap(cf->interrupt_disable_level_, level_);
+            } else {
+                BOOST_THROW_EXCEPTION(NOT_A_FIBER);
+            }
+        }
+        
+        restore_interruption::~restore_interruption() {
+            if (auto cf=current_fiber()) {
+                std::lock_guard<fibers::detail::spinlock> lock(cf->mtx_);
+                std::swap(cf->interrupt_disable_level_, level_);
+            }
+        }
+        
+        bool interruption_enabled() noexcept {
+            if (auto cf=current_fiber()) {
+                std::lock_guard<fibers::detail::spinlock> lock(cf->mtx_);
+                return cf->interrupt_disable_level_==0;
+            }
+            return false;
+        }
+        
+        bool interruption_requested() noexcept {
+            if (auto cf=current_fiber()) {
+                std::lock_guard<fibers::detail::spinlock> lock(cf->mtx_);
+                return cf->interrupt_requested_==0;
+            }
+            return false;
+        }
+        
+        void interruption_point() {
+            if (auto cf=current_fiber()) {
+                std::lock_guard<fibers::detail::spinlock> lock(cf->mtx_);
+                if (cf->interrupt_requested_) {
+                    BOOST_THROW_EXCEPTION(fibers::fiber_interrupted());
+                }
+            }
         }
     }   // End of namespace this_fiber
 }}  // End of namespace fibio::fibers

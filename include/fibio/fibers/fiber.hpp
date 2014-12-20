@@ -217,6 +217,8 @@ namespace fibio { namespace fibers {
          */
         std::string get_name();
         
+        void interrupt();
+        
     private:
         /// non-copyable
         fiber(const fiber&) = delete;
@@ -245,7 +247,6 @@ namespace fibio { namespace fibers {
             boost::asio::strand &get_strand();
         }
         
-
         /**
          * reschedule execution of fibers
          */
@@ -276,7 +277,7 @@ namespace fibio { namespace fibers {
         void sleep_until( const std::chrono::time_point<Clock,Duration>& sleep_time ) {
             sleep_for(sleep_time-Clock::now());
         }
-
+        
         /**
          * get the name of current fiber
          */
@@ -287,6 +288,22 @@ namespace fibio { namespace fibers {
          */
         void set_name(const std::string &name);
 
+        struct disable_interruption {
+            disable_interruption();
+            ~disable_interruption();
+        };
+        
+        struct restore_interruption {
+            restore_interruption();
+            ~restore_interruption();
+        private:
+            int level_=0;
+        };
+        
+        bool interruption_enabled() BOOST_NOEXCEPT;
+        bool interruption_requested() BOOST_NOEXCEPT;
+        void interruption_point();
+        
         /**
          * get current scheduler
          */
@@ -314,6 +331,9 @@ namespace fibio {
         using fibers::this_fiber::get_name;
         using fibers::this_fiber::set_name;
         using fibers::this_fiber::get_scheduler;
+        using fibers::this_fiber::disable_interruption;
+        using fibers::this_fiber::restore_interruption;
+        using fibers::this_fiber::interruption_enabled;
     }
     namespace asio {
         using fibers::this_fiber::detail::get_io_service;
