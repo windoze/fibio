@@ -9,6 +9,7 @@
 #ifndef fibio_http_server_restful_hpp
 #define fibio_http_server_restful_hpp
 
+#include <fibio/fibers/shared_timed_mutex.hpp>
 #include <fibio/http/server/routing.hpp>
 
 namespace fibio { namespace http {
@@ -26,7 +27,7 @@ namespace fibio { namespace http {
             // For non-lock-free types
             template<>
             struct lock_type<false> {
-                typedef fibio::shared_mutex type;
+                typedef fibio::shared_timed_mutex type;
             };
             
             // For lock-free types
