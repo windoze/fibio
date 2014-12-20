@@ -69,7 +69,7 @@ namespace fibio { namespace fibers {
         fiber* create_fiber(Fn &&fn, Args&&... args)
         {
             lock_guard<shared_timed_mutex> guard(m_);
-            std::auto_ptr<fiber> new_fiber(new fiber(std::forward<Fn>(fn), std::forward<Args>(args)...));
+            std::unique_ptr<fiber> new_fiber(new fiber(std::forward<Fn>(fn), std::forward<Args>(args)...));
             fibers_.push_back(new_fiber.get());
             return new_fiber.release();
         }
