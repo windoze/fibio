@@ -85,6 +85,85 @@ namespace utility {
     template<typename F> using make_function_type = std::function<get_signature<F>>;
     template<typename F> make_function_type<F> make_function(F &&f)
     { return make_function_type<F>(std::forward<F>(f)); }
+
+    // Function traits
+    template<typename T>
+    struct function_traits {
+        typedef typename remove_class<decltype(&std::remove_reference<T>::type::operator())>::type call_type;
+        static constexpr size_t arity=function_traits<call_type>::arity;
+        using result_type = typename function_traits<call_type>::result_type ;
+        using arguments_tuple = typename function_traits<call_type>::arguments_tuple;
+    };
+    template<typename R, typename... A>
+    struct function_traits<R(A...)> {
+        enum { arity=sizeof...(A) };
+        typedef R result_type;
+        typedef std::tuple<A...> arguments_tuple;
+        template<size_t N>
+        struct arg {
+            typedef typename std::tuple_element<N, arguments_tuple>::type type;
+        };
+    };
+    template<typename R, typename... A>
+    struct function_traits<R(&)(A...)> {
+        typedef R result_type;
+        static constexpr size_t arity=sizeof...(A);
+        typedef std::tuple<A...> arguments_tuple;
+        template<size_t N>
+        struct arg {
+            typedef typename std::tuple_element<N, arguments_tuple>::type type;
+        };
+    };
+    template<typename R, typename... A>
+    struct function_traits<R(*)(A...)> {
+        static constexpr size_t arity=sizeof...(A);
+        typedef R result_type;
+        typedef std::tuple<A...> arguments_tuple;
+        template<size_t N>
+        struct arg {
+            typedef typename std::tuple_element<N, arguments_tuple>::type type;
+        };
+    };
+    template<typename R, typename C, typename... A>
+    struct function_traits<R(C::*)(A...)> {
+        static constexpr size_t arity=sizeof...(A);
+        typedef R result_type;
+        typedef std::tuple<A...> arguments_tuple;
+        template<size_t N>
+        struct arg {
+            typedef typename std::tuple_element<N, arguments_tuple>::type type;
+        };
+    };
+    template<typename R, typename C, typename... A>
+    struct function_traits<R(C::*)(A...) const> {
+        static constexpr size_t arity=sizeof...(A);
+        typedef R result_type;
+        typedef std::tuple<A...> arguments_tuple;
+        template<size_t N>
+        struct arg {
+            typedef typename std::tuple_element<N, arguments_tuple>::type type;
+        };
+    };
+    template<typename R, typename C, typename... A>
+    struct function_traits<R(C::*)(A...) volatile> {
+        static constexpr size_t arity=sizeof...(A);
+        typedef R result_type;
+        typedef std::tuple<A...> arguments_tuple;
+        template<size_t N>
+        struct arg {
+            typedef typename std::tuple_element<N, arguments_tuple>::type type;
+        };
+    };
+    template<typename R, typename C, typename... A>
+    struct function_traits<R(C::*)(A...) const volatile> {
+        static constexpr size_t arity=sizeof...(A);
+        typedef R result_type;
+        typedef std::tuple<A...> arguments_tuple;
+        template<size_t N>
+        struct arg {
+            typedef typename std::tuple_element<N, arguments_tuple>::type type;
+        };
+    };
 }
 
 #endif
