@@ -97,7 +97,7 @@ namespace fibio { namespace fibers { namespace detail {
             mark_ready_and_notify_();
         }
         
-        R get_( unique_lock< mutex > & lk)
+        const R& get_( unique_lock< mutex > & lk)
         {
             //TODO: the get method waits until the future has a valid result and
             //      (depending on which template is used) retrieves it
@@ -212,7 +212,7 @@ namespace fibio { namespace fibers { namespace detail {
             set_exception_( except);
         }
         
-        R get()
+        const R& get()
         {
             //TODO: the get method waits until the future has a valid result and
             //      (depending on which template is used) retrieves it
