@@ -68,9 +68,11 @@ int fibio::main(int argc, char *argv[]) {
     assert(n2==8);
     assert(n3==9);
     
-    fiber(test_async).join();
-    fiber(test_async_executor).join();
-    fiber(test_async_function).join();
+    fiber_group fg;
+    fg.create_fiber(test_async);
+    fg.create_fiber(test_async_executor);
+    fg.create_fiber(test_async_function);
+    fg.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }
