@@ -47,6 +47,11 @@ namespace fibio { namespace fibers {
         void add_worker_thread(size_t nthr=1);
         
         /**
+         * returns number of threads in the worker pool
+         */
+        size_t worker_pool_size() const;
+        
+        /**
          * returns the scheduler singleton
          */
         static scheduler get_instance();

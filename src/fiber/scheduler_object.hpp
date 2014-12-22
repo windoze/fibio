@@ -26,13 +26,14 @@ namespace fibio { namespace fibers { namespace detail {
         void join();
         
         void add_thread(size_t nthr);
+        size_t worker_pool_size() const;
         
         void on_fiber_exit(fiber_ptr_t p);
         void on_check_timer(boost::system::error_code ec);
         
         static std::shared_ptr<scheduler_object> get_instance();
         
-        std::mutex mtx_;
+        mutable std::mutex mtx_;
         std::condition_variable cv_;
         std::vector<std::thread> threads_;
         boost::asio::io_service io_service_;

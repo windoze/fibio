@@ -86,6 +86,11 @@ namespace fibio { namespace fibers { namespace detail {
         }
     }
     
+    size_t scheduler_object::worker_pool_size() const {
+        std::lock_guard<std::mutex> guard(mtx_);
+        return threads_.size();
+    }
+    
     void scheduler_object::on_fiber_exit(fiber_ptr_t p) {
         std::lock_guard<std::mutex> guard(mtx_);
         fiber_count_--;
@@ -136,6 +141,10 @@ namespace fibio { namespace fibers {
     
     void scheduler::add_worker_thread(size_t nthr) {
         impl_->add_thread(nthr);
+    }
+    
+    size_t scheduler::worker_pool_size() const {
+        return impl_->worker_pool_size();
     }
     
     scheduler scheduler::get_instance() {
