@@ -47,8 +47,9 @@ namespace fibio { namespace fibers { namespace detail {
         std::tuple<typename std::decay<F>::type, typename std::decay<ArgTypes>::type...> fp;
     };
     
-    /// make_fiber_data
     /**
+     * make_fiber_data
+     *
      * wrap entry function and arguments into a tuple
      */
     template<typename F, class... ArgTypes>

@@ -12,20 +12,28 @@
 #include <boost/atomic.hpp>
  
 namespace fibio { namespace fibers { namespace detail {
+    /**
+     * class spinlock
+     *
+     * A spinlock meets C++11 BasicLockable concept
+     */
     class spinlock {
     private:
         typedef enum {Locked, Unlocked} LockState;
         boost::atomic<LockState> state_;
 
     public:
+        /// Constructor
         spinlock() noexcept : state_(Unlocked) {}
   
+        /// Blocks until a lock can be obtained for the current execution agent.
         void lock() noexcept {
             while (state_.exchange(Locked, boost::memory_order_acquire) == Locked) {
                 /* busy-wait */
             }
         }
 
+        /// Releases the lock held by the execution agent.
         void unlock() noexcept {
             state_.store(Unlocked, boost::memory_order_release);
         }

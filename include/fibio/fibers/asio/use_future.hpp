@@ -15,6 +15,14 @@
 #include <boost/asio/detail/config.hpp>
 
 namespace fibio { namespace fibers { namespace asio {
+    /**
+     * class use_future_t
+     * 
+     * Instance of the class can be used as completion handler for Boost.ASIO async_* call,
+     * makes calls return a fibio::future.
+     *
+     * @see fibio::future
+     */
     template<typename Allocator = std::allocator<void>>
     class use_future_t
     {
@@ -43,6 +51,7 @@ namespace fibio { namespace fibers { namespace asio {
         Allocator allocator_;
     };
     
+    /// The predefined instance of use_future_t can be used directly.
     BOOST_CONSTEXPR_OR_CONST use_future_t<> use_future;
 }}} // End of namespace fibio::fibers::asio
 

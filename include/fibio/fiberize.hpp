@@ -71,6 +71,13 @@ namespace fibio { namespace fibers {
         };
     }   // End of namespace fibio::fibers::detail
     
+    /**
+     * Start the scheduler and create the first fiber in it
+     *
+     * @param sched the scheduler to run the fiber
+     * @param fn the entry point of the fiber
+     * @param args the arguments for the fiber
+     */
     template<typename Fn, typename ...Args>
     auto fiberize(fibio::scheduler sched, Fn &&fn, Args&& ...args)
     -> typename std::result_of<Fn(Args...)>::type
@@ -89,6 +96,12 @@ namespace fibio { namespace fibers {
         return ret;
     }
     
+    /**
+     * Start the default scheduler and create the first fiber in it
+     *
+     * @param fn the entry point of the fiber
+     * @param args the arguments for the fiber
+     */
     template<typename Fn, typename ...Args>
     auto fiberize(Fn &&fn, Args&& ...args)
     -> typename std::result_of<Fn(Args...)>::type

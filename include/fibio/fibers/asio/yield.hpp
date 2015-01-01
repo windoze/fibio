@@ -15,7 +15,12 @@
 #include <boost/system/error_code.hpp>
 
 namespace fibio { namespace fibers { namespace asio {
-    /// Context object that represents the currently executing fiber.
+    /**
+     * class yield_t
+     *
+     * Instance of the class can be used as completion handler for Boost.ASIO async_* call,
+     * makes calls block current fiber until completion.
+     */
     class yield_t {
     public:
         /// constructor
@@ -25,6 +30,8 @@ namespace fibio { namespace fibers { namespace asio {
 
         /**
          * Return a yield context that sets the specified error_code.
+         *
+         * @param ec a reference of error_code to store returned errors
          */
         yield_t operator[](boost::system::error_code &ec) const {
             yield_t tmp;
@@ -36,7 +43,7 @@ namespace fibio { namespace fibers { namespace asio {
         boost::system::error_code *ec_;
     };
     
-    /// pre-defined yield object
+    /// predefined instance of yield_t can be used directly
     constexpr yield_t yield;
 }}} // End of namespace fibio::fibers::asio
 

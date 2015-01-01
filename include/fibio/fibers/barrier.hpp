@@ -80,7 +80,7 @@ namespace fibio { namespace fibers {
         {}
         
         /**
-         * Construct a barrier for `count` threads and a completion function `completion`.
+         * Construct a barrier for `count` fibers and a completion function `completion`.
          */
         template <typename F>
         barrier(unsigned int count,
@@ -92,7 +92,7 @@ namespace fibio { namespace fibers {
         {}
         
         /**
-         * Construct a barrier for `count` threads and a completion function `completion`.
+         * Construct a barrier for `count` fibers and a completion function `completion`.
          */
         template <typename F>
         barrier(unsigned int count,
@@ -104,7 +104,7 @@ namespace fibio { namespace fibers {
         {}
         
         /**
-         * Construct a barrier for `count` threads and a completion function `completion`.
+         * Construct a barrier for `count` fibers and a completion function `completion`.
          */
         barrier(unsigned int count, void(*completion)()) :
         m_count(check_counter(count)), m_generation(0),
@@ -114,7 +114,7 @@ namespace fibio { namespace fibers {
         {}
         
         /**
-         * Construct a barrier for `count` threads and a completion function `completion`.
+         * Construct a barrier for `count` fibers and a completion function `completion`.
          */
         barrier(unsigned int count, unsigned int(*completion)()) :
         m_count(check_counter(count)), m_generation(0),

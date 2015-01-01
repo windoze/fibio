@@ -222,6 +222,9 @@ namespace fibio { namespace fibers {
          */
         std::string get_name();
         
+        /**
+         * Interrupt the fiber with a fiber_interrupted exception if the interruption is not disabled.
+         */
         void interrupt();
         
     private:
@@ -293,11 +296,23 @@ namespace fibio { namespace fibers {
          */
         void set_name(const std::string &name);
 
+        /**
+         * struct disable_interruption
+         *
+         * Create disable_interruption instance to increase interruption disable level.
+         * Interruption is disable if the disable level larger than 0
+         */
         struct disable_interruption {
             disable_interruption();
             ~disable_interruption();
         };
         
+        /**
+         * struct restore_interruption
+         *
+         * Create restore_interruption instance to decrease interruption disable level.
+         * Interruption is not enable if the disable level larger than 0
+         */
         struct restore_interruption {
             restore_interruption();
             ~restore_interruption();
@@ -305,8 +320,13 @@ namespace fibio { namespace fibers {
             int level_=0;
         };
         
+        /// Check if the interruption is enabled
         bool interruption_enabled() BOOST_NOEXCEPT;
+
+        /// Check if there is an interruption request
         bool interruption_requested() BOOST_NOEXCEPT;
+        
+        /// Interruption request is checked only at this function call and some other predefined points
         void interruption_point();
         
         /**

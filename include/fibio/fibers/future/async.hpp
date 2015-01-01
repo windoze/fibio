@@ -41,6 +41,9 @@ namespace fibio { namespace fibers {
         };
     }
     
+    /**
+     * Run function asynchronously, returns a future, which will be ready when function completes
+     */
     template<typename Fn, typename ...Args>
     typename detail::task_data<Fn, Args...>::future_type
     async(Fn &&fn, Args&&... args) {
@@ -51,6 +54,9 @@ namespace fibio { namespace fibers {
         return std::move(ret);
     }
     
+    /**
+     * Run function asynchronously in a fiber pool, returns a future
+     */
     template<typename T>
     struct async_executor {
         async_executor(size_t pool_size=0) {
@@ -79,6 +85,9 @@ namespace fibio { namespace fibers {
         std::vector<fiber> fibers_;
     };
     
+    /**
+     *  Asynchronous wrapper for the function, accepts same arguments as the original function and returns a future
+     */
     template<typename Fn>
     struct async_function {
         typedef utility::function_traits<Fn> traits_type;
@@ -130,6 +139,9 @@ namespace fibio { namespace fibers {
         fiber fiber_;
     };
     
+    /**
+     *  Create an asynchronous wrapper for the function
+     */
     template<typename Fn>
     async_function<Fn> make_async(Fn &&fn)
     { return async_function<Fn>(std::forward<Fn>(fn)); }
