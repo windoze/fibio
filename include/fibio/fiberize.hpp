@@ -66,7 +66,6 @@ namespace fibio { namespace fibers {
         native_handle_type std_in_handle() { return 0; }
         native_handle_type std_out_handle() { return 1; }
         native_handle_type std_err_handle() { return 2; }
-        native_handle_type std_log_handle() { return 2; }
 #elif defined(BOOST_ASIO_HAS_WINDOWS_STREAM_HANDLE)
         // Windows platform
         typedef boost::asio::windows::stream_handle std_handle_type;
@@ -74,7 +73,6 @@ namespace fibio { namespace fibers {
         native_handle_type std_in_handle() { return ::GetStdHandle(STD_INPUT_HANDLE); }
         native_handle_type std_out_handle() { return ::GetStdHandle(STD_OUTPUT_HANDLE); }
         native_handle_type std_err_handle() { return ::GetStdHandle(STD_ERROR_HANDLE); }
-        native_handle_type std_log_handle() { return ::GetStdHandle(STD_ERROR_HANDLE); }
 #else
 #   error("Unsupported platform")
 #endif
@@ -83,7 +81,6 @@ namespace fibio { namespace fibers {
             guard<std::istream, std_handle_type> cin_guard_{std::cin, std_in_handle()};
             guard<std::ostream, std_handle_type> cout_guard_{std::cout, std_out_handle()};
             guard<std::ostream, std_handle_type> cerr_guard_{std::cerr, std_err_handle(), true};
-            guard<std::ostream, std_handle_type> clog_guard_{std::clog, std_log_handle()};
         };
         
 #else   // !defined(FIBIO_DONT_FIBERIZE_STD_STREAM), No std stream guard, do nothing
