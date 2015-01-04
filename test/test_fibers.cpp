@@ -17,6 +17,7 @@
 // This is needed if you're using multiple schedulers, and more than one of them
 // need to access std streams
 #define FIBIO_DONT_FIBERIZE_STD_STREAM
+#define FIBIO_DONT_USE_DEFAULT_MAIN
 #include <fibio/fiberize.hpp>
 
 using namespace fibio;
@@ -62,32 +63,22 @@ void ex() {
 void test_interrupted1() {
     try {
         this_fiber::sleep_for(std::chrono::seconds(1));
+        // fiber should be interrupted
         assert(false);
     } catch(fiber_interrupted) {
         // Interrupted
     }
 }
 
-void test_interruptor1() {
-    fiber f(test_interrupted1);
-    f.interrupt();
-    f.join();
-}
-
 void test_interrupted2() {
     try {
         this_fiber::disable_interruption d1;
         this_fiber::sleep_for(std::chrono::seconds(1));
+        // fiber should not be interrupted
         assert(true);
     } catch(fiber_interrupted) {
         assert(false);
     }
-}
-
-void test_interruptor2() {
-    fiber f(test_interrupted2);
-    f.interrupt();
-    f.join();
 }
 
 void test_interrupted3() {
@@ -95,6 +86,7 @@ void test_interrupted3() {
         this_fiber::disable_interruption d1;
         this_fiber::restore_interruption r1;
         this_fiber::sleep_for(std::chrono::seconds(1));
+        // fiber should be interrupted
         assert(false);
     } catch(fiber_interrupted) {
         // Interrupted
@@ -102,13 +94,13 @@ void test_interrupted3() {
     }
 }
 
-void test_interruptor3() {
-    fiber f(test_interrupted3);
+void test_interruptor(void (*t)()) {
+    fiber f(t);
     f.interrupt();
     f.join();
 }
 
-void main_fiber(/*int argc, char *argv[]*/) {
+int main_fiber(int n) {
     fiber_group fibers;
     
     data d1(1);
@@ -160,9 +152,9 @@ void main_fiber(/*int argc, char *argv[]*/) {
      */
     
     // Test interruption
-    fibers.create_fiber(test_interruptor1);
-    fibers.create_fiber(test_interruptor2);
-    fibers.create_fiber(test_interruptor3);
+    fibers.create_fiber(test_interruptor, test_interrupted1);
+    fibers.create_fiber(test_interruptor, test_interrupted2);
+    fibers.create_fiber(test_interruptor, test_interrupted3);
     
     fibers.join_all();
     
@@ -178,31 +170,24 @@ void main_fiber(/*int argc, char *argv[]*/) {
     assert(d5.n==0);
     // d6.n changed
     assert(d6.n=400);
-    // We need a lock as the std::cout is shared across 3 schedulers
+    // We need a lock as the std::cout is shared across multiple schedulers
     std::lock_guard<std::mutex> lk(cout_mtx);
-    std::cout << "main_fiber exiting" << std::endl;
+    std::cout << "main_fiber in scheduler[" << n << "] exiting" << std::endl;
+    return 0;
 }
 
-void thr_entry() {
-    try {
-        fibio::scheduler sched;
-        sched.start();
-        fibio::fiber f(sched, main_fiber);
-        sched.join();
-    } catch (std::exception& e) {
-        std::lock_guard<std::mutex> lk(cout_mtx);
-        std::cerr << "Exception: " << e.what() << "\n";
+int main() {
+    // Create 10 schedulers from a fiber belongs to the default scheduler
+    std::vector<std::thread> threads;
+    for(size_t i=0; i<10; i++) {
+        threads.emplace_back([i](){
+            fibio::fiberize(fibio::scheduler(), main_fiber, i);
+            std::lock_guard<std::mutex> lk(cout_mtx);
+            std::cout << "scheduler[" << i << "] destroyed" << std::endl;
+        });
     }
-    return;
-}
-
-int fibio::main(int argc, char *argv[]) {
-    // Create 2 schedulers from a fiber belongs to the default scheduler
-    std::thread t1(thr_entry);
-    std::thread t2(thr_entry);
-    t1.join();
-    t2.join();
+    for(auto &t : threads) t.join();
     
-    std::cout << "main_fiber exiting" << std::endl;
+    std::cout << "main thread exiting" << std::endl;
     return 0;
 }

@@ -13,6 +13,7 @@
 #include <memory>
 #include <iostream>
 #include <boost/asio/posix/stream_descriptor.hpp>
+#include <boost/asio/windows/stream_handle.hpp>
 #include <fibio/fibers/fiber.hpp>
 #include <fibio/stream/streambuf.hpp>
 
@@ -24,50 +25,85 @@
 
 namespace fibio { namespace fibers {
     namespace detail {
-        struct std_stream_guard {
-#ifndef FIBIO_DONT_FIBERIZE_STD_STREAM
-            typedef stream::streambuf<boost::asio::posix::stream_descriptor> sbuf_t;
+#if !defined(FIBIO_DONT_FIBERIZE_STD_STREAM)
+        template<typename Stream, typename Desc, typename CharT=char, typename Traits=std::char_traits<CharT>>
+        struct guard {
+            typedef typename Desc::native_handle_type native_handle_type;
+            typedef stream::streambuf<Desc> sbuf_t;
             typedef std::unique_ptr<sbuf_t> sbuf_ptr_t;
             
-            explicit inline std_stream_guard(boost::asio::io_service &iosvc)
-            : old_cin_buf_(0)
-            , old_cout_buf_(0)
-            , old_cerr_buf_(0)
-            , cin_buf_(new sbuf_t(iosvc))
-            , cout_buf_(new sbuf_t(iosvc))
-            , cerr_buf_(new sbuf_t(iosvc))
+            guard(Stream &s, native_handle_type h, bool unbuffered=false)
+            : new_buf_(new sbuf_t(this_fiber::detail::get_io_service()))
+            , stream_(s)
             {
-                old_cin_buf_=std::cin.rdbuf(cin_buf_.get());
-                old_cout_buf_=std::cout.rdbuf(cout_buf_.get());
-                old_cerr_buf_=std::cerr.rdbuf(cerr_buf_.get());
-                cin_buf_->assign(0);
-                cout_buf_->assign(1);
-                cerr_buf_->assign(2);
-                // Set cerr to unbuffered
-                std::cerr.rdbuf()->pubsetbuf(0, 0);
-            }
-
-            inline ~std_stream_guard()
-            {
-                std::cout.flush();
-                std::cerr.flush();
-                cin_buf_->release();
-                cout_buf_->release();
-                cerr_buf_->release();
-                std::cin.rdbuf(old_cin_buf_);
-                std::cout.rdbuf(old_cout_buf_);
-                std::cerr.rdbuf(old_cerr_buf_);
+                old_buf_=stream_.rdbuf(new_buf_.get());
+                new_buf_->assign(h);
+                // Don't sync with stdio, it doesn't work anyway
+                stream_.sync_with_stdio(false);
+                // Set to unbuffered if needed
+                if(unbuffered) stream_.rdbuf()->pubsetbuf(0, 0);
             }
             
-            std::streambuf *old_cin_buf_;
-            std::streambuf *old_cout_buf_;
-            std::streambuf *old_cerr_buf_;
-            sbuf_ptr_t cin_buf_;
-            sbuf_ptr_t cout_buf_;
-            sbuf_ptr_t cerr_buf_;
+            ~guard() {
+                flush(stream_);
+                new_buf_->release();
+                stream_.rdbuf(old_buf_);
+            }
+            
+            // HACK: only ostream can be flushed
+            void flush(std::basic_ostream<CharT, Traits> &s) { s.flush(); }
+            void flush(std::basic_istream<CharT, Traits> &s) {}
+            
+            sbuf_ptr_t new_buf_;
+            Stream &stream_;
+            std::streambuf *old_buf_=0;
+        };
+
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+        // POSIX platform
+        typedef boost::asio::posix::stream_descriptor std_handle_type;
+        typedef std_handle_type::native_handle_type native_handle_type;
+        native_handle_type std_in_handle() { return 0; }
+        native_handle_type std_out_handle() { return 1; }
+        native_handle_type std_err_handle() { return 2; }
+        native_handle_type std_log_handle() { return 2; }
+#elif defined(BOOST_ASIO_HAS_WINDOWS_STREAM_HANDLE)
+        // Windows platform
+        typedef boost::asio::windows::stream_handle std_handle_type;
+        typedef std_handle_type::native_handle_type native_handle_type;
+        native_handle_type std_in_handle() { return ::GetStdHandle(STD_INPUT_HANDLE); }
+        native_handle_type std_out_handle() { return ::GetStdHandle(STD_OUTPUT_HANDLE); }
+        native_handle_type std_err_handle() { return ::GetStdHandle(STD_ERROR_HANDLE); }
+        native_handle_type std_log_handle() { return ::GetStdHandle(STD_ERROR_HANDLE); }
 #else
-            explicit inline std_stream_guard(boost::asio::io_service &iosvc){}
+#   error("Unsupported platform")
 #endif
+        
+        struct std_stream_guard {
+            guard<std::istream, std_handle_type> cin_guard_{std::cin, std_in_handle()};
+            guard<std::ostream, std_handle_type> cout_guard_{std::cout, std_out_handle()};
+            guard<std::ostream, std_handle_type> cerr_guard_{std::cerr, std_err_handle(), true};
+            guard<std::ostream, std_handle_type> clog_guard_{std::clog, std_log_handle()};
+        };
+        
+#else   // !defined(FIBIO_DONT_FIBERIZE_STD_STREAM), No std stream guard, do nothing
+        struct std_stream_guard {};
+#endif  // !defined(FIBIO_DONT_FIBERIZE_STD_STREAM)
+      
+        // HACK: C++ forbids variable with `void` type as it is always incomplete
+        template<typename T>
+        struct non_void {
+            typedef T type;
+            template<typename Fn, typename ...Args>
+            static void run(type &t, Fn &&fn, Args&&... args)
+            { t=std::forward<Fn>(fn)(std::forward<Args>(args)...); }
+        };
+        template<>
+        struct non_void<void> {
+            typedef int type;
+            template<typename Fn, typename ...Args>
+            static void run(type &t, Fn &&fn, Args&&... args)
+            { t=0; std::forward<Fn>(fn)(std::forward<Args>(args)...); }
         };
     }   // End of namespace fibio::fibers::detail
     
@@ -79,21 +115,26 @@ namespace fibio { namespace fibers {
      * @param args the arguments for the fiber
      */
     template<typename Fn, typename ...Args>
-    auto fiberize(fibio::scheduler sched, Fn &&fn, Args&& ...args)
+    auto fiberize(fibio::scheduler &&sched, Fn &&fn, Args&& ...args)
     -> typename std::result_of<Fn(Args...)>::type
     {
-        typename std::result_of<Fn(Args...)>::type ret;
+        typedef typename std::result_of<Fn(Args...)>::type result_type;
+        typedef detail::non_void<result_type> non_void_result;
+        typename non_void_result::type ret{};
         try {
             sched.start();
             fibio::fiber f(sched, [&](){
-                detail::std_stream_guard guard(sched.get_io_service());
-                ret=fn(std::forward<Args>(args)...);
+                detail::std_stream_guard guard;
+                // Disable unused variable warning
+                (void)guard;
+                non_void_result::run(ret, std::forward<Fn>(fn), std::forward<Args>(args)...);
             });
             sched.join();
         } catch (std::exception& e) {
             std::cerr << "Exception: " << e.what() << "\n";
         }
-        return ret;
+        // No-op if `result_type` is `void`
+        return result_type(ret);
     }
     
     /**
@@ -102,7 +143,7 @@ namespace fibio { namespace fibers {
      * @param fn the entry point of the fiber
      * @param args the arguments for the fiber
      */
-    template<typename Fn, typename ...Args>
+    template<typename Fn, typename ...Args, typename std::enable_if<!std::is_same<Fn, fibio::scheduler>::value>::type * = nullptr>
     auto fiberize(Fn &&fn, Args&& ...args)
     -> typename std::result_of<Fn(Args...)>::type
     {
@@ -115,16 +156,16 @@ namespace fibio { namespace fibers {
 
 namespace fibio {
     using fibers::fiberize;
-#ifndef FIBIO_DONT_USE_DEFAULT_MAIN
-    // Forward declaration of real entry point
-    int main(int argc, char *argv[]);
-#endif
 }
 
-#ifndef FIBIO_DONT_USE_DEFAULT_MAIN
+#if !defined(FIBIO_DONT_USE_DEFAULT_MAIN)
+namespace fibio {
+    // Forward declaration of real entry point
+    int main(int argc, char *argv[]);
+}
 int main(int argc, char *argv[]) {
     return fibio::fiberize(fibio::main, argc, argv);
 }
-#endif
+#endif  // !defined(FIBIO_DONT_USE_DEFAULT_MAIN)
 
 #endif

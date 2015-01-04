@@ -249,7 +249,14 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     void fiber_object::activate() {
-        get_fiber_strand().dispatch(std::bind(activate_fiber, shared_from_this()));
+        if (fiber_object::current_fiber_
+            && fiber_object::current_fiber_->sched_
+            && (fiber_object::current_fiber_->sched_==sched_))
+        {
+            get_fiber_strand().dispatch(std::bind(activate_fiber, shared_from_this()));
+        } else {
+            resume();
+        }
     }
     
     void fiber_object::resume() {
