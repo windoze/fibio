@@ -1063,6 +1063,42 @@ namespace fibio { namespace fibers {
                 all_waiter<Futures...>::setup(cv, acquired, fs...);
             }
         };
+
+        template <typename ...Futures, std::size_t... Indices>
+        std::size_t wait_for_any2(std::tuple<Futures&...> &&futures, utility::tuple_indices<Indices...>) {
+            auto sp=std::make_shared<detail::any_state<size_t>>();
+            detail::any_waiter<0, Futures...>::setup(sp, std::get<Indices>(futures)...);
+            return sp->wait();
+        }
+        
+        template <typename ...Futures, std::size_t... Indices>
+        std::size_t wait_for_any2(std::tuple<Futures&...> &futures, utility::tuple_indices<Indices...>) {
+            auto sp=std::make_shared<detail::any_state<size_t>>();
+            detail::any_waiter<0, Futures...>::setup(sp, std::get<Indices>(futures)...);
+            return sp->wait();
+        }
+
+        template <typename ...Futures, std::size_t... Indices>
+        std::size_t wait_for_all2(std::tuple<Futures&...> &futures, utility::tuple_indices<Indices...>) {
+            mutex mtx;
+            condition_variable cv;
+            constexpr size_t count=sizeof...(Futures);
+            std::atomic<size_t> acquired(0);
+            detail::all_waiter<Futures...>::setup(cv, acquired, std::get<Indices>(futures)...);
+            unique_lock<mutex> lk(mtx);
+            cv.wait(lk, [&]()->bool{ return acquired==count; });
+        }
+        
+        template <typename ...Futures, std::size_t... Indices>
+        std::size_t wait_for_all2(std::tuple<Futures&...> &&futures, utility::tuple_indices<Indices...>) {
+            mutex mtx;
+            condition_variable cv;
+            constexpr size_t count=sizeof...(Futures);
+            std::atomic<size_t> acquired(0);
+            detail::all_waiter<Futures...>::setup(cv, acquired, std::get<Indices>(futures)...);
+            unique_lock<mutex> lk(mtx);
+            cv.wait(lk, [&]()->bool{ return acquired==count; });
+        }
     }
     
     template<typename ...Futures>
@@ -1074,26 +1110,12 @@ namespace fibio { namespace fibers {
         return sp->wait();
     }
     
-    template <typename ...Futures, std::size_t... Indices>
-    std::size_t wait_for_any2(std::tuple<Futures&...> &&futures, utility::tuple_indices<Indices...>) {
-        auto sp=std::make_shared<detail::any_state<size_t>>();
-        detail::any_waiter<0, Futures...>::setup(sp, std::get<Indices>(futures)...);
-        return sp->wait();
-    }
-    
     template<typename ...Futures>
     std::size_t wait_for_any(std::tuple<Futures&...> &&futures) {
         static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
                       "Only futures can be waited");
         typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
-        return wait_for_any2(std::forward<std::tuple<Futures&...>>(futures), index_type());
-    }
-    
-    template <typename ...Futures, std::size_t... Indices>
-    std::size_t wait_for_any2(std::tuple<Futures&...> &futures, utility::tuple_indices<Indices...>) {
-        auto sp=std::make_shared<detail::any_state<size_t>>();
-        detail::any_waiter<0, Futures...>::setup(sp, std::get<Indices>(futures)...);
-        return sp->wait();
+        return detail::wait_for_any2(std::forward<std::tuple<Futures&...>>(futures), index_type());
     }
     
     template<typename ...Futures>
@@ -1101,7 +1123,7 @@ namespace fibio { namespace fibers {
         static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
                       "Only futures can be waited");
         typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
-        return wait_for_any2(futures, index_type());
+        return detail::wait_for_any2(futures, index_type());
     }
     
     template<typename Iterator>
@@ -1130,6 +1152,22 @@ namespace fibio { namespace fibers {
         detail::all_waiter<Futures...>::setup(cv, acquired, futures...);
         unique_lock<mutex> lk(mtx);
         cv.wait(lk, [&]()->bool{ return acquired==count; });
+    }
+    
+    template<typename ...Futures>
+    void wait_for_all(std::tuple<Futures&...> &futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
+        return detail::wait_for_all2(futures, index_type());
+    }
+    
+    template<typename ...Futures>
+    void wait_for_all(std::tuple<Futures&...> &&futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
+        return detail::wait_for_all2(std::forward<std::tuple<Futures&...>>(futures), index_type());
     }
     
     template<typename Iterator>
