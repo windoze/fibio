@@ -433,7 +433,7 @@ namespace fibio { namespace fibers {
         return p.get_future();
     }
     
-    future<void> make_ready_future() {
+    inline future<void> make_ready_future() {
         promise<void> p;
         p.set_value();
         return p.get_future();

@@ -8,7 +8,6 @@
 
 #include <iostream>
 #include <fibio/fiber.hpp>
-//#include <fibio/fibers/future.hpp>
 #include <fibio/future.hpp>
 #include <fibio/fiberize.hpp>
 
@@ -70,6 +69,20 @@ void test_wait_for_any2() {
     std::vector<future<void>>::const_iterator i=wait_for_any(fv.cbegin(), fv.cend());
     // 1st future should be ready
     assert(i==fv.begin());
+}
+
+void test_wait_for_any3() {
+    future<void> f0=async([](){
+        this_fiber::sleep_for(std::chrono::seconds(1));
+    });
+    future<double> f1=async([](){
+        this_fiber::sleep_for(std::chrono::milliseconds(300));
+        return 100.5;
+    });
+    future<int> f2=make_ready_future(100);
+    size_t n=wait_for_any(std::tie(f0, f1, f2));
+    // 3rd future should be ready
+    assert(n==2);
 }
 
 void test_wait_for_all1() {
@@ -134,6 +147,7 @@ int fibio::main(int argc, char *argv[]) {
     fg.create_fiber(test_async_function);
     fg.create_fiber(test_wait_for_any1);
     fg.create_fiber(test_wait_for_any2);
+    fg.create_fiber(test_wait_for_any3);
     fg.create_fiber(test_wait_for_all1);
     fg.create_fiber(test_wait_for_all2);
     fg.join_all();

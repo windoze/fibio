@@ -6,8 +6,8 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifndef fibio_future_future_hpp
-#define fibio_future_future_hpp
+#ifndef fibio_fibers_future_future_hpp
+#define fibio_fibers_future_future_hpp
 
 #include <boost/config.hpp>
 #include <boost/move/move.hpp>
@@ -1038,6 +1038,36 @@ namespace fibio { namespace fibers {
         auto sp=std::make_shared<detail::any_state<size_t>>();
         detail::any_waiter<0, Futures...>::setup(sp, futures...);
         return sp->wait();
+    }
+    
+    template <typename ...Futures, std::size_t... Indices>
+    std::size_t wait_for_any2(std::tuple<Futures&...> &&futures, utility::tuple_indices<Indices...>) {
+        auto sp=std::make_shared<detail::any_state<size_t>>();
+        detail::any_waiter<0, Futures...>::setup(sp, std::get<Indices>(futures)...);
+        return sp->wait();
+    }
+    
+    template<typename ...Futures>
+    std::size_t wait_for_any(std::tuple<Futures&...> &&futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
+        return wait_for_any2(std::forward<std::tuple<Futures&...>>(futures), index_type());
+    }
+    
+    template <typename ...Futures, std::size_t... Indices>
+    std::size_t wait_for_any2(std::tuple<Futures&...> &futures, utility::tuple_indices<Indices...>) {
+        auto sp=std::make_shared<detail::any_state<size_t>>();
+        detail::any_waiter<0, Futures...>::setup(sp, std::get<Indices>(futures)...);
+        return sp->wait();
+    }
+    
+    template<typename ...Futures>
+    std::size_t wait_for_any(std::tuple<Futures&...> &futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
+        return wait_for_any2(futures, index_type());
     }
     
     template<typename Iterator>
