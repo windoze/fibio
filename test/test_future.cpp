@@ -119,6 +119,25 @@ void test_wait_for_all2() {
     assert(dur>=std::chrono::milliseconds(100*c));
 }
 
+void test_wait_for_all3() {
+    auto start=std::chrono::system_clock::now();
+    auto f0=async([](){
+        this_fiber::sleep_for(std::chrono::seconds(1));
+    });
+    auto f1=async([](){
+        this_fiber::sleep_for(std::chrono::milliseconds(100));
+        return 100;
+    });
+    auto f2=async([](){
+        this_fiber::sleep_for(std::chrono::milliseconds(300));
+        return 100.5;
+    });
+    wait_for_all(std::tie(f0, f1, f2));
+    auto stop=std::chrono::system_clock::now();
+    std::chrono::system_clock::duration dur=stop-start;
+    assert(dur>=std::chrono::seconds(1));
+}
+
 int fibio::main(int argc, char *argv[]) {
     // future from a packaged_task
     packaged_task<int()> task([](){ return 7; }); // wrap the function
@@ -154,6 +173,7 @@ int fibio::main(int argc, char *argv[]) {
     fg.create_fiber(test_wait_for_any3);
     fg.create_fiber(test_wait_for_all1);
     fg.create_fiber(test_wait_for_all2);
+    fg.create_fiber(test_wait_for_all3);
     fg.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
