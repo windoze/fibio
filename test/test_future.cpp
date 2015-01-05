@@ -75,10 +75,10 @@ void test_wait_for_any3() {
     future<void> f0=async([](){
         this_fiber::sleep_for(std::chrono::seconds(1));
     });
-    future<double> f1=async([](){
+    shared_future<double> f1=async([](){
         this_fiber::sleep_for(std::chrono::milliseconds(300));
         return 100.5;
-    });
+    }).share();
     future<int> f2=make_ready_future(100);
     size_t n=wait_for_any(std::tie(f0, f1, f2));
     // 3rd future should be ready

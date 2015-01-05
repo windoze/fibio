@@ -42,6 +42,10 @@ namespace fibio { namespace fibers {
         struct is_future<future<T>> : std::integral_constant<bool, true>
         {};
 
+        template<typename T>
+        struct is_future<shared_future<T>> : std::integral_constant<bool, true>
+        {};
+        
         template<std::size_t N, typename ...Futures>
         struct any_waiter;
 
@@ -472,6 +476,16 @@ namespace fibio { namespace fibers {
         typedef typename detail::shared_state< R >::ptr_t   ptr_t;
         
         friend class future< R >;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::any_waiter;
+        template<typename ...Futures>
+        friend struct detail::all_waiter;
+        template<typename Iterator>
+        friend auto wait_for_any(Iterator begin, Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, Iterator>::type;
+        template<typename Iterator>
+        friend auto wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -620,6 +634,16 @@ namespace fibio { namespace fibers {
         typedef typename detail::shared_state< R & >::ptr_t   ptr_t;
         
         friend class future< R & >;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::any_waiter;
+        template<typename ...Futures>
+        friend struct detail::all_waiter;
+        template<typename Iterator>
+        friend auto wait_for_any(Iterator begin, Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, Iterator>::type;
+        template<typename Iterator>
+        friend auto wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -768,6 +792,16 @@ namespace fibio { namespace fibers {
         typedef detail::shared_state< void >::ptr_t   ptr_t;
         
         friend class future< void >;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::any_waiter;
+        template<typename ...Futures>
+        friend struct detail::all_waiter;
+        template<typename Iterator>
+        friend auto wait_for_any(Iterator begin, Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, Iterator>::type;
+        template<typename Iterator>
+        friend auto wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
         
         struct dummy
         { void nonnull() {} };
