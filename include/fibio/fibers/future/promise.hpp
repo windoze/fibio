@@ -423,10 +423,26 @@ namespace fibio { namespace fibers {
     template< typename R >
     void swap( promise< R > & l, promise< R > & r)
     { l.swap( r); }
+
+    
+    template <typename T>
+    future<typename std::decay<T>::type> make_ready_future(T&& value) {
+        typedef typename std::decay<T>::type value_type;
+        promise<value_type> p;
+        p.set_value(std::forward<T>(value));
+        return p.get_future();
+    }
+    
+    future<void> make_ready_future() {
+        promise<void> p;
+        p.set_value();
+        return p.get_future();
+    }
 }}
 
 namespace fibio {
     using fibers::promise;
+    using fibers::make_ready_future;
 }
 
 #endif
