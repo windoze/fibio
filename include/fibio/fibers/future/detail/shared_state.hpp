@@ -34,17 +34,22 @@ namespace fibio { namespace fibers { namespace detail {
     class shared_state : public boost::noncopyable
     {
     private:
-        boost::atomic< std::size_t >   use_count_;
+        std::atomic< std::size_t >   use_count_;
         mutable mutex                  mtx_;
         mutable condition_variable     waiters_;
-        boost::atomic<bool>            ready_;
+        std::atomic<bool>            ready_;
         boost::optional< R >           value_;
-        boost::exception_ptr           except_;
+        std::exception_ptr           except_;
+        typedef std::function<void()>  external_waiter;
+        std::vector<external_waiter>   ext_waiters_;
         
         void mark_ready_and_notify_()
         {
             ready_ = true;
             waiters_.notify_all();
+            for(auto &w: ext_waiters_) {
+                w();
+            }
         }
         
         void owner_destroyed_()
@@ -52,7 +57,7 @@ namespace fibio { namespace fibers { namespace detail {
             //TODO: set broken_exception if future was not already done
             //      notify all waiters
             if (!ready_)
-                set_exception_( boost::copy_exception( broken_promise() ) );
+                set_exception_( utility::copy_exception( broken_promise() ) );
         }
         
         void set_value_( R const& value)
@@ -65,29 +70,17 @@ namespace fibio { namespace fibers { namespace detail {
             mark_ready_and_notify_();
         }
         
-#ifndef BOOST_NO_RVALUE_REFERENCES
         void set_value_( R && value)
         {
             //TODO: store the value and make the future ready
             //      notify all waiters
             if (ready_)
                 BOOST_THROW_EXCEPTION(promise_already_satisfied() );
-            value_ = boost::move( value);
+            value_ = std::move( value);
             mark_ready_and_notify_();
         }
-#else
-        void set_value_( BOOST_RV_REF( R) value)
-        {
-            //TODO: store the value and make the future ready
-            //      notify all waiters
-            if (ready_)
-                BOOST_THROW_EXCEPTION(promise_already_satisfied() );
-            value_ = boost::move( value);
-            mark_ready_and_notify_();
-        }
-#endif
         
-        void set_exception_( boost::exception_ptr except)
+        void set_exception_( std::exception_ptr except)
         {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      done = true, notify all waiters
@@ -157,6 +150,17 @@ namespace fibio { namespace fibers { namespace detail {
         
         virtual ~shared_state() {}
         
+        template<typename Fn>
+        void add_external_waiter(Fn &&fn)
+        {
+            unique_lock< mutex > lk( mtx_);
+            if (ready_) {
+                fn();
+            } else {
+                ext_waiters_.emplace_back(std::forward<Fn>(fn));
+            }
+        }
+        
         void owner_destroyed()
         {
             //TODO: lock mutex
@@ -177,7 +181,6 @@ namespace fibio { namespace fibers { namespace detail {
             set_value_( value);
         }
         
-#ifndef BOOST_NO_RVALUE_REFERENCES
         void set_value( R && value)
         {
             //TODO: store the value into the shared state and make the state ready
@@ -186,22 +189,10 @@ namespace fibio { namespace fibers { namespace detail {
             //      an exception is thrown if there is no shared state or the shared state already
             //      stores a value or exception
             unique_lock< mutex > lk( mtx_);
-            set_value_( boost::move( value) );
+            set_value_( std::move( value) );
         }
-#else
-        void set_value( BOOST_RV_REF( R) value)
-        {
-            //TODO: store the value into the shared state and make the state ready
-            //      rhe operation is atomic, i.e. it behaves as though they acquire a single mutex
-            //      associated with the promise object while updating the promise object
-            //      an exception is thrown if there is no shared state or the shared state already
-            //      stores a value or exception
-            unique_lock< mutex > lk( mtx_);
-            set_value_( boost::move( value) );
-        }
-#endif
         
-        void set_exception( boost::exception_ptr except)
+        void set_exception( std::exception_ptr except)
         {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      the operation is atomic, i.e. it behaves as though they acquire a single mutex
@@ -269,18 +260,23 @@ namespace fibio { namespace fibers { namespace detail {
     class shared_state< R & > : public boost::noncopyable
     {
     private:
-        boost::atomic< std::size_t >   use_count_;
+        std::atomic< std::size_t >   use_count_;
         mutable mutex           mtx_;
         mutable condition_variable       waiters_;
         mutable std::mutex             state_mtx_;
-        boost::atomic<bool>              ready_;
+        std::atomic<bool>              ready_;
         R                   *   value_;
-        boost::exception_ptr           except_;
+        std::exception_ptr           except_;
+        typedef std::function<void()>  external_waiter;
+        std::vector<external_waiter>   ext_waiters_;
         
         void mark_ready_and_notify_()
         {
             ready_ = true;
             waiters_.notify_all();
+            for(auto &w: ext_waiters_) {
+                w();
+            }
         }
         
         void owner_destroyed_()
@@ -289,7 +285,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      notify all waiters
             if (!ready_) {
                 std::lock_guard<std::mutex> lock(state_mtx_);
-                set_exception_( boost::copy_exception( broken_promise() ) );
+                set_exception_( utility::copy_exception( broken_promise() ) );
             }
         }
         
@@ -304,7 +300,7 @@ namespace fibio { namespace fibers { namespace detail {
             mark_ready_and_notify_();
         }
         
-        void set_exception_( boost::exception_ptr except)
+        void set_exception_( std::exception_ptr except)
         {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      done = true, notify all waiters
@@ -376,6 +372,17 @@ namespace fibio { namespace fibers { namespace detail {
         
         virtual ~shared_state() {}
         
+        template<typename Fn>
+        void add_external_waiter(Fn &&fn)
+        {
+            unique_lock< mutex > lk( mtx_);
+            if (ready_) {
+                fn();
+            } else {
+                ext_waiters_.emplace_back(std::forward<Fn>(fn));
+            }
+        }
+        
         void owner_destroyed()
         {
             //TODO: lock mutex
@@ -396,7 +403,7 @@ namespace fibio { namespace fibers { namespace detail {
             set_value_( value);
         }
         
-        void set_exception( boost::exception_ptr except)
+        void set_exception( std::exception_ptr except)
         {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      the operation is atomic, i.e. it behaves as though they acquire a single mutex
@@ -464,17 +471,22 @@ namespace fibio { namespace fibers { namespace detail {
     class shared_state< void > : public boost::noncopyable
     {
     private:
-        boost::atomic< std::size_t >   use_count_;
+        std::atomic< std::size_t >   use_count_;
         mutable mutex           mtx_;
         mutable condition_variable       waiters_;
         std::mutex                     state_mtx_;
-        boost::atomic<bool>              ready_;
-        boost::exception_ptr           except_;
+        std::atomic<bool>              ready_;
+        std::exception_ptr           except_;
+        typedef std::function<void()>  external_waiter;
+        std::vector<external_waiter>   ext_waiters_;
         
         void mark_ready_and_notify_()
         {
             ready_ = true;
             waiters_.notify_all();
+            for(auto &w: ext_waiters_) {
+                w();
+            }
         }
         
         void owner_destroyed_()
@@ -483,7 +495,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      notify all waiters
             if (!ready_) {
                 std::lock_guard<std::mutex> lock(state_mtx_);
-                set_exception_(boost::copy_exception( broken_promise() ) );
+                set_exception_(utility::copy_exception( broken_promise() ) );
             }
         }
         
@@ -497,7 +509,7 @@ namespace fibio { namespace fibers { namespace detail {
             mark_ready_and_notify_();
         }
         
-        void set_exception_( boost::exception_ptr except)
+        void set_exception_( std::exception_ptr except)
         {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      done = true, notify all waiters
@@ -567,6 +579,17 @@ namespace fibio { namespace fibers { namespace detail {
         
         virtual ~shared_state() {}
         
+        template<typename Fn>
+        void add_external_waiter(Fn &&fn)
+        {
+            unique_lock< mutex > lk( mtx_);
+            if (ready_) {
+                fn();
+            } else {
+                ext_waiters_.emplace_back(std::forward<Fn>(fn));
+            }
+        }
+        
         void owner_destroyed()
         {
             //TODO: lock mutex
@@ -587,7 +610,7 @@ namespace fibio { namespace fibers { namespace detail {
             set_value_();
         }
         
-        void set_exception( boost::exception_ptr except)
+        void set_exception( std::exception_ptr except)
         {
             //TODO: store the exception pointer p into the shared state and make the state ready
             //      the operation is atomic, i.e. it behaves as though they acquire a single mutex

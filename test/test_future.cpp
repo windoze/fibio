@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <fibio/fiber.hpp>
+//#include <fibio/fibers/future.hpp>
 #include <fibio/future.hpp>
 #include <fibio/fiberize.hpp>
 
@@ -42,6 +43,65 @@ void test_async_function() {
     assert(af2(af1(42).get(), af1(24).get()).get()==f2(100)(f1(42), f1(24)));
 }
 
+void test_wait_for_any1() {
+    future<void> f0=async([](){
+        this_fiber::sleep_for(std::chrono::seconds(1));
+    });
+    future<int> f1=async([](){
+        this_fiber::sleep_for(std::chrono::milliseconds(100));
+        return 100;
+    });
+    future<double> f2=async([](){
+        this_fiber::sleep_for(std::chrono::milliseconds(300));
+        return 100.5;
+    });
+    size_t n=wait_for_any(f0, f1, f2);
+    // 2nd future should be ready
+    assert(n==1);
+}
+
+void test_wait_for_any2() {
+    std::vector<future<void>> fv;
+    for (size_t i=0; i<10; i++) {
+        fv.push_back(async([i](){
+            this_fiber::sleep_for(std::chrono::milliseconds(100*(i+1)));
+        }));
+    }
+    std::vector<future<void>>::const_iterator i=wait_for_any(fv.cbegin(), fv.cend());
+    // 1st future should be ready
+    assert(i==fv.begin());
+}
+
+void test_wait_for_all1() {
+    future<void> f0=async([](){
+        this_fiber::sleep_for(std::chrono::seconds(1));
+    });
+    future<int> f1=async([](){
+        this_fiber::sleep_for(std::chrono::milliseconds(100));
+        return 100;
+    });
+    future<double> f2=async([](){
+        this_fiber::sleep_for(std::chrono::milliseconds(300));
+        return 100.5;
+    });
+    wait_for_all(f0, f1, f2);
+}
+
+void test_wait_for_all2() {
+    constexpr size_t c=10;
+    auto start=std::chrono::system_clock::now();
+    std::vector<future<void>> fv;
+    for (size_t i=0; i<c; i++) {
+        fv.push_back(async([i](){
+            this_fiber::sleep_for(std::chrono::milliseconds(100*(i+1)));
+        }));
+    }
+    wait_for_all(fv.cbegin(), fv.cend());
+    auto stop=std::chrono::system_clock::now();
+    std::chrono::system_clock::duration dur=stop-start;
+    assert(dur>=std::chrono::milliseconds(100*c));
+}
+
 int fibio::main(int argc, char *argv[]) {
     // future from a packaged_task
     packaged_task<int()> task([](){ return 7; }); // wrap the function
@@ -72,6 +132,10 @@ int fibio::main(int argc, char *argv[]) {
     fg.create_fiber(test_async);
     fg.create_fiber(test_async_executor);
     fg.create_fiber(test_async_function);
+    fg.create_fiber(test_wait_for_any1);
+    fg.create_fiber(test_wait_for_any2);
+    fg.create_fiber(test_wait_for_all1);
+    fg.create_fiber(test_wait_for_all2);
     fg.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;

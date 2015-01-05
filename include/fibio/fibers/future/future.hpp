@@ -14,7 +14,7 @@
 #include <boost/system/system_error.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/utility.hpp>
-
+#include <fibio/utility.hpp>
 #include <fibio/fibers/exceptions.hpp>
 #include <fibio/fibers/future/future_status.hpp>
 #include <fibio/fibers/future/detail/shared_state_object.hpp>
@@ -28,7 +28,34 @@ namespace fibio { namespace fibers {
     class promise;
     
     template< typename R >
+    class future;
+    
+    template< typename R >
     class shared_future;
+    
+    namespace detail {
+        template<typename T>
+        struct is_future : std::integral_constant<bool, false>
+        {};
+        
+        template<typename T>
+        struct is_future<future<T>> : std::integral_constant<bool, true>
+        {};
+
+        template<std::size_t N, typename ...Futures>
+        struct any_waiter;
+
+        template<typename ...Futures>
+        struct all_waiter;
+    }
+    
+    template<typename Iterator>
+    auto wait_for_any(Iterator begin, Iterator end)
+    -> typename std::enable_if<!detail::is_future<Iterator>::value, Iterator>::type;
+    
+    template<typename Iterator>
+    auto wait_for_all(Iterator begin,Iterator end)
+    -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
     
     template< typename R >
     class future : private boost::noncopyable
@@ -39,6 +66,16 @@ namespace fibio { namespace fibers {
         friend class packaged_task< R() >;
         friend class promise< R >;
         friend class shared_future< R >;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::any_waiter;
+        template<typename ...Futures>
+        friend struct detail::all_waiter;
+        template<typename Iterator>
+        friend auto wait_for_any(Iterator begin, Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, Iterator>::type;
+        template<typename Iterator>
+        friend auto wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -66,7 +103,6 @@ namespace fibio { namespace fibers {
             //TODO: abandon ownership if any
         }
         
-#ifndef BOOST_NO_RVALUE_REFERENCES
         future( future && other) BOOST_NOEXCEPT :
         state_()
         {
@@ -84,25 +120,6 @@ namespace fibio { namespace fibers {
             swap( tmp);
             return * this;
         }
-#else
-        future( BOOST_RV_REF( future< R >) other) BOOST_NOEXCEPT :
-        state_()
-        {
-            //TODO: constructs a future with the shared state of other using move semantics
-            //      after construction, other.valid() == false
-            swap( other);
-        }
-        
-        future & operator=( BOOST_RV_REF( future< R >) other) BOOST_NOEXCEPT
-        {
-            //TODO: releases any shared state and move-assigns the contents of other to *this
-            //      after the assignment, other.valid() == false and this->valid() will yield
-            //      the same value as other.valid() before the assignment
-            future tmp( boost::move( other) );
-            swap( tmp);
-            return * this;
-        }
-#endif
         
         void swap( future & other) BOOST_NOEXCEPT
         {
@@ -183,6 +200,16 @@ namespace fibio { namespace fibers {
         friend class packaged_task< R&() >;
         friend class promise< R & >;
         friend class shared_future< R & >;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::any_waiter;
+        template<typename ...Futures>
+        friend struct detail::all_waiter;
+        template<typename Iterator>
+        friend auto wait_for_any(Iterator begin, Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, Iterator>::type;
+        template<typename Iterator>
+        friend auto wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -210,7 +237,6 @@ namespace fibio { namespace fibers {
             //TODO: abandon ownership if any
         }
         
-#ifndef BOOST_NO_RVALUE_REFERENCES
         future( future && other) BOOST_NOEXCEPT :
         state_()
         {
@@ -228,25 +254,6 @@ namespace fibio { namespace fibers {
             swap( tmp);
             return * this;
         }
-#else
-        future( BOOST_RV_REF( future< R & >) other) BOOST_NOEXCEPT :
-        state_()
-        {
-            //TODO: constructs a future with the shared state of other using move semantics
-            //      after construction, other.valid() == false
-            swap( other);
-        }
-        
-        future & operator=( BOOST_RV_REF( future< R & >) other) BOOST_NOEXCEPT
-        {
-            //TODO: releases any shared state and move-assigns the contents of other to *this
-            //      after the assignment, other.valid() == false and this->valid() will yield
-            //      the same value as other.valid() before the assignment
-            future tmp( boost::move( other) );
-            swap( tmp);
-            return * this;
-        }
-#endif
         
         void swap( future & other) BOOST_NOEXCEPT
         {
@@ -327,6 +334,16 @@ namespace fibio { namespace fibers {
         friend class packaged_task< void() >;
         friend class promise< void >;
         friend class shared_future< void >;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::any_waiter;
+        template<typename ...Futures>
+        friend struct detail::all_waiter;
+        template<typename Iterator>
+        friend auto wait_for_any(Iterator begin, Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, Iterator>::type;
+        template<typename Iterator>
+        friend auto wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -354,7 +371,6 @@ namespace fibio { namespace fibers {
             //TODO: abandon ownership if any
         }
         
-#ifndef BOOST_NO_RVALUE_REFERENCES
         future( future && other) BOOST_NOEXCEPT :
         state_()
         {
@@ -372,25 +388,6 @@ namespace fibio { namespace fibers {
             swap( tmp);
             return * this;
         }
-#else
-        future( BOOST_RV_REF( future< void >) other) BOOST_NOEXCEPT :
-        state_()
-        {
-            //TODO: constructs a future with the shared state of other using move semantics
-            //      after construction, other.valid() == false
-            swap( other);
-        }
-        
-        future & operator=( BOOST_RV_REF( future< void >) other) BOOST_NOEXCEPT
-        {
-            //TODO: releases any shared state and move-assigns the contents of other to *this
-            //      after the assignment, other.valid() == false and this->valid() will yield
-            //      the same value as other.valid() before the assignment
-            future tmp( boost::move( other) );
-            swap( tmp);
-            return * this;
-        }
-#endif
         
         void swap( future & other) BOOST_NOEXCEPT
         {
@@ -508,7 +505,6 @@ namespace fibio { namespace fibers {
             //      as other, if there's any
         }
         
-#ifndef BOOST_NO_RVALUE_REFERENCES
         shared_future( future< R > && other) BOOST_NOEXCEPT :
         state_()
         {
@@ -534,33 +530,6 @@ namespace fibio { namespace fibers {
             swap( tmp);
             return * this;
         }
-#else
-        shared_future( BOOST_RV_REF( future< R >) other) BOOST_NOEXCEPT :
-        state_()
-        {
-            //TODO: constructs a shared_future with the shared state of other using move semantics
-            //      after construction, other.valid() == false
-            state_.swap( other.state_);
-        }
-        
-        shared_future( BOOST_RV_REF( shared_future) other) BOOST_NOEXCEPT :
-        state_()
-        {
-            //TODO: constructs a shared_future with the shared state of other using move semantics
-            //      after construction, other.valid() == false
-            swap( other);
-        }
-        
-        shared_future & operator=( BOOST_RV_REF( shared_future) other) BOOST_NOEXCEPT
-        {
-            //TODO: releases any shared state and move-assigns the contents of other to *this
-            //      after the assignment, other.valid() == false and this->valid() will yield
-            //      the same value as other.valid() before the assignment
-            shared_future tmp( boost::move( other) );
-            swap( tmp);
-            return * this;
-        }
-#endif
         
         shared_future & operator=( shared_future const& other) BOOST_NOEXCEPT
         {
@@ -684,7 +653,6 @@ namespace fibio { namespace fibers {
             //      as other, if there's any
         }
         
-#ifndef BOOST_NO_RVALUE_REFERENCES
         shared_future( future< R & > && other) BOOST_NOEXCEPT :
         state_()
         {
@@ -710,33 +678,6 @@ namespace fibio { namespace fibers {
             swap( tmp);
             return * this;
         }
-#else
-        shared_future( BOOST_RV_REF( future< R & >) other) BOOST_NOEXCEPT :
-        state_()
-        {
-            //TODO: constructs a shared_future with the shared state of other using move semantics
-            //      after construction, other.valid() == false
-            state_.swap( other.state_);
-        }
-        
-        shared_future( BOOST_RV_REF( shared_future) other) BOOST_NOEXCEPT :
-        state_()
-        {
-            //TODO: constructs a shared_future with the shared state of other using move semantics
-            //      after construction, other.valid() == false
-            swap( other);
-        }
-        
-        shared_future & operator=( BOOST_RV_REF( shared_future) other) BOOST_NOEXCEPT
-        {
-            //TODO: releases any shared state and move-assigns the contents of other to *this
-            //      after the assignment, other.valid() == false and this->valid() will yield
-            //      the same value as other.valid() before the assignment
-            shared_future tmp( boost::move( other) );
-            swap( tmp);
-            return * this;
-        }
-#endif
         
         shared_future & operator=( shared_future const& other) BOOST_NOEXCEPT
         {
@@ -860,7 +801,6 @@ namespace fibio { namespace fibers {
             //      as other, if there's any
         }
         
-#ifndef BOOST_NO_RVALUE_REFERENCES
         shared_future( future< void > && other) BOOST_NOEXCEPT :
         state_()
         {
@@ -886,33 +826,6 @@ namespace fibio { namespace fibers {
             swap( tmp);
             return * this;
         }
-#else
-        shared_future( BOOST_RV_REF( future< void >) other) BOOST_NOEXCEPT :
-        state_()
-        {
-            //TODO: constructs a shared_future with the shared state of other using move semantics
-            //      after construction, other.valid() == false
-            state_.swap( other.state_);
-        }
-        
-        shared_future( BOOST_RV_REF( shared_future) other) BOOST_NOEXCEPT :
-        state_()
-        {
-            //TODO: constructs a shared_future with the shared state of other using move semantics
-            //      after construction, other.valid() == false
-            swap( other);
-        }
-        
-        shared_future & operator=( BOOST_RV_REF( shared_future) other) BOOST_NOEXCEPT
-        {
-            //TODO: releases any shared state and move-assigns the contents of other to *this
-            //      after the assignment, other.valid() == false and this->valid() will yield
-            //      the same value as other.valid() before the assignment
-            shared_future tmp( boost::move( other) );
-            swap( tmp);
-            return * this;
-        }
-#endif
         
         shared_future & operator=( shared_future const& other) BOOST_NOEXCEPT
         {
@@ -1053,11 +966,135 @@ namespace fibio { namespace fibers {
         return shared_future< void >( boost::move( * this) );
     }
 
+    namespace detail {
+        template<typename Ret>
+        struct any_state : std::enable_shared_from_this<any_state<Ret>> {
+            typedef std::shared_ptr<any_state> ptr;
+            mutex mtx;
+            condition_variable cv;
+            std::atomic<bool> flag{false};
+            Ret ret{};
+            
+            void set_value(Ret v) {
+                unique_lock<mutex> lk(mtx);
+                flag=true;
+                ret=v;
+                cv.notify_all();
+            }
+            
+            Ret wait() {
+                unique_lock<mutex> lk(mtx);
+                cv.wait(lk, [this]()->bool{ return flag; });
+                return ret;
+            }
+        };
+
+        template<std::size_t N, typename ...Futures>
+        struct any_waiter;
+        
+        template<std::size_t N, typename F>
+        struct any_waiter<N, F> {
+            static void setup(typename any_state<size_t>::ptr s, F &f) {
+                f.state_->add_external_waiter([s](){
+                    s->set_value(N);
+                });
+            }
+        };
+        
+        template<std::size_t N, typename F, typename ...Futures>
+        struct any_waiter<N, F, Futures...> {
+            static void setup(typename any_state<size_t>::ptr s, F &f, Futures&... fs) {
+                any_waiter<N, F>::setup(s, f);
+                any_waiter<N+1, Futures...>::setup(s, fs...);
+            }
+        };
+        
+        template<typename ...Futures>
+        struct all_waiter;
+        
+        template<typename F>
+        struct all_waiter<F> {
+            static void setup(condition_variable &cv, std::atomic<size_t> &acquired, F &f) {
+                f.state_->add_external_waiter([&](){
+                    acquired++;
+                    cv.notify_all();
+                });
+            }
+        };
+        
+        template<typename F, typename ...Futures>
+        struct all_waiter<F, Futures...> {
+            static void setup(condition_variable &cv, std::atomic<size_t> &acquired, F &f, Futures&... fs) {
+                all_waiter<F>::setup(cv, acquired, f);
+                all_waiter<Futures...>::setup(cv, acquired, fs...);
+            }
+        };
+    }
+    
+    template<typename ...Futures>
+    std::size_t wait_for_any(Futures&... futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        auto sp=std::make_shared<detail::any_state<size_t>>();
+        detail::any_waiter<0, Futures...>::setup(sp, futures...);
+        return sp->wait();
+    }
+    
+    template<typename Iterator>
+    auto wait_for_any(Iterator begin,Iterator end)
+    -> typename std::enable_if<!detail::is_future<Iterator>::value, Iterator>::type
+    {
+        static_assert(detail::is_future<typename std::iterator_traits<Iterator>::value_type>::value,
+                      "Iterator must refer to future type");
+        auto sp=std::make_shared<detail::any_state<Iterator>>();
+        for(Iterator i=begin; i!=end; ++i) {
+            i->state_->add_external_waiter([sp, i](){
+                sp->set_value(i);
+            });
+        }
+        return sp->wait();
+    }
+    
+    template<typename ...Futures>
+    void wait_for_all(Futures&... futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        mutex mtx;
+        condition_variable cv;
+        constexpr size_t count=sizeof...(Futures);
+        std::atomic<size_t> acquired(0);
+        detail::all_waiter<Futures...>::setup(cv, acquired, futures...);
+        unique_lock<mutex> lk(mtx);
+        cv.wait(lk, [&]()->bool{ return acquired==count; });
+    }
+    
+    template<typename Iterator>
+    auto wait_for_all(Iterator begin,Iterator end)
+    -> typename std::enable_if<!detail::is_future<Iterator>::value>::type
+    {
+        static_assert(detail::is_future<typename std::iterator_traits<Iterator>::value_type>::value,
+                      "Iterator must refer to future type");
+        mutex mtx;
+        condition_variable cv;
+        size_t count=0;
+        std::atomic<size_t> acquired(0);
+        for(Iterator i=begin; i!=end; ++i) {
+            i->state_->add_external_waiter([&](){
+                acquired++;
+                cv.notify_all();
+            });
+            count++;
+        }
+        unique_lock<mutex> lk(mtx);
+        cv.wait(lk, [&]()->bool{ return acquired==count; });
+    }
 }}
 
 namespace fibio {
     using fibers::future;
     using fibers::shared_future;
+    using fibers::wait_for_any;
+    using fibers::wait_for_all;
 }
 
 #endif
