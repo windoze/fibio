@@ -86,6 +86,7 @@ void test_wait_for_any3() {
 }
 
 void test_wait_for_all1() {
+    auto start=std::chrono::system_clock::now();
     future<void> f0=async([](){
         this_fiber::sleep_for(std::chrono::seconds(1));
     });
@@ -98,6 +99,9 @@ void test_wait_for_all1() {
         return 100.5;
     });
     wait_for_all(f0, f1, f2);
+    auto stop=std::chrono::system_clock::now();
+    std::chrono::system_clock::duration dur=stop-start;
+    assert(dur>=std::chrono::seconds(1));
 }
 
 void test_wait_for_all2() {
