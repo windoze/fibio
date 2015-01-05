@@ -1079,7 +1079,7 @@ namespace fibio { namespace fibers {
         }
 
         template <typename ...Futures, std::size_t... Indices>
-        std::size_t wait_for_all2(std::tuple<Futures&...> &futures, utility::tuple_indices<Indices...>) {
+        void wait_for_all2(std::tuple<Futures&...> &futures, utility::tuple_indices<Indices...>) {
             mutex mtx;
             condition_variable cv;
             constexpr size_t count=sizeof...(Futures);
@@ -1090,7 +1090,7 @@ namespace fibio { namespace fibers {
         }
         
         template <typename ...Futures, std::size_t... Indices>
-        std::size_t wait_for_all2(std::tuple<Futures&...> &&futures, utility::tuple_indices<Indices...>) {
+        void wait_for_all2(std::tuple<Futures&...> &&futures, utility::tuple_indices<Indices...>) {
             mutex mtx;
             condition_variable cv;
             constexpr size_t count=sizeof...(Futures);
@@ -1159,7 +1159,7 @@ namespace fibio { namespace fibers {
         static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
                       "Only futures can be waited");
         typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
-        return detail::wait_for_all2(futures, index_type());
+        detail::wait_for_all2(futures, index_type());
     }
     
     template<typename ...Futures>
@@ -1167,7 +1167,7 @@ namespace fibio { namespace fibers {
         static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
                       "Only futures can be waited");
         typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
-        return detail::wait_for_all2(std::forward<std::tuple<Futures&...>>(futures), index_type());
+        detail::wait_for_all2(std::forward<std::tuple<Futures&...>>(futures), index_type());
     }
     
     template<typename Iterator>
