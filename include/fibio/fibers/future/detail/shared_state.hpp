@@ -99,7 +99,7 @@ namespace fibio { namespace fibers { namespace detail {
             //      otherwise it is copied
             wait_(lk);
             if (except_)
-                rethrow_exception( except_);
+                std::rethrow_exception( except_);
             return value_.get();
         }
         
@@ -321,7 +321,7 @@ namespace fibio { namespace fibers { namespace detail {
             wait_(lk);
             std::lock_guard<std::mutex> lock(state_mtx_);
             if (except_)
-                rethrow_exception(except_);
+                std::rethrow_exception(except_);
             return * value_;
         }
         
@@ -530,7 +530,7 @@ namespace fibio { namespace fibers { namespace detail {
             wait_(lk);
             std::lock_guard<std::mutex> lock(state_mtx_);
             if (except_)
-                rethrow_exception( except_);
+                std::rethrow_exception( except_);
         }
         
         void wait_(unique_lock< mutex > & lk) const
