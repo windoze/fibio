@@ -9,7 +9,7 @@
 #ifndef fibio_fibers_detail_spinlock_hpp
 #define fibio_fibers_detail_spinlock_hpp
 
-#include <boost/atomic.hpp>
+#include <atomic>
  
 namespace fibio { namespace fibers { namespace detail {
     /**
@@ -20,7 +20,7 @@ namespace fibio { namespace fibers { namespace detail {
     class spinlock {
     private:
         typedef enum {Locked, Unlocked} LockState;
-        boost::atomic<LockState> state_;
+        std::atomic<LockState> state_;
 
     public:
         /// Constructor
@@ -28,14 +28,14 @@ namespace fibio { namespace fibers { namespace detail {
   
         /// Blocks until a lock can be obtained for the current execution agent.
         void lock() noexcept {
-            while (state_.exchange(Locked, boost::memory_order_acquire) == Locked) {
+            while (state_.exchange(Locked, std::memory_order_acquire) == Locked) {
                 /* busy-wait */
             }
         }
 
         /// Releases the lock held by the execution agent.
         void unlock() noexcept {
-            state_.store(Unlocked, boost::memory_order_release);
+            state_.store(Unlocked, std::memory_order_release);
         }
     };
 }}} // End of namespace fibio::fibers::detail
