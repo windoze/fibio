@@ -13,7 +13,7 @@
 #include <memory>
 #include <tuple>
 #include <fibio/utility.hpp>
-#include <fibio/fibers/fiber.hpp>
+#include <fibio/fibers/fiber_group.hpp>
 #include <fibio/fibers/future/future.hpp>
 #include <fibio/fibers/future/packaged_task.hpp>
 #include <fibio/concurrent/concurrent_queue.hpp>
@@ -22,22 +22,23 @@ namespace fibio { namespace fibers {
     namespace detail {
         template<typename Fn, class... Args>
         struct task_data {
+            typedef std::tuple<typename std::decay<Fn>::type, typename std::decay<Args>::type...> data_type;
             typedef typename std::result_of<Fn(Args...)>::type result_type;
             typedef future<result_type> future_type;
             typedef packaged_task<result_type()> task_type;
             task_data(Fn&& fn, Args&&... args)
-            : fn_(std::forward<Fn>(fn), std::forward<Args>(args)...)
+            : fn_(new data_type(std::forward<Fn>(fn), std::forward<Args>(args)...))
             {}
             
             template <std::size_t... Indices>
             result_type run2(utility::tuple_indices<Indices...>)
-            { return utility::invoke(std::move(std::get<0>(fn_)), std::move(std::get<Indices>(fn_))...); }
+            { return utility::invoke(std::move(std::get<0>(*fn_)), std::move(std::get<Indices>(*fn_))...); }
             
             result_type operator()() {
                 typedef typename utility::make_tuple_indices<std::tuple_size<std::tuple<Fn, Args...> >::value, 1>::type index_type;
                 return run2(index_type());
             }
-            std::tuple<typename std::decay<Fn>::type, typename std::decay<Args>::type...> fn_;
+            std::unique_ptr<data_type> fn_;
         };
     }
     
@@ -47,9 +48,9 @@ namespace fibio { namespace fibers {
     template<typename Fn, typename ...Args>
     typename detail::task_data<Fn, Args...>::future_type
     async(Fn &&fn, Args&&... args) {
-        typedef detail::task_data<Fn, Args...> data;
-        typename data::task_type task(data(std::forward<Fn>(fn), std::forward<Args>(args)...));
-        typename data::future_type ret(task.get_future());
+        typedef detail::task_data<Fn, Args...> data_type;
+        typename data_type::task_type task(data_type(std::forward<Fn>(fn), std::forward<Args>(args)...));
+        typename data_type::future_type ret(task.get_future());
         fiber(std::move(task)).detach();
         return std::move(ret);
     }
@@ -59,30 +60,32 @@ namespace fibio { namespace fibers {
      */
     template<typename T>
     struct async_executor {
+        typedef typename std::decay<T>::type result_type;
         async_executor(size_t pool_size=0) {
             if (pool_size==0) pool_size=std::min(this_fiber::get_scheduler().worker_pool_size(),
                                                  size_t(std::thread::hardware_concurrency()));
-            for(size_t i=0; i<pool_size; i++) fibers_.emplace_back(&async_executor::execute, this);
+            for(size_t i=0; i<pool_size; i++) fibers_.create_fiber([this](){
+                for(auto & i: queue_) i();
+            });
         }
         
         ~async_executor()
-        { queue_.close(); for(auto &f : fibers_) f.join(); }
+        { queue_.close(); fibers_.join_all(); }
         
         template<typename Fn, typename ...Args>
-        future<T> operator()(Fn &&fn, Args&&... args) {
+        future<result_type> operator()(Fn &&fn, Args&&... args) {
             typedef detail::task_data<Fn, Args...> task_type;
             static_assert(std::is_convertible<typename task_type::result_type, T>::value,
                           "function must return compatible type");
-            packaged_task<T()> task(task_type(std::forward<Fn>(fn), std::forward<Args>(args)...));
-            future<T> ret=task.get_future();
+            packaged_task<result_type()> task(task_type(std::forward<Fn>(fn), std::forward<Args>(args)...));
+            future<result_type> ret=task.get_future();
             queue_.push(std::move(task));
             return ret;
         }
         
     private:
-        void execute() { for(auto & i: queue_) i(); }
-        concurrent::concurrent_queue<packaged_task<T()>> queue_;
-        std::vector<fiber> fibers_;
+        concurrent::concurrent_queue<packaged_task<result_type()>> queue_;
+        fiber_group fibers_;
     };
     
     /**
