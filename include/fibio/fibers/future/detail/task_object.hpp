@@ -23,22 +23,10 @@ namespace fibio { namespace fibers { namespace detail {
         task_object< Fn, Allocator, R >
         >::other                                      allocator_t;
         
-#ifndef BOOST_NO_RVALUE_REFERENCES
         task_object( Fn && fn, allocator_t const& alloc) :
         task_base< R >(),
         fn_( std::forward< Fn >( fn) ), alloc_( alloc)
         {}
-#else
-        task_object( Fn const& fn, allocator_t const& alloc) :
-        task_base< R >(),
-        fn_( fn), alloc_( alloc)
-        {}
-        
-        task_object( BOOST_RV_REF( Fn) fn, allocator_t const& alloc) :
-        task_base< R >(),
-        fn_( fn), alloc_( alloc)
-        {}
-#endif
         
         void run()
         {
@@ -48,7 +36,7 @@ namespace fibio { namespace fibers { namespace detail {
             }
             catch (...)
             {
-                this->set_exception(boost::current_exception() );
+                this->set_exception(std::current_exception() );
             }
         }
         
@@ -75,22 +63,10 @@ namespace fibio { namespace fibers { namespace detail {
         task_object< Fn, Allocator, void >
         >::other                                      allocator_t;
         
-#ifndef BOOST_NO_RVALUE_REFERENCES
         task_object( Fn && fn, allocator_t const& alloc) :
         task_base< void >(),
         fn_( std::forward< Fn >( fn) ), alloc_( alloc)
         {}
-#else
-        task_object( Fn const& fn, allocator_t const& alloc) :
-        task_base< void >(),
-        fn_( fn), alloc_( alloc)
-        {}
-        
-        task_object( BOOST_RV_REF( Fn) fn, allocator_t const& alloc) :
-        task_base< void >(),
-        fn_( fn), alloc_( alloc)
-        {}
-#endif
         
         void run()
         {
@@ -101,7 +77,7 @@ namespace fibio { namespace fibers { namespace detail {
             }
             catch (...)
             {
-                this->set_exception(boost::current_exception() );
+                this->set_exception(std::current_exception() );
             }
         }
         

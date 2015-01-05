@@ -14,6 +14,16 @@
 #include <type_traits>
 
 namespace utility {
+    template <bool Value> using bool_t = typename std::integral_constant<bool, Value>::type;
+    template <bool... Values> struct and_;
+    template <> struct and_<> : bool_t<true> {};
+    template <bool... Values> struct and_<true, Values...> : and_<Values...> {};
+    template <bool... Values> struct and_<false, Values...> : bool_t<false> {};
+    template <bool... Values> struct or_;
+    template <> struct or_<> : bool_t<false> {};
+    template <bool... Values> struct or_<false, Values...> : or_<Values...> {};
+    template <bool... Values> struct or_<true, Values...> : bool_t<true> {};
+    
     template <std::size_t...> struct tuple_indices {};
     template <std::size_t Sp, class IntTuple, std::size_t Ep> struct make_indices_imp;
     template <std::size_t Sp, std::size_t... Indices, std::size_t Ep>
@@ -151,6 +161,15 @@ namespace utility {
         template<size_t N>
         struct arg { typedef typename std::tuple_element<N, arguments_tuple>::type type; };
     };
+
+    template <class T>
+    inline std::exception_ptr copy_exception(T const & e) {
+        try {
+            throw e;
+        } catch(...) {
+            return std::current_exception();
+        }
+    }
 }
 
 #endif

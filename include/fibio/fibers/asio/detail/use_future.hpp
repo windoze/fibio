@@ -48,7 +48,7 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
         void operator()(const boost::system::error_code &ec, T t)
         {
             if (ec)
-                promise_->set_exception(boost::copy_exception(boost::system::system_error(ec)));
+                promise_->set_exception(utility::copy_exception(boost::system::system_error(ec)));
             else
                 promise_->set_value(t);
         }
@@ -79,7 +79,7 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
         void operator()(const boost::system::error_code &ec)
         {
             if (ec)
-                promise_->set_exception(boost::copy_exception(boost::system::system_error(ec)));
+                promise_->set_exception(utility::copy_exception(boost::system::system_error(ec)));
             else
                 promise_->set_value();
         }
@@ -98,7 +98,7 @@ namespace fibio { namespace fibers { namespace asio { namespace detail {
         try
         { f(); }
         catch (...)
-        { p->set_exception(boost::current_exception()); }
+        { p->set_exception(std::current_exception()); }
     }
 }}}}    // End of namespace fibio::fibers::asio::detail
 
