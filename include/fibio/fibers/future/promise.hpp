@@ -455,6 +455,21 @@ namespace fibio { namespace fibers {
         {
             p.set_value(std::forward<F>(fn)(f));
         }
+
+        template<typename R, typename F>
+        auto set_promise_value(promise<typename std::result_of<F(shared_future<R>&)>::type> &p, F &&fn, shared_future<R> &f)
+        -> typename std::enable_if<std::is_same<typename std::result_of<F(shared_future<R>&)>::type, void>::value>::type
+        {
+            std::forward<F>(fn)(f);
+            p.set_value();
+        }
+        
+        template<typename R, typename F>
+        auto set_promise_value(promise<typename std::result_of<F(shared_future<R>&)>::type> &p, F &&fn, shared_future<R> &f)
+        -> typename std::enable_if<!std::is_same<typename std::result_of<F(shared_future<R>&)>::type, void>::value>::type
+        {
+            p.set_value(std::forward<F>(fn)(f));
+        }
     }
     
     template<typename R> template<typename F>
@@ -484,7 +499,7 @@ namespace fibio { namespace fibers {
             promise<result_type> p_;
             waiter(ptr_t src, F &&f) : src_(src), f_(std::forward<F>(f)) {}
             void invoke() {
-                future<R> f(src_);
+                future<R&> f(src_);
                 detail::set_promise_value(p_, std::forward<F>(f_), f);
             }
         };
@@ -513,17 +528,56 @@ namespace fibio { namespace fibers {
 
     template<typename R> template<typename F>
     inline future<typename std::result_of<F(shared_future<R>&)>::type> shared_future<R>::then(F&& func) {
-        //
+        typedef typename std::result_of<F(shared_future<R>&)>::type result_type;
+        struct waiter {
+            ptr_t src_;
+            F f_;
+            promise<result_type> p_;
+            waiter(ptr_t src, F &&f) : src_(src), f_(std::forward<F>(f)) {}
+            void invoke() {
+                shared_future<R> f(src_);
+                detail::set_promise_value(p_, std::forward<F>(f_), f);
+            }
+        };
+        std::shared_ptr<waiter> w=std::make_shared<waiter>(state_, std::forward<F>(func));
+        state_->add_external_waiter(std::bind(&waiter::invoke, w));
+        return w->p_.get_future();
     }
     
     template<typename R> template<typename F>
     inline future<typename std::result_of<F(shared_future<R&>&)>::type> shared_future<R&>::then(F&& func) {
-        //
+        typedef typename std::result_of<F(shared_future<R&>&)>::type result_type;
+        struct waiter {
+            ptr_t src_;
+            F f_;
+            promise<result_type> p_;
+            waiter(ptr_t src, F &&f) : src_(src), f_(std::forward<F>(f)) {}
+            void invoke() {
+                shared_future<R&> f(src_);
+                detail::set_promise_value(p_, std::forward<F>(f_), f);
+            }
+        };
+        std::shared_ptr<waiter> w=std::make_shared<waiter>(state_, std::forward<F>(func));
+        state_->add_external_waiter(std::bind(&waiter::invoke, w));
+        return w->p_.get_future();
     }
     
     template<typename F>
     inline future<typename std::result_of<F(shared_future<void>&)>::type> shared_future<void>::then(F&& func) {
-        //
+        typedef typename std::result_of<F(shared_future<void>&)>::type result_type;
+        struct waiter {
+            ptr_t src_;
+            F f_;
+            promise<result_type> p_;
+            waiter(ptr_t src, F &&f) : src_(src), f_(std::forward<F>(f)) {}
+            void invoke() {
+                shared_future<void> f(src_);
+                detail::set_promise_value(p_, std::forward<F>(f_), f);
+            }
+        };
+        std::shared_ptr<waiter> w=std::make_shared<waiter>(state_, std::forward<F>(func));
+        state_->add_external_waiter(std::bind(&waiter::invoke, w));
+        return w->p_.get_future();
     }
 }}
 

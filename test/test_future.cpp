@@ -182,6 +182,22 @@ void test_then2() {
     assert(f.get()==100);
 }
 
+void test_then3() {
+    promise<int> p;
+    auto f0=p.get_future().share();
+    auto f1=f0.then([](shared_future<int> &f){ return boost::lexical_cast<std::string>(f.get()); });
+    p.set_value(100);
+    assert(f1.get()==std::string("100"));
+}
+
+void test_then4() {
+    auto f=async([](){ return 100; }).share()
+        .then([](shared_future<int> &f){ return boost::lexical_cast<std::string>(f.get()); }).share()
+        .then([](shared_future<std::string> &f){ return boost::lexical_cast<int>(f.get()); }).share()
+    ;
+    assert(f.get()==100);
+}
+
 int fibio::main(int argc, char *argv[]) {
     fiber_group fg;
     fg.create_fiber(test_future);
@@ -196,6 +212,8 @@ int fibio::main(int argc, char *argv[]) {
     fg.create_fiber(test_wait_for_all3);
     fg.create_fiber(test_then1);
     fg.create_fiber(test_then2);
+    fg.create_fiber(test_then3);
+    fg.create_fiber(test_then4);
     fg.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
