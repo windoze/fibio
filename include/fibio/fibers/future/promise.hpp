@@ -18,6 +18,7 @@
 #include <boost/utility.hpp>
 
 #include <fibio/fibers/exceptions.hpp>
+#include <fibio/fibers/fiber.hpp>
 #include <fibio/fibers/future/detail/shared_state.hpp>
 #include <fibio/fibers/future/detail/shared_state_object.hpp>
 #include <fibio/fibers/future/future.hpp>
@@ -160,6 +161,34 @@ namespace fibio { namespace fibers {
                 BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_exception( p);
         }
+        
+        void set_value_at_fiber_exit(const R &value) {
+            ptr_t f=future_;
+            this_fiber::at_fiber_exit([value, f](){
+                f->set_value(value);
+            });
+        }
+
+        void set_value_at_fiber_exit(R &&value) {
+            // FIXME: Way too stupid
+            ptr_t f=future_;
+            R *p=new R(std::forward<R>(value));
+            this_fiber::at_fiber_exit([p, f](){
+                try {
+                    f->set_value(*p);
+                } catch(...) {
+                    delete p;
+                    throw;
+                }
+            });
+        }
+        
+        void set_exception_at_fiber_exit(std::exception_ptr p) {
+            ptr_t f=future_;
+            this_fiber::at_fiber_exit([p, f](){
+                f->set_exception(p);
+            });
+        }
     };
     
     template< typename R >
@@ -286,6 +315,20 @@ namespace fibio { namespace fibers {
             if ( ! future_)
                 BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_exception( p);
+        }
+
+        void set_value_at_fiber_exit(R &value) {
+            ptr_t f=future_;
+            this_fiber::at_fiber_exit([&value, f](){
+                f->set_value(value);
+            });
+        }
+        
+        void set_exception_at_fiber_exit(std::exception_ptr p) {
+            ptr_t f=future_;
+            this_fiber::at_fiber_exit([p, f](){
+                f->set_exception(p);
+            });
         }
     };
     
@@ -417,6 +460,20 @@ namespace fibio { namespace fibers {
             if ( ! future_)
                 BOOST_THROW_EXCEPTION(promise_uninitialized());
             future_->set_exception( p);
+        }
+        
+        void set_value_at_fiber_exit() {
+            ptr_t f=future_;
+            this_fiber::at_fiber_exit([f](){
+                f->set_value();
+            });
+        }
+        
+        void set_exception_at_fiber_exit(std::exception_ptr p) {
+            ptr_t f=future_;
+            this_fiber::at_fiber_exit([p, f](){
+                f->set_exception(p);
+            });
         }
     };
     

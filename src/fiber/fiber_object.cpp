@@ -652,6 +652,13 @@ namespace fibio { namespace fibers {
                 }
             }
         }
+        
+        void at_fiber_exit(std::function<void()> &&f) {
+            if (auto cf=current_fiber()) {
+                std::lock_guard<fibers::detail::spinlock> lock(cf->mtx_);
+                cf->cleanup_queue_.push_back(std::forward<std::function<void()>>(f));
+            }
+        }
     }   // End of namespace this_fiber
 }}  // End of namespace fibio::fibers
 

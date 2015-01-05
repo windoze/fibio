@@ -295,7 +295,22 @@ namespace fibio { namespace fibers {
          * set the name of current fiber
          */
         void set_name(const std::string &name);
-
+        
+        /**
+         * register function which will be called on fiber exit
+         */
+        void at_fiber_exit(std::function<void()> &&f);
+        
+        /**
+         * register function which will be called on fiber exit
+         */
+        template<typename Fn>
+        auto at_fiber_exit(Fn &&fn)
+        -> typename std::enable_if<!std::is_same<Fn, std::function<void()>>::value>::type
+        {
+            at_fiber_exit(std::function<void()>(std::forward<Fn>(fn)));
+        }
+        
         /**
          * struct disable_interruption
          *
@@ -359,6 +374,7 @@ namespace fibio {
         using fibers::this_fiber::disable_interruption;
         using fibers::this_fiber::restore_interruption;
         using fibers::this_fiber::interruption_enabled;
+        using fibers::this_fiber::at_fiber_exit;
     }
     namespace asio {
         using fibers::this_fiber::detail::get_io_service;
