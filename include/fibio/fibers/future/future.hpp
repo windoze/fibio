@@ -193,6 +193,9 @@ namespace fibio { namespace fibers {
                 BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
+        
+        template<typename F>
+        future<typename std::result_of<F(future&)>::type> then(F&& func);
     };
     
     template< typename R >
@@ -327,6 +330,9 @@ namespace fibio { namespace fibers {
                 BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
+
+        template<typename F>
+        future<typename std::result_of<F(future&)>::type> then(F&& func);
     };
     
     template<>
@@ -461,6 +467,9 @@ namespace fibio { namespace fibers {
                 BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
+
+        template<typename F>
+        future<typename std::result_of<F(future&)>::type> then(F&& func);
     };
     
     template< typename R >
@@ -625,6 +634,9 @@ namespace fibio { namespace fibers {
                 BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
+        
+        template<typename F>
+        future<typename std::result_of<F(shared_future&)>::type> then(F&& func);
     };
     
     template< typename R >
@@ -783,6 +795,9 @@ namespace fibio { namespace fibers {
                 BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
+        
+        template<typename F>
+        future<typename std::result_of<F(shared_future&)>::type> then(F&& func);
     };
     
     template<>
@@ -947,6 +962,9 @@ namespace fibio { namespace fibers {
                 BOOST_THROW_EXCEPTION(future_uninitialized());
             return state_->wait_until( timeout_time);
         }
+        
+        template<typename F>
+        future<typename std::result_of<F(shared_future&)>::type> then(F&& func);
     };
     
     template< typename R >

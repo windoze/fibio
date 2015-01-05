@@ -7,6 +7,7 @@
 //
 
 #include <iostream>
+#include <boost/lexical_cast.hpp>
 #include <fibio/fiber.hpp>
 #include <fibio/future.hpp>
 #include <fibio/fiberize.hpp>
@@ -26,6 +27,33 @@ struct f2 {
     }
     int n_;
 };
+
+void test_future() {
+    // future from a packaged_task
+    packaged_task<int()> task([](){ return 7; }); // wrap the function
+    future<int> f1 = task.get_future();  // get a future
+    fiber(std::move(task)).detach(); // launch on a fiber
+    
+    // future from an async()
+    future<int> f2 = async([](){ return 8; });
+    
+    // future from a promise
+    promise<int> p;
+    future<int> f3 = p.get_future();
+    fiber([](promise<int> p){
+        p.set_value(9);
+    }, std::move(p)).detach();
+    
+    f1.wait();
+    f2.wait();
+    f3.wait();
+    int n1=f1.get();
+    int n2=f2.get();
+    int n3=f3.get();
+    assert(n1==7);
+    assert(n2==8);
+    assert(n3==9);
+}
 
 void test_async() {
     assert(async(f2(100), async(f1, 42).get(), async(f1, 24).get()).get()==f2(100)(f1(42), f1(24)));
@@ -138,33 +166,25 @@ void test_wait_for_all3() {
     assert(dur>=std::chrono::seconds(1));
 }
 
-int fibio::main(int argc, char *argv[]) {
-    // future from a packaged_task
-    packaged_task<int()> task([](){ return 7; }); // wrap the function
-    future<int> f1 = task.get_future();  // get a future
-    fiber(std::move(task)).detach(); // launch on a fiber
-    
-    // future from an async()
-    future<int> f2 = async([](){ return 8; });
-    
-    // future from a promise
+void test_then1() {
     promise<int> p;
-    future<int> f3 = p.get_future();
-    fiber([](promise<int> p){
-        p.set_value(9);
-    }, std::move(p)).detach();
-    
-    f1.wait();
-    f2.wait();
-    f3.wait();
-    int n1=f1.get();
-    int n2=f2.get();
-    int n3=f3.get();
-    assert(n1==7);
-    assert(n2==8);
-    assert(n3==9);
-    
+    auto f0=p.get_future();
+    auto f1=f0.then([](future<int> &f){ return boost::lexical_cast<std::string>(f.get()); });
+    p.set_value(100);
+    assert(f1.get()==std::string("100"));
+}
+
+void test_then2() {
+    auto f=async([](){ return 100; })
+        .then([](future<int> &f){ return boost::lexical_cast<std::string>(f.get()); })
+        .then([](future<std::string> &f){ return boost::lexical_cast<int>(f.get()); })
+    ;
+    assert(f.get()==100);
+}
+
+int fibio::main(int argc, char *argv[]) {
     fiber_group fg;
+    fg.create_fiber(test_future);
     fg.create_fiber(test_async);
     fg.create_fiber(test_async_executor);
     fg.create_fiber(test_async_function);
@@ -174,6 +194,8 @@ int fibio::main(int argc, char *argv[]) {
     fg.create_fiber(test_wait_for_all1);
     fg.create_fiber(test_wait_for_all2);
     fg.create_fiber(test_wait_for_all3);
+    fg.create_fiber(test_then1);
+    fg.create_fiber(test_then2);
     fg.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
