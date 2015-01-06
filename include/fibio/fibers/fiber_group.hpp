@@ -28,6 +28,7 @@ namespace fibio { namespace fibers {
         
         /// destructor
         ~fiber_group() {
+            join_all();
             for(std::list<fiber*>::iterator it=fibers_.begin(), end=fibers_.end(); it!=end; ++it) {
                 delete *it;
             }
