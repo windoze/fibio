@@ -166,6 +166,66 @@ void test_wait_for_all3() {
     assert(dur>=std::chrono::seconds(1));
 }
 
+void test_async_wait_for_any1() {
+    std::vector<future<void>> fv;
+    for (size_t i=0; i<10; i++) {
+        fv.push_back(async([i](){
+            this_fiber::sleep_for(std::chrono::milliseconds(100*(i+1)));
+        }));
+    }
+    auto f=async_wait_for_any(fv.cbegin(), fv.cend());
+    // 1st future should be ready
+    assert(f.get()==fv.begin());
+}
+
+void test_async_wait_for_any2() {
+    std::vector<future<void>> fv1;
+    for (int i=0; i<10; i++) {
+        fv1.push_back(async([i](){
+            this_fiber::sleep_for(std::chrono::milliseconds(100*(i+1)));
+        }));
+    }
+    auto f1=async_wait_for_any(fv1.cbegin(), fv1.cend());
+
+    std::vector<future<int>> fv2;
+    for (int i=0; i<10; i++) {
+        fv2.push_back(async([i](){
+            this_fiber::sleep_for(std::chrono::milliseconds(90*(i+1)));
+            return i;
+        }));
+    }
+    auto f2=async_wait_for_any(fv2.cbegin(), fv2.cend());
+    wait_for_all(f1, f2);
+    // 1st future should be ready
+    assert(f1.get()==fv1.begin());
+    assert(f2.get()==fv2.begin());
+}
+
+void test_async_wait_for_all1() {
+    auto start=std::chrono::system_clock::now();
+    std::vector<future<void>> fv1;
+    int c=10;
+    for (int i=0; i<c; i++) {
+        fv1.push_back(async([i](){
+            this_fiber::sleep_for(std::chrono::milliseconds(100*(i+1)));
+        }));
+    }
+    auto f1=async_wait_for_all(fv1.cbegin(), fv1.cend());
+    
+    std::vector<future<int>> fv2;
+    for (int i=0; i<c; i++) {
+        fv2.push_back(async([i](){
+            this_fiber::sleep_for(std::chrono::milliseconds(90*(i+1)));
+            return i;
+        }));
+    }
+    auto f2=async_wait_for_all(fv2.cbegin(), fv2.cend());
+    wait_for_all(f1, f2);
+    auto stop=std::chrono::system_clock::now();
+    std::chrono::system_clock::duration dur=stop-start;
+    assert(dur>=std::chrono::milliseconds(100*c));
+}
+
 void test_then1() {
     promise<int> p;
     auto f0=p.get_future();
@@ -210,6 +270,9 @@ int fibio::main(int argc, char *argv[]) {
     fg.create_fiber(test_wait_for_all1);
     fg.create_fiber(test_wait_for_all2);
     fg.create_fiber(test_wait_for_all3);
+    fg.create_fiber(test_async_wait_for_any1);
+    fg.create_fiber(test_async_wait_for_any2);
+    fg.create_fiber(test_async_wait_for_all1);
     fg.create_fiber(test_then1);
     fg.create_fiber(test_then2);
     fg.create_fiber(test_then3);

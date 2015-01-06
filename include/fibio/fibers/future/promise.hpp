@@ -527,6 +527,100 @@ namespace fibio { namespace fibers {
         {
             p.set_value(std::forward<F>(fn)(f));
         }
+
+        template<typename Ret>
+        struct async_any_state : std::enable_shared_from_this<async_any_state<Ret>> {
+            typedef std::shared_ptr<async_any_state> ptr;
+            std::atomic<bool> is_set_{false};
+            promise<Ret> p;
+            
+            void set_value(Ret v) {
+                if(is_set_) return;
+                is_set_=true;
+                p.set_value(v);
+            }
+            
+            future<Ret> get_future() {
+                return p.get_future();
+            }
+        };
+        
+        template<std::size_t N, typename ...Futures>
+        struct async_any_waiter;
+        
+        template<std::size_t N, typename F>
+        struct async_any_waiter<N, F> {
+            static void setup(typename async_any_state<size_t>::ptr s, F &f) {
+                f.state_->add_external_waiter([s](){
+                    s->set_value(N);
+                });
+            }
+        };
+        
+        template<std::size_t N, typename F, typename ...Futures>
+        struct async_any_waiter<N, F, Futures...> {
+            static void setup(typename async_any_state<size_t>::ptr s, F &f, Futures&... fs) {
+                async_any_waiter<N, F>::setup(s, f);
+                async_any_waiter<N+1, Futures...>::setup(s, fs...);
+            }
+        };
+        
+        template <typename ...Futures, std::size_t... Indices>
+        future<std::size_t> async_wait_for_any2(std::tuple<Futures&...> &&futures, utility::tuple_indices<Indices...>) {
+            auto sp=std::make_shared<detail::async_any_state<size_t>>();
+            detail::async_any_waiter<0, Futures...>::setup(sp, std::get<Indices>(futures)...);
+            return sp->get_future();
+        }
+        
+        template <typename ...Futures, std::size_t... Indices>
+        future<std::size_t> async_wait_for_any2(std::tuple<Futures&...> &futures, utility::tuple_indices<Indices...>) {
+            auto sp=std::make_shared<detail::async_any_state<size_t>>();
+            detail::async_any_waiter<0, Futures...>::setup(sp, std::get<Indices>(futures)...);
+            return sp->get_future();
+        }
+
+        struct async_all_state : std::enable_shared_from_this<async_all_state> {
+            typedef std::shared_ptr<async_all_state> ptr;
+            std::atomic<size_t> acquired{0};
+            promise<void> p;
+            const size_t count_;
+            
+            async_all_state(size_t c) : count_(c) {}
+            void count() { if(++acquired>=count_) p.set_value(); }
+            future<void> get_future() { return p.get_future(); }
+        };
+        
+        template<typename ...Futures>
+        struct async_all_waiter;
+        
+        template<typename F>
+        struct async_all_waiter<F> {
+            static void setup(std::shared_ptr<async_all_state> state, F &f) {
+                f.state_->add_external_waiter([state](){ state->count(); });
+            }
+        };
+        
+        template<typename F, typename ...Futures>
+        struct async_all_waiter<F, Futures...> {
+            static void setup(std::shared_ptr<async_all_state> state, F &f, Futures&... fs) {
+                async_all_waiter<F>::setup(state, f);
+                async_all_waiter<Futures...>::setup(state, fs...);
+            }
+        };
+        
+        template <typename ...Futures, std::size_t... Indices>
+        future<void> async_wait_for_all2(std::tuple<Futures&...> &futures, utility::tuple_indices<Indices...>) {
+            async_all_state::ptr state(new async_all_state(sizeof...(Futures)));
+            detail::async_all_waiter<Futures...>::setup(state, std::get<Indices>(futures)...);
+            return state->get_future();
+        }
+        
+        template <typename ...Futures, std::size_t... Indices>
+        future<void> async_wait_for_all2(std::tuple<Futures&...> &&futures, utility::tuple_indices<Indices...>) {
+            async_all_state::ptr state(new async_all_state(sizeof...(Futures)));
+            detail::async_all_waiter<Futures...>::setup(state, std::get<Indices>(futures)...);
+            return state->get_future();
+        }
     }
     
     template<typename R> template<typename F>
@@ -635,6 +729,85 @@ namespace fibio { namespace fibers {
         std::shared_ptr<waiter> w=std::make_shared<waiter>(state_, std::forward<F>(func));
         state_->add_external_waiter(std::bind(&waiter::invoke, w));
         return w->p_.get_future();
+    }
+
+    template<typename ...Futures>
+    future<std::size_t> async_wait_for_any(Futures&... futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        auto sp=std::make_shared<detail::async_any_state<size_t>>();
+        detail::async_any_waiter<0, Futures...>::setup(sp, futures...);
+        return sp->get_future();
+    }
+    
+    template<typename Iterator>
+    auto async_wait_for_any(Iterator begin,Iterator end)
+    -> typename std::enable_if<!detail::is_future<Iterator>::value, future<Iterator>>::type
+    {
+        static_assert(detail::is_future<typename std::iterator_traits<Iterator>::value_type>::value,
+                      "Iterator must refer to future type");
+        auto sp=std::make_shared<detail::async_any_state<Iterator>>();
+        for(Iterator i=begin; i!=end; ++i) {
+            i->state_->add_external_waiter([sp, i](){
+                sp->set_value(i);
+            });
+        }
+        return sp->get_future();
+    }
+    
+    template<typename ...Futures>
+    future<std::size_t> async_wait_for_any(std::tuple<Futures&...> &&futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
+        return detail::async_wait_for_any2(std::forward<std::tuple<Futures&...>>(futures), index_type());
+    }
+    
+    template<typename ...Futures>
+    future<std::size_t> async_wait_for_any(std::tuple<Futures&...> &futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
+        return detail::async_wait_for_any2(futures, index_type());
+    }
+
+    template<typename ...Futures>
+    future<void> async_wait_for_all(Futures&... futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        detail::async_all_state::ptr state(new detail::async_all_state(sizeof...(Futures)));
+        detail::async_all_waiter<Futures...>::setup(state, futures...);
+        return state->get_future();
+    }
+    
+    template<typename ...Futures>
+    future<void> async_wait_for_all(std::tuple<Futures&...> &futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
+        detail::async_wait_for_all2(futures, index_type());
+    }
+    
+    template<typename ...Futures>
+    future<void> async_wait_for_all(std::tuple<Futures&...> &&futures) {
+        static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
+                      "Only futures can be waited");
+        typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
+        detail::async_wait_for_all2(std::forward<std::tuple<Futures&...>>(futures), index_type());
+    }
+    
+    template<typename Iterator>
+    auto async_wait_for_all(Iterator begin,Iterator end)
+    -> typename std::enable_if<!detail::is_future<Iterator>::value, future<void>>::type
+    {
+        static_assert(detail::is_future<typename std::iterator_traits<Iterator>::value_type>::value,
+                      "Iterator must refer to future type");
+        // TODO: Require random-access iterator here
+        detail::async_all_state::ptr state(new detail::async_all_state(end-begin));
+        for(Iterator i=begin; i!=end; ++i) {
+            i->state_->add_external_waiter([state](){ state->count(); });
+        }
+        return state->get_future();
     }
 }}
 

@@ -51,6 +51,12 @@ namespace fibio { namespace fibers {
 
         template<typename ...Futures>
         struct all_waiter;
+
+        template<std::size_t N, typename ...Futures>
+        struct async_any_waiter;
+        
+        template<typename ...Futures>
+        struct async_all_waiter;
     }
     
     template<typename Iterator>
@@ -60,6 +66,14 @@ namespace fibio { namespace fibers {
     template<typename Iterator>
     auto wait_for_all(Iterator begin,Iterator end)
     -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
+    
+    template<typename Iterator>
+    auto async_wait_for_any(Iterator begin,Iterator end)
+    -> typename std::enable_if<!detail::is_future<Iterator>::value, future<Iterator>>::type;
+    
+    template<typename Iterator>
+    auto async_wait_for_all(Iterator begin,Iterator end)
+    -> typename std::enable_if<!detail::is_future<Iterator>::value, future<void>>::type;
     
     template< typename R >
     class future : private boost::noncopyable
@@ -80,6 +94,16 @@ namespace fibio { namespace fibers {
         template<typename Iterator>
         friend auto wait_for_all(Iterator begin,Iterator end)
         -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::async_any_waiter;
+        template<typename ...Futures>
+        friend struct detail::async_all_waiter;
+        template<typename Iterator>
+        friend auto async_wait_for_any(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<Iterator>>::type;
+        template<typename Iterator>
+        friend auto async_wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<void>>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -217,6 +241,16 @@ namespace fibio { namespace fibers {
         template<typename Iterator>
         friend auto wait_for_all(Iterator begin,Iterator end)
         -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::async_any_waiter;
+        template<typename ...Futures>
+        friend struct detail::async_all_waiter;
+        template<typename Iterator>
+        friend auto async_wait_for_any(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<Iterator>>::type;
+        template<typename Iterator>
+        friend auto async_wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<void>>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -354,6 +388,16 @@ namespace fibio { namespace fibers {
         template<typename Iterator>
         friend auto wait_for_all(Iterator begin,Iterator end)
         -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::async_any_waiter;
+        template<typename ...Futures>
+        friend struct detail::async_all_waiter;
+        template<typename Iterator>
+        friend auto async_wait_for_any(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<Iterator>>::type;
+        template<typename Iterator>
+        friend auto async_wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<void>>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -495,6 +539,16 @@ namespace fibio { namespace fibers {
         template<typename Iterator>
         friend auto wait_for_all(Iterator begin,Iterator end)
         -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::async_any_waiter;
+        template<typename ...Futures>
+        friend struct detail::async_all_waiter;
+        template<typename Iterator>
+        friend auto async_wait_for_any(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<Iterator>>::type;
+        template<typename Iterator>
+        friend auto async_wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<void>>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -656,6 +710,16 @@ namespace fibio { namespace fibers {
         template<typename Iterator>
         friend auto wait_for_all(Iterator begin,Iterator end)
         -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::async_any_waiter;
+        template<typename ...Futures>
+        friend struct detail::async_all_waiter;
+        template<typename Iterator>
+        friend auto async_wait_for_any(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<Iterator>>::type;
+        template<typename Iterator>
+        friend auto async_wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<void>>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -817,6 +881,16 @@ namespace fibio { namespace fibers {
         template<typename Iterator>
         friend auto wait_for_all(Iterator begin,Iterator end)
         -> typename std::enable_if<!detail::is_future<Iterator>::value>::type;
+        template<std::size_t N, typename ...Futures>
+        friend struct detail::async_any_waiter;
+        template<typename ...Futures>
+        friend struct detail::async_all_waiter;
+        template<typename Iterator>
+        friend auto async_wait_for_any(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<Iterator>>::type;
+        template<typename Iterator>
+        friend auto async_wait_for_all(Iterator begin,Iterator end)
+        -> typename std::enable_if<!detail::is_future<Iterator>::value, future<void>>::type;
         
         struct dummy
         { void nonnull() {} };
@@ -1066,19 +1140,18 @@ namespace fibio { namespace fibers {
         
         template<typename F>
         struct all_waiter<F> {
-            static void setup(condition_variable &cv, std::atomic<size_t> &acquired, F &f) {
-                f.state_->add_external_waiter([&](){
-                    acquired++;
-                    cv.notify_all();
+            static void setup(condition_variable &cv, std::atomic<size_t> &acquired, size_t count, F &f) {
+                f.state_->add_external_waiter([&cv, &acquired, count](){
+                    if(++acquired == count) cv.notify_all();
                 });
             }
         };
         
         template<typename F, typename ...Futures>
         struct all_waiter<F, Futures...> {
-            static void setup(condition_variable &cv, std::atomic<size_t> &acquired, F &f, Futures&... fs) {
-                all_waiter<F>::setup(cv, acquired, f);
-                all_waiter<Futures...>::setup(cv, acquired, fs...);
+            static void setup(condition_variable &cv, std::atomic<size_t> &acquired, size_t count, F &f, Futures&... fs) {
+                all_waiter<F>::setup(cv, acquired, count, f);
+                all_waiter<Futures...>::setup(cv, acquired, count, fs...);
             }
         };
 
@@ -1102,7 +1175,7 @@ namespace fibio { namespace fibers {
             condition_variable cv;
             constexpr size_t count=sizeof...(Futures);
             std::atomic<size_t> acquired(0);
-            detail::all_waiter<Futures...>::setup(cv, acquired, std::get<Indices>(futures)...);
+            detail::all_waiter<Futures...>::setup(cv, acquired, count, std::get<Indices>(futures)...);
             unique_lock<mutex> lk(mtx);
             cv.wait(lk, [&]()->bool{ return acquired==count; });
         }
@@ -1113,7 +1186,7 @@ namespace fibio { namespace fibers {
             condition_variable cv;
             constexpr size_t count=sizeof...(Futures);
             std::atomic<size_t> acquired(0);
-            detail::all_waiter<Futures...>::setup(cv, acquired, std::get<Indices>(futures)...);
+            detail::all_waiter<Futures...>::setup(cv, acquired, count, std::get<Indices>(futures)...);
             unique_lock<mutex> lk(mtx);
             cv.wait(lk, [&]()->bool{ return acquired==count; });
         }
@@ -1167,7 +1240,7 @@ namespace fibio { namespace fibers {
         condition_variable cv;
         constexpr size_t count=sizeof...(Futures);
         std::atomic<size_t> acquired(0);
-        detail::all_waiter<Futures...>::setup(cv, acquired, futures...);
+        detail::all_waiter<Futures...>::setup(cv, acquired, count, futures...);
         unique_lock<mutex> lk(mtx);
         cv.wait(lk, [&]()->bool{ return acquired==count; });
     }
