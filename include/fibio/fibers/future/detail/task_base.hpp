@@ -2,8 +2,12 @@
 //  task_base.hpp
 //  fibio
 //
-//  Created by Chen Xu on 14-3-29.
-//  Copyright (c) 2014 0d0a.com. All rights reserved.
+//  Base on Boost.Fiber at https://github.com/olk/boost-fiber
+//
+//          Copyright Oliver Kowalke 2013.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file LICENSE_1_0.txt or copy at
+//          http://www.boost.org/LICENSE_1_0.txt)
 //
 
 #ifndef fibio_fibio_fibers_future_detail_task_base_hpp

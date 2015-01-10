@@ -3,7 +3,7 @@
 //  fibio
 //
 //  Created by Chen Xu on 14-3-29.
-//  Copyright (c) 2014年 0d0a.com. All rights reserved.
+//  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
 #ifndef fibio_future_status_hpp

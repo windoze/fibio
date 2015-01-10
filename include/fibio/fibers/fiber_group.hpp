@@ -2,8 +2,12 @@
 //  fiber_group.hpp
 //  fibio
 //
-//  Created by Chen Xu on 14-3-20.
-//  Copyright (c) 2014 0d0a.com. All rights reserved.
+//  Base on Boost.Thread
+//
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+// (C) Copyright 2007-9 Anthony Williams
 //
 
 #ifndef fibio_fiber_group_hpp
