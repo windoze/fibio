@@ -44,6 +44,11 @@ namespace apache { namespace thrift {
                                                      "Cannot write.");
                     s.write((const char *)buf, len);
                 }
+                template<typename Stream>
+                static bool peek(fibio::stream::iostream<Stream> &s) {
+                    if(!s) return false;
+                    return s.peek()!=fibio::stream::iostream<Stream>::traits_type::eof();
+                }
             };
 
             template<>
@@ -67,6 +72,10 @@ namespace apache { namespace thrift {
                     if(ec) throw TTransportException(TTransportException::NOT_OPEN,
                                                      "Cannot write.");
                 }
+                template<typename Stream>
+                static bool peek(fibio::stream::iostream<Stream> &s) {
+                    return true;
+                }
             };
         }
         template<typename Stream, bool buffered>
@@ -85,13 +94,8 @@ namespace apache { namespace thrift {
         
             virtual bool isOpen() override { return stream_.is_open(); }
             
-            virtual bool peek() override {
-                if (buffered) {
-                    return stream_.peek()!=fibio_stream::traits_type::eof();
-                } else {
-                    return true;
-                }
-            }
+            virtual bool peek() override
+            { return detail::io_ops<buffered>::peek(stream_); }
     
             virtual void open() override { stream_.connect(ep_); }
             
