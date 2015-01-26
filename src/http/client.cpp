@@ -141,7 +141,8 @@ namespace fibio { namespace http {
             BOOST_THROW_EXCEPTION(boost::system::system_error(ec, "HTTP client connect"));
         }
     }
-
+    
+#ifdef HAVE_SSL
     client::client(ssl::context &ctx, const std::string &server, const std::string &port)
     : ctx_(&ctx)
     {
@@ -159,12 +160,18 @@ namespace fibio { namespace http {
             BOOST_THROW_EXCEPTION(boost::system::system_error(ec, "HTTP client connect"));
         }
     }
+#endif
     
     client::~client() {
         if (stream_) {
-            if (ctx_) {
+#ifdef HAVE_SSL
+            if (ctx_)
+            {
                     delete static_cast<ssl::tcp_stream *>(stream_);
-            } else {
+            }
+            else
+#endif
+            {
                 delete static_cast<tcp_stream *>(stream_);
             }
         }
@@ -181,6 +188,7 @@ namespace fibio { namespace http {
         return connect(server, boost::lexical_cast<std::string>(port));
     }
     
+#ifdef HAVE_SSL
     boost::system::error_code client::connect(ssl::context &ctx, const std::string &server, const std::string &port) {
         server_=server;
         port_=port;
@@ -191,6 +199,7 @@ namespace fibio { namespace http {
     boost::system::error_code client::connect(ssl::context &ctx, const std::string &server, int port) {
         return connect(ctx, server, boost::lexical_cast<std::string>(port));
     }
+#endif
     
     void client::disconnect() {
         if (stream_) {
@@ -198,6 +207,7 @@ namespace fibio { namespace http {
         }
     }
     
+#ifdef HAVE_ZLIB
     void client::auto_decompress(bool c) {
         auto_decompress_=c;
     }
@@ -205,13 +215,16 @@ namespace fibio { namespace http {
     bool client::auto_decompress() const {
         return auto_decompress_;
     }
+#endif
     
     bool client::send_request(request &req, response &resp) {
         if (!stream_->is_open() || stream_->eof() || stream_->fail() || stream_->bad()) return false;
         // Make sure there is no pending data in the last response
         resp.clear();
+#ifdef HAVE_ZLIB
         req.accept_compressed(auto_decompress_);
         resp.auto_decompression(auto_decompress_);
+#endif
         if(!req.write(*stream_)) return false;
         if (!stream_->is_open() || stream_->eof() || stream_->fail() || stream_->bad()) return false;
         //if (!stream_.is_open()) return false;
@@ -286,16 +299,26 @@ namespace fibio { namespace http {
                 if ((the_client_->server_!=host) || (the_client_->port_!=boost::lexical_cast<std::string>(port))) {
                     the_response_.drop_body();
                     the_client_->disconnect();
-                    if (ssl) {
+#ifdef HAVE_SSL
+                    if (ssl)
+                    {
                         the_client_.reset(new client(settings_.ctx, host, port));
-                    } else {
+                    }
+                    else
+#endif
+                    {
                         the_client_.reset(new client(host, port));
                     }
                 }
             } else {
-                if (ssl) {
+#ifdef HAVE_SSL
+                if (ssl)
+                {
                     the_client_.reset(new client(settings_.ctx, host, port));
-                } else {
+                }
+                else
+#endif
+                {
                     the_client_.reset(new client(host, port));
                 }
             }

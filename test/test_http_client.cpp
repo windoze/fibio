@@ -61,11 +61,13 @@ void the_url_client() {
         client::response &resp=uc.request("http://www.baidu.com/");
         assert(resp.status_code==http_status_code::OK);
     }
+#ifdef HAVE_SSL
     {
         // http://github.com/ responses with 301, redirects to 'https://github.com/'
         client::response &resp=uc.request("http://github.com/");
         assert(resp.status_code==http_status_code::OK);
     }
+#endif
 }
 
 int fibio::main(int argc, char *argv[]) {

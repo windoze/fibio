@@ -348,6 +348,7 @@ void test_http_server() {
     svr.join();
 }
 
+#ifdef HAVE_SSL
 void the_ssl_client() {
     client c;
     ssl::context ctx(ssl::context::tlsv1_client);
@@ -522,12 +523,15 @@ void test_https_server() {
     svr.stop();
     svr.join();
 }
+#endif
 
 int fibio::main(int argc, char *argv[]) {
     this_fiber::get_scheduler().add_worker_thread(3);
     fiber_group fibers;
     fibers.create_fiber(test_http_server);
+#ifdef HAVE_SSL
     fibers.create_fiber(test_https_server);
+#endif
     fibers.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;

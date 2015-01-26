@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 
 enable_testing()
 
-file(COPY "ca.pem" "dh512.pem" "server.pem" DESTINATION ${CMAKE_BINARY_DIR}/test)
-
 add_executable(test_fibers test_fibers.cpp)
 TARGET_LINK_LIBRARIES(test_fibers ${FIBIO_LIBS})
 
@@ -27,9 +25,6 @@ TARGET_LINK_LIBRARIES(test_asio ${FIBIO_LIBS})
 
 add_executable(test_tcp_stream test_tcp_stream.cpp)
 TARGET_LINK_LIBRARIES(test_tcp_stream ${FIBIO_LIBS})
-
-add_executable(test_ssl_stream test_ssl_stream.cpp)
-TARGET_LINK_LIBRARIES(test_ssl_stream ${FIBIO_LIBS})
 
 add_executable(test_http_client test_http_client.cpp)
 TARGET_LINK_LIBRARIES(test_http_client ${FIBIO_LIBS})
@@ -57,12 +52,18 @@ add_test(concurrent_queue test_cq)
 add_test(future test_future)
 add_test(ASIO test_asio)
 add_test(TCP_stream test_tcp_stream)
-add_test(SSL_stream test_ssl_stream)
 add_test(http_client test_http_client)
 add_test(http_server test_http_server)
 add_test(cookie test_cookie)
 add_test(redis_proto test_redis_proto)
 add_test(redis_client test_redis_client)
+
+IF(OPENSSL_FOUND)
+file(COPY "ca.pem" "dh512.pem" "server.pem" DESTINATION ${CMAKE_BINARY_DIR}/test)
+add_executable(test_ssl_stream test_ssl_stream.cpp)
+TARGET_LINK_LIBRARIES(test_ssl_stream ${FIBIO_LIBS})
+add_test(SSL_stream test_ssl_stream)
+ENDIF(OPENSSL_FOUND)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/test)
 find_package(Thrift)

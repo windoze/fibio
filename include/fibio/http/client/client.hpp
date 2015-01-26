@@ -12,7 +12,9 @@
 #include <string>
 #include <functional>
 #include <fibio/stream/iostream.hpp>
+#ifdef HAVE_SSL
 #include <fibio/stream/ssl.hpp>
+#endif
 #include <fibio/http/client/request.hpp>
 #include <fibio/http/client/response.hpp>
 #include <fibio/http/common/url_codec.hpp>
@@ -25,27 +27,37 @@ namespace fibio { namespace http {
         client()=default;
         client(const std::string &server, const std::string &port);
         client(const std::string &server, int port=80);
+#ifdef HAVE_SSL
         client(ssl::context &ctx, const std::string &server, const std::string &port);
         client(ssl::context &ctx, const std::string &server, int port=443);
+#endif
         ~client();
         
         boost::system::error_code connect(const std::string &server, const std::string &port);
         boost::system::error_code connect(const std::string &server, int port=80);
+#ifdef HAVE_SSL
         boost::system::error_code connect(ssl::context &ctx, const std::string &server, const std::string &port);
         boost::system::error_code connect(ssl::context &ctx, const std::string &server, int port=443);
+#endif
         void disconnect();
         bool is_open() const { return stream_ && stream_->is_open() && !stream_->eof() && !stream_->fail() && !stream_->bad(); }
         
+#ifdef HAVE_ZLIB
         void auto_decompress(bool c);
         bool auto_decompress() const;
+#endif
         
         bool send_request(request &req, response &resp);
         
         std::string server_;
         std::string port_;
+#ifdef HAVE_SSL
         ssl::context *ctx_;
+#endif
         stream::closable_stream *stream_;
+#ifdef HAVE_ZLIB
         bool auto_decompress_=false;
+#endif
     };
     
     // GET
@@ -78,7 +90,9 @@ namespace fibio { namespace http {
     
     struct url_client {
         struct settings {
+#ifdef HAVE_SSL
             ssl::context ctx=ssl::context(ssl::context::tlsv1_client);
+#endif
             int max_redirection=0;
         };
         

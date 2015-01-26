@@ -9,12 +9,20 @@ endif(APPLE)
 
 find_package(Threads REQUIRED)
 find_package(Boost 1.56.0 COMPONENTS system coroutine context iostreams thread REQUIRED)
-find_package(OpenSSL REQUIRED)
-find_package(ZLIB REQUIRED)
 
 IF((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
     add_definitions(-DHAVE_VALGRIND_H)
 ENDIF((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
+
+find_package(OpenSSL)
+IF(OPENSSL_FOUND)
+    add_definitions(-DHAVE_SSL)
+ENDIF(OPENSSL_FOUND)
+
+find_package(ZLIB)
+IF(ZLIB_FOUND)
+	add_definitions(-DHAVE_ZLIB)
+ENDIF(ZLIB_FOUND)
 
 INCLUDE_DIRECTORIES(
     ${Boost_INCLUDE_DIRS}
