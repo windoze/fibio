@@ -258,6 +258,40 @@ void test_then4() {
     assert(f.get()==100);
 }
 
+int thr_func(int x) {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    return x*10;
+}
+
+void thr_func1() {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+void dot() {
+    for (int i=0; i<30; i++) {
+        std::cout << i << '.' << std::endl;
+        this_fiber::sleep_for(std::chrono::milliseconds(100));
+    }
+}
+
+void test_foreign_thread_pool() {
+    fiber f(dot);
+    foreign_thread_pool pool;
+    struct thr_op {
+        int operator()(int x) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            return x*10;
+        }
+    };
+    assert(pool(thr_func, 42)==420);
+    std::cout << "check" << std::endl;
+    assert(pool(thr_op(), 42)==420);
+    std::cout << "check" << std::endl;
+    pool(thr_func1);
+    std::cout << "check" << std::endl;
+    f.join();
+}
+
 int fibio::main(int argc, char *argv[]) {
     fiber_group fg;
     fg.create_fiber(test_future);
@@ -277,6 +311,7 @@ int fibio::main(int argc, char *argv[]) {
     fg.create_fiber(test_then2);
     fg.create_fiber(test_then3);
     fg.create_fiber(test_then4);
+    fg.create_fiber(test_foreign_thread_pool);
     fg.join_all();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;

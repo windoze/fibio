@@ -148,6 +148,56 @@ namespace fibio { namespace fibers {
     template<typename Fn>
     async_function<Fn> make_async(Fn &&fn)
     { return async_function<Fn>(std::forward<Fn>(fn)); }
+    
+    /**
+     *  Foreign thread pool
+     */
+    struct foreign_thread_pool {
+        foreign_thread_pool(size_t pool_size=1) {
+            for(size_t i=0; i<pool_size; i++) {
+                threads_.emplace_back([this](){
+                    for(auto & i: queue_) i();
+                });
+            }
+        }
+        
+        ~foreign_thread_pool() {
+            queue_.close();
+            for(auto &t : threads_) {
+                t.join();
+            }
+        }
+        
+        template<typename Fn, typename ...Args>
+        auto async_call(Fn &&fn, Args&&... args) ->
+        future<typename detail::task_data<Fn, Args...>::result_type>
+        {
+            typedef detail::task_data<Fn, Args...> task_data_type;
+            typedef typename task_data_type::result_type result_type;
+            std::shared_ptr<packaged_task<result_type()>> task(new packaged_task<result_type()>(task_data_type(std::forward<Fn>(fn), std::forward<Args>(args)...)));
+            future<result_type> ret=task->get_future();
+            struct thr_task {
+                void operator()() { (*pt_)(); }
+                std::shared_ptr<packaged_task<result_type()>> pt_;
+            };
+            queue_.push(thr_task{task});
+            return ret;
+        }
+        
+        template<typename Fn, typename ...Args>
+        auto operator()(Fn &&fn, Args&&... args) ->
+        typename detail::task_data<Fn, Args...>::result_type
+        {
+            return async_call(std::forward<Fn>(fn), std::forward<Args>(args)...).get();
+        }
+        
+    private:
+        typedef std::function<void()> task_type;
+        typedef concurrent::basic_concurrent_queue<task_type, std::unique_lock<std::mutex>, std::condition_variable> queue_type;
+        
+        queue_type queue_;
+        std::vector<std::thread> threads_;
+    };
 }}  // End of namespace fibio::fibers
 
 namespace fibio {
@@ -155,6 +205,7 @@ namespace fibio {
     using fibers::async_executor;
     using fibers::async_function;
     using fibers::make_async;
+    using fibers::foreign_thread_pool;
 }
 
 #endif
