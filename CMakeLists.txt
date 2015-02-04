@@ -8,7 +8,7 @@ if(APPLE)
 endif(APPLE)
 
 find_package(Threads REQUIRED)
-find_package(Boost 1.56.0 COMPONENTS system coroutine context iostreams thread REQUIRED)
+find_package(Boost 1.56.0 COMPONENTS system coroutine context thread REQUIRED)
 
 IF((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
     add_definitions(-DHAVE_VALGRIND_H)
@@ -27,11 +27,14 @@ IF(OPENSSL_FOUND)
 ENDIF(OPENSSL_FOUND)
 
 find_package(ZLIB)
-IF(ZLIB_FOUND)
+find_package(Boost 1.56.0 COMPONENTS iostreams)
+IF(ZLIB_FOUND AND Boost_FOUND)
 	add_definitions(-DHAVE_ZLIB)
 	INCLUDE_DIRECTORIES(AFTER ${ZLIB_INCLUDE_DIR})
 	list(APPEND FIBIO_LIBS ${ZLIB_LIBRARIES})
-ENDIF(ZLIB_FOUND)
+	list(APPEND FIBIO_LIBS fibio ${Boost_LIBRARIES})
+ENDIF(ZLIB_FOUND AND Boost_FOUND)
+list(APPEND FIBIO_LIBS fibio)
 
 INCLUDE_DIRECTORIES(AFTER ${CMAKE_SOURCE_DIR}/include)
 

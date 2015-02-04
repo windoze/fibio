@@ -46,6 +46,7 @@ namespace fibio { namespace http {
         return *this;
     }
     
+#ifdef HAVE_ZLIB
     client_request &client_request::accept_compressed(bool c) {
         if (c) {
             // Support gzip only for now
@@ -55,6 +56,7 @@ namespace fibio { namespace http {
         }
         return *this;
     }
+#endif
     
     bool client_request::write_header(std::ostream &os) {
         set_header("Connection", keep_alive() ? "keep-alive" : "close");
@@ -83,6 +85,7 @@ namespace fibio { namespace http {
         common::response::clear();
     }
     
+#ifdef HAVE_ZLIB
     void client_response::auto_decompression(bool c) {
         auto_decompress_=c;
     }
@@ -90,6 +93,7 @@ namespace fibio { namespace http {
     bool client_response::auto_decompression() const {
         return auto_decompress_;
     }
+#endif
     
     bool client_response::read(std::istream &is) {
         clear();
@@ -99,12 +103,14 @@ namespace fibio { namespace http {
             // Setup body stream
             namespace bio = boost::iostreams;
             bio::filtering_istream *in=new bio::filtering_istream;
+#ifdef HAVE_ZLIB
             if (auto_decompress_) {
                 // Support gzip only for now
                 if (common::iequal()(header("Content-Encoding"), "gzip")) {
                     in->push(boost::iostreams::gzip_decompressor());
                 }
             }
+#endif
             restriction_.reset(new bio::restriction<std::istream>(is, 0, content_length));
             in->push(*restriction_);
             body_stream_.reset(in);

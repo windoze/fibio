@@ -29,14 +29,15 @@ namespace fibio { namespace http {
             return *(body_stream_.get());
         }
         
-        void auto_decompression(bool c);
-        
-        bool auto_decompression() const;
-        
         // Consume and discard body
         void drop_body();
         
+#ifdef HAVE_ZLIB
+        void auto_decompression(bool c);
+        bool auto_decompression() const;
         bool auto_decompress_=false;
+#endif
+        
         std::unique_ptr<boost::iostreams::restriction<std::istream>> restriction_;
         std::unique_ptr<std::istream> body_stream_;
     };

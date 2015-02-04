@@ -33,8 +33,9 @@ namespace fibio { namespace http {
         
         this_type &content_type(const std::string &);
         this_type &header(const std::string &key, const std::string &value);
-        
+#ifdef HAVE_ZLIB
         this_type &accept_compressed(bool);
+#endif
         
         std::ostream &body_stream();
         
