@@ -788,7 +788,7 @@ namespace fibio { namespace fibers {
         static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
                       "Only futures can be waited");
         typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
-        detail::async_wait_for_all2(futures, index_type());
+        return detail::async_wait_for_all2(futures, index_type());
     }
     
     template<typename ...Futures>
@@ -796,7 +796,7 @@ namespace fibio { namespace fibers {
         static_assert(utility::and_< detail::is_future<Futures>::value... >::value,
                       "Only futures can be waited");
         typedef typename utility::make_tuple_indices<sizeof...(Futures)>::type index_type;
-        detail::async_wait_for_all2(std::forward<std::tuple<Futures&...>>(futures), index_type());
+        return detail::async_wait_for_all2(std::forward<std::tuple<Futures&...>>(futures), index_type());
     }
     
     template<typename Iterator>
