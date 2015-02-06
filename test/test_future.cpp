@@ -258,6 +258,25 @@ void test_then4() {
     assert(f.get()==100);
 }
 
+void test_packaged_task() {
+    {
+        packaged_task<int(int)> pt([](int x){ return x*10; });
+        auto f=pt.get_future();
+        pt(42);
+        assert(f.get()==420);
+    }
+    {
+        int x=0;
+        packaged_task<void()> pt([&x](){
+            x++;
+        });
+        auto f=pt.get_future();
+        pt();
+        f.get();
+        assert(x==1);
+    }
+}
+
 int thr_func(int x) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
     return x*10;
@@ -311,6 +330,7 @@ int fibio::main(int argc, char *argv[]) {
     fg.create_fiber(test_then2);
     fg.create_fiber(test_then3);
     fg.create_fiber(test_then4);
+    fg.create_fiber(test_packaged_task);
     fg.create_fiber(test_foreign_thread_pool);
     fg.join_all();
     std::cout << "main_fiber exiting" << std::endl;

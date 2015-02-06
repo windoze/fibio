@@ -29,344 +29,95 @@
 #include <fibio/fibers/future/future.hpp>
 
 namespace fibio { namespace fibers {
-    template< typename Signature >
+    template<typename>
     class packaged_task;
     
-    template< typename R >
-    class packaged_task< R() > : private boost::noncopyable
-    {
-    private:
-        typedef typename detail::task_base< R >::ptr_t   ptr_t;
+    template<typename R, typename ...Args>
+    class packaged_task<R(Args...)> {
+        typedef packaged_task<R(Args...)> this_type;
+        typedef typename detail::task_base<R, Args...>::ptr_t ptr_t;
         
-        struct dummy
-        { void nonnull() {} };
+        bool obtained_;
+        ptr_t task_;
         
-        typedef void ( dummy::*safe_bool)();
-        
-        bool            obtained_;
-        ptr_t           task_;
-        
-        BOOST_MOVABLE_BUT_NOT_COPYABLE( packaged_task);
-        
+        packaged_task(const packaged_task &)=delete;
+        packaged_task& operator=( const packaged_task& ) = delete;
     public:
-        packaged_task() BOOST_NOEXCEPT :
-        obtained_( false),
-        task_()
+        packaged_task() noexcept
+        : obtained_(false)
+        , task_()
+        {}
+        
+        ~packaged_task() { if(task_) { task_->owner_destroyed(); } }
+        
+        template<typename Fn,
+            class = typename std::enable_if<!std::is_same<
+                typename std::decay<Fn>::type,
+                packaged_task
+            >::value>::type
+        >
+        explicit packaged_task(Fn &&fn) {
+            typedef detail::task_object<Fn, std::allocator<this_type>, R, Args...> object_t;
+            std::allocator<packaged_task<R(Args...)>> alloc;
+            typename object_t::allocator_t a(alloc);
+            // placement new
+            task_ = ptr_t(::new(a.allocate(1)) object_t(std::forward<Fn>(fn), a));
+        }
+
+        template<typename Fn, typename Allocator>
+        explicit packaged_task(std::allocator_arg_t, const Allocator& alloc, Fn &&fn)
         {
-            //TODO: constructs a packaged_task object with
-            //       no task and no shared state
+            typedef detail::task_object<Fn, std::allocator<this_type>, R, Args...> object_t;
+            typename object_t::allocator_t a(alloc);
+            // placement new
+            task_ = ptr_t(::new(a.allocate(1)) object_t(std::forward<Fn>(fn), a));
         }
         
-        ~packaged_task()
+        packaged_task(packaged_task&& other) noexcept
+        : obtained_(false)
+        , task_()
+        { swap( other); }
+
+        packaged_task &operator=(packaged_task&& other) noexcept
         {
-            //TODO: abandons the shared state and destroys the stored task object
-            //      a usual, if the shared state is abandoned before it was made
-            //      ready, an std::future_error exception is stored with the error
-            //      code future_errc::broken_promise
-            if ( task_)
-                task_->owner_destroyed();
+            packaged_task tmp(std::move(other));
+            swap(tmp);
+            return *this;
         }
         
-        template< typename Fn >
-        explicit packaged_task( Fn && fn,
-                               typename boost::disable_if<
-                               boost::is_same<
-                               typename boost::decay< Fn >::type,
-                               packaged_task
-                               >,
-                               dummy * >::type = 0) :
-        obtained_( false),
-        task_()
+        void swap(packaged_task & other) noexcept
         {
-            //TODO: constructs a std::packaged_task object
-            //       with a shared state and a copy of the task,
-            //       initialized with forward< Fn >( fn)
-            typedef detail::task_object<
-            Fn,
-            std::allocator< packaged_task< R() > >,
-            R
-            >                                       object_t;
-            std::allocator< packaged_task< R() > > alloc;
-            typename object_t::allocator_t a( alloc);
-            task_ = ptr_t(
-                          // placement new
-                          ::new( a.allocate( 1) ) object_t( std::forward< Fn >( fn), a) );
+            std::swap(obtained_, other.obtained_);
+            task_.swap(other.task_);
         }
+
+        bool valid() const noexcept { return task_.get()!=nullptr; }
         
-        template< typename Fn, typename Allocator >
-        explicit packaged_task( boost::allocator_arg_t, Allocator const& alloc, Fn && fn,
-                               typename boost::disable_if<
-                               boost::is_same<
-                               typename boost::decay< Fn >::type,
-                               packaged_task
-                               >,
-                               dummy * >::type = 0) :
-        obtained_( false),
-        task_()
+        future<R> get_future()
         {
-            //TODO: constructs a std::packaged_task object
-            //       with a shared state and a copy of the task,
-            //       initialized with forward< Fn >( fn)
-            //       uses the provided allocator to allocate
-            //       memory necessary to store the task
-            typedef detail::task_object<
-            Fn,
-            Allocator,
-            R
-            >                                       object_t;
-            typename object_t::allocator_t a( alloc);
-            task_ = ptr_t(
-                          // placement new
-                          ::new( a.allocate( 1) ) object_t( std::forward< Fn >( fn), a) );
-        }
-        
-        packaged_task( BOOST_RV_REF( packaged_task) other) BOOST_NOEXCEPT :
-        obtained_( false),
-        task_()
-        {
-            //TODO: constructs a std::packaged_task with thes
-            //       shared state and task formerly owned by rhs,
-            //       leaving rhs with no shared state and a moved-from task
-            swap( other);
-        }
-        
-        packaged_task & operator=( BOOST_RV_REF( packaged_task) other) BOOST_NOEXCEPT
-        {
-            //TODO: releases the shared state, if any, destroys the
-            //       previously-held task, and moves the shared state
-            //       and the task owned by rhs into *this
-            //       rhs is left without a shared state and with a
-            //       moved-from task
-            packaged_task tmp( boost::move( other) );
-            swap( tmp);
-            return * this;
-        }
-        
-        void swap( packaged_task & other) BOOST_NOEXCEPT
-        {
-            //TODO: exchange the shared states of two packaged_task
-            std::swap( obtained_, other.obtained_);
-            task_.swap( other.task_);
-        }
-        
-        operator safe_bool() const BOOST_NOEXCEPT
-        { return valid() ? & dummy::nonnull : 0; }
-        
-        bool operator!() const BOOST_NOEXCEPT
-        { return ! valid(); }
-        
-        bool valid() const BOOST_NOEXCEPT
-        {
-            //TODO: checks whether *this has a shared state
-            return 0 != task_.get();
-        }
-        
-        future< R > get_future()
-        {
-            //TODO: returns a future which shares the same shared state as *this
-            //      get_future can be called only once for each packaged_task
-            if ( obtained_)
-                BOOST_THROW_EXCEPTION(future_already_retrieved());
-            if ( ! valid() )
-                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
+            if (obtained_) { BOOST_THROW_EXCEPTION(future_already_retrieved()); }
+            if (!valid()) { BOOST_THROW_EXCEPTION(packaged_task_uninitialized()); }
             obtained_ = true;
-            return future< R >( task_);
+            return future<R>(task_);
         }
-        
-        void operator()()
+
+        void operator()(Args&&... args)
         {
-            //TODO: calls the stored task with args as the arguments
-            //      the return value of the task or any exceptions thrown are
-            //      stored in the shared state
-            //      the shared state is made ready and any threads waiting for
-            //      this are unblocked
-            if ( ! valid() )
-                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
-            task_->run();
+            if (!valid()) { BOOST_THROW_EXCEPTION(packaged_task_uninitialized()); }
+            task_->run(std::forward<Args>(args)...);
         }
         
         void reset()
         {
-            //TODO: resets the state abandoning the results of previous executions
-            //      new shared state is constructed
-            //      equivalent to *this = packaged_task(std::move(f)), where f is
-            //      the stored task
-            if ( ! valid() )
-                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
+            if (!valid()) { BOOST_THROW_EXCEPTION(packaged_task_uninitialized()); }
             obtained_ = false;
             task_->reset();
         }
     };
     
-    template<>
-    class packaged_task< void() > : private boost::noncopyable
-    {
-    private:
-        typedef detail::task_base< void >::ptr_t   ptr_t;
-        
-        struct dummy
-        { void nonnull() {} };
-        
-        typedef void ( dummy::*safe_bool)();
-        
-        bool            obtained_;
-        ptr_t           task_;
-        
-        BOOST_MOVABLE_BUT_NOT_COPYABLE( packaged_task);
-        
-    public:
-        packaged_task() BOOST_NOEXCEPT :
-        obtained_( false),
-        task_()
-        {
-            //TODO: constructs a packaged_task object with
-            //       no task and no shared state
-        }
-        
-        ~packaged_task()
-        {
-            //TODO: abandons the shared state and destroys the stored task object
-            //      a usual, if the shared state is abandoned before it was made
-            //      ready, an std::future_error exception is stored with the error
-            //      code future_errc::broken_promise
-            if ( task_)
-                task_->owner_destroyed();
-        }
-        
-        template< typename Fn >
-        explicit packaged_task( Fn && fn,
-                               typename boost::disable_if<
-                               boost::is_same<
-                               typename boost::decay< Fn >::type,
-                               packaged_task
-                               >,
-                               dummy * >::type = 0) :
-        obtained_( false),
-        task_()
-        {
-            //TODO: constructs a std::packaged_task object
-            //       with a shared state and a copy of the task,
-            //       initialized with forward< Fn >( fn)
-            typedef detail::task_object<
-            Fn,
-            std::allocator< packaged_task< void() > >,
-            void
-            >                                       object_t;
-            std::allocator< packaged_task< void() > > alloc;
-            typename object_t::allocator_t a( alloc);
-            task_ = ptr_t(
-                          // placement new
-                          ::new( a.allocate( 1) ) object_t( std::forward< Fn >( fn), a) );
-        }
-        
-        template< typename Fn, typename Allocator >
-        explicit packaged_task( Allocator const& alloc, Fn && fn,
-                               typename boost::disable_if<
-                               boost::is_same<
-                               typename boost::decay< Fn >::type,
-                               packaged_task
-                               >,
-                               dummy * >::type = 0) :
-        obtained_( false),
-        task_()
-        {
-            //TODO: constructs a std::packaged_task object
-            //       with a shared state and a copy of the task,
-            //       initialized with forward< Fn >( fn)
-            //       uses the provided allocator to allocate
-            //       memory necessary to store the task
-            typedef detail::task_object<
-            Fn,
-            Allocator,
-            void
-            >                                       object_t;
-            typename object_t::allocator_t a( alloc);
-            task_ = ptr_t(
-                          // placement new
-                          ::new( a.allocate( 1) ) object_t( std::forward< Fn >( fn), a) );
-        }
-        
-        packaged_task( packaged_task && other) BOOST_NOEXCEPT :
-        obtained_( false),
-        task_()
-        {
-            //TODO: constructs a std::packaged_task with thes
-            //       shared state and task formerly owned by rhs,
-            //       leaving rhs with no shared state and a moved-from task
-            swap( other);
-        }
-        
-        packaged_task & operator=( packaged_task && other) BOOST_NOEXCEPT
-        {
-            //TODO: releases the shared state, if any, destroys the
-            //       previously-held task, and moves the shared state
-            //       and the task owned by rhs into *this
-            //       rhs is left without a shared state and with a
-            //       moved-from task
-            packaged_task tmp( boost::move( other) );
-            swap( tmp);
-            return * this;
-        }
-        
-        void swap( packaged_task & other) BOOST_NOEXCEPT
-        {
-            //TODO: exchange the shared states of two packaged_task
-            std::swap( obtained_, other.obtained_);
-            task_.swap( other.task_);
-        }
-        
-        operator safe_bool() const BOOST_NOEXCEPT
-        { return valid() ? & dummy::nonnull : 0; }
-        
-        bool operator!() const BOOST_NOEXCEPT
-        { return ! valid(); }
-        
-        bool valid() const BOOST_NOEXCEPT
-        {
-            //TODO: checks whether *this has a shared state
-            return 0 != task_.get();
-        }
-        
-        future< void > get_future()
-        {
-            //TODO: returns a future which shares the same shared state as *this
-            //      get_future can be called only once for each packaged_task
-            if ( obtained_)
-                BOOST_THROW_EXCEPTION(future_already_retrieved());
-            if ( ! valid() )
-                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
-            obtained_ = true;
-            return future< void >( task_);
-        }
-        
-        void operator()()
-        {
-            //TODO: calls the stored task with args as the arguments
-            //      the return value of the task or any exceptions thrown are
-            //      stored in the shared state
-            //      the shared state is made ready and any threads waiting for
-            //      this are unblocked
-            if ( ! valid() )
-                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
-            task_->run();
-        }
-        
-        void reset()
-        {
-            //TODO: resets the state abandoning the results of previous executions
-            //      new shared state is constructed
-            //      equivalent to *this = packaged_task(std::move(f)), where f is
-            //      the stored task
-            if ( ! valid() )
-                BOOST_THROW_EXCEPTION(packaged_task_uninitialized());
-            obtained_ = false;
-            task_->reset();
-        }
-    };
-    
-    template< typename Signature >
-    void swap( packaged_task< Signature > & l, packaged_task< Signature > & r)
-    { l.swap( r); }
+    template<typename Signature>
+    void swap(packaged_task<Signature> &l, packaged_task<Signature> &r)
+    { l.swap(r); }
     
 }}
 
