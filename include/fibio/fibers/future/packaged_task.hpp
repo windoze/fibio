@@ -37,7 +37,7 @@ namespace fibio { namespace fibers {
         typedef packaged_task<R(Args...)> this_type;
         typedef typename detail::task_base<R, Args...>::ptr_t ptr_t;
         
-        bool obtained_;
+        bool obtained_=false;
         ptr_t task_;
         
         packaged_task(const packaged_task &)=delete;
