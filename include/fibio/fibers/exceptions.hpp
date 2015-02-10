@@ -150,12 +150,12 @@ namespace boost { namespace system {
     struct is_error_code_enum<fibio::fibers::future_errc> : public true_type
     {};
     
-    inline error_code make_error_code(fibio::fibers::future_errc e) //BOOST_NOEXCEPT
+    inline error_code make_error_code(fibio::fibers::future_errc e) //noexcept
     {
         return error_code(underlying_cast<int>(e), fibio::fibers::future_category());
     }
     
-    inline error_condition make_error_condition(fibio::fibers::future_errc e) //BOOST_NOEXCEPT
+    inline error_condition make_error_condition(fibio::fibers::future_errc e) //noexcept
     {
         return error_condition(underlying_cast<int>(e), fibio::fibers::future_category());
     }
@@ -172,10 +172,10 @@ namespace fibio { namespace fibers {
         , ec_(ec)
         {}
         
-        boost::system::error_code const &code() const BOOST_NOEXCEPT
+        boost::system::error_code const &code() const noexcept
         { return ec_; }
         
-        const char *what() const BOOST_NOEXCEPT
+        const char *what() const noexcept
         { return code().message().c_str(); }
     };
     

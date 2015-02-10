@@ -264,7 +264,7 @@ namespace fibio { namespace fibers { namespace detail {
         void reset()
         { ready_ = false; }
         
-        friend inline void intrusive_ptr_add_ref( shared_state * p) BOOST_NOEXCEPT
+        friend inline void intrusive_ptr_add_ref( shared_state * p) noexcept
         { ++p->use_count_; }
         
         friend inline void intrusive_ptr_release( shared_state * p)
@@ -472,7 +472,7 @@ namespace fibio { namespace fibers { namespace detail {
         void reset()
         { ready_ = false; }
         
-        friend inline void intrusive_ptr_add_ref( shared_state * p) BOOST_NOEXCEPT
+        friend inline void intrusive_ptr_add_ref( shared_state * p) noexcept
         { ++p->use_count_; }
         
         friend inline void intrusive_ptr_release( shared_state * p)
@@ -676,7 +676,7 @@ namespace fibio { namespace fibers { namespace detail {
         void reset()
         { ready_ = false; }
         
-        friend inline void intrusive_ptr_add_ref( shared_state * p) BOOST_NOEXCEPT
+        friend inline void intrusive_ptr_add_ref( shared_state * p) noexcept
         { ++p->use_count_; }
         
         friend inline void intrusive_ptr_release( shared_state * p)

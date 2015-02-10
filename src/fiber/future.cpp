@@ -12,7 +12,7 @@ namespace fibio { namespace fibers {
     class future_error_category : public boost::system::error_category
     {
     public:
-        virtual const char* name() const BOOST_NOEXCEPT
+        virtual const char* name() const noexcept
         { return "future"; }
         
         virtual std::string message( int ev) const
@@ -35,7 +35,7 @@ namespace fibio { namespace fibers {
         }
     };
     
-    boost::system::error_category const& future_category() BOOST_NOEXCEPT
+    boost::system::error_category const& future_category() noexcept
     {
         static fibers::future_error_category cat;
         return cat;

@@ -150,7 +150,7 @@ namespace fibio { namespace fibers { namespace detail {
 }}} // End of namespace fibio::fibers::detail
 
 namespace fibio { namespace fibers {
-    inline detail::fiber_object *current_fiber() BOOST_NOEXCEPT {
+    inline detail::fiber_object *current_fiber() noexcept {
         return detail::fiber_object::current_fiber_;
     }
     

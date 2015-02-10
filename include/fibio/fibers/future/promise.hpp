@@ -83,7 +83,7 @@ namespace fibio { namespace fibers {
                 future_->owner_destroyed();
         }
         
-        promise( promise && other) BOOST_NOEXCEPT :
+        promise( promise && other) noexcept :
         obtained_( false),
         future_()
         {
@@ -93,27 +93,27 @@ namespace fibio { namespace fibers {
             swap( other);
         }
         
-        promise & operator=( promise && other) BOOST_NOEXCEPT
+        promise & operator=( promise && other) noexcept
         {
             //TODO: take over ownership
             //      other is valid before but in
             //      undefined state afterwards
-            promise tmp( boost::move( other) );
+            promise tmp( std::move( other) );
             swap( tmp);
             return * this;
         }
         
-        void swap( promise & other) BOOST_NOEXCEPT
+        void swap( promise & other) noexcept
         {
             //TODO: exchange the shared states of two promises
             std::swap( obtained_, other.obtained_);
             future_.swap( other.future_);
         }
         
-        operator safe_bool() const BOOST_NOEXCEPT
+        operator safe_bool() const noexcept
         { return 0 != future_.get() ? & dummy::nonnull : 0; }
         
-        bool operator!() const BOOST_NOEXCEPT
+        bool operator!() const noexcept
         { return 0 == future_.get(); }
         
         future< R > get_future()
@@ -150,7 +150,7 @@ namespace fibio { namespace fibers {
             //      stores a value or exception
             if ( ! future_)
                 BOOST_THROW_EXCEPTION(promise_uninitialized());
-            future_->set_value( boost::move( value) );
+            future_->set_value( std::move( value) );
         }
         
         void set_exception( std::exception_ptr p)
@@ -250,7 +250,7 @@ namespace fibio { namespace fibers {
                 future_->owner_destroyed();
         }
         
-        promise( promise && other) BOOST_NOEXCEPT :
+        promise( promise && other) noexcept :
         obtained_( false),
         future_()
         {
@@ -260,27 +260,27 @@ namespace fibio { namespace fibers {
             swap( other);
         }
         
-        promise & operator=( promise && other) BOOST_NOEXCEPT
+        promise & operator=( promise && other) noexcept
         {
             //TODO: take over ownership
             //      other is valid before but in
             //      undefined state afterwards
-            promise tmp( boost::move( other) );
+            promise tmp( std::move( other) );
             swap( tmp);
             return * this;
         }
         
-        void swap( promise & other) BOOST_NOEXCEPT
+        void swap( promise & other) noexcept
         {
             //TODO: exchange the shared states of two promises
             std::swap( obtained_, other.obtained_);
             future_.swap( other.future_);
         }
         
-        operator safe_bool() const BOOST_NOEXCEPT
+        operator safe_bool() const noexcept
         { return 0 != future_.get() ? & dummy::nonnull : 0; }
         
-        bool operator!() const BOOST_NOEXCEPT
+        bool operator!() const noexcept
         { return 0 == future_.get(); }
         
         future< R & > get_future()
@@ -395,7 +395,7 @@ namespace fibio { namespace fibers {
                 future_->owner_destroyed();
         }
         
-        promise( promise && other) BOOST_NOEXCEPT :
+        promise( promise && other) noexcept :
         obtained_( false),
         future_()
         {
@@ -405,27 +405,27 @@ namespace fibio { namespace fibers {
             swap( other);
         }
         
-        promise & operator=( promise && other) BOOST_NOEXCEPT
+        promise & operator=( promise && other) noexcept
         {
             //TODO: take over ownership
             //      other is valid before but in
             //      undefined state afterwards
-            promise tmp( boost::move( other) );
+            promise tmp( std::move( other) );
             swap( tmp);
             return * this;
         }
         
-        void swap( promise & other) BOOST_NOEXCEPT
+        void swap( promise & other) noexcept
         {
             //TODO: exchange the shared states of two promises
             std::swap( obtained_, other.obtained_);
             future_.swap( other.future_);
         }
         
-        operator safe_bool() const BOOST_NOEXCEPT
+        operator safe_bool() const noexcept
         { return 0 != future_.get() ? & dummy::nonnull : 0; }
         
-        bool operator!() const BOOST_NOEXCEPT
+        bool operator!() const noexcept
         { return 0 == future_.get(); }
         
         future< void > get_future()

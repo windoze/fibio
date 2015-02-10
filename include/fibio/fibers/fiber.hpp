@@ -336,10 +336,10 @@ namespace fibio { namespace fibers {
         };
         
         /// Check if the interruption is enabled
-        bool interruption_enabled() BOOST_NOEXCEPT;
+        bool interruption_enabled() noexcept;
 
         /// Check if there is an interruption request
-        bool interruption_requested() BOOST_NOEXCEPT;
+        bool interruption_requested() noexcept;
         
         /// Interruption request is checked only at this function call and some other predefined points
         void interruption_point();

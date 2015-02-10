@@ -8,6 +8,19 @@
 
 #include <memory>
 #include <algorithm>
+#if defined(HAVE_VALGRIND_H)
+#   if BOOST_VERSION>=105700
+//      For boost 1.57 and up, enable built-in valgrind support
+#       define BOOST_USE_VALGRIND
+#   else
+//      For boost 1.56 and earlier
+#       include "valgrind.h"
+#       include <unordered_map>
+#   endif
+#endif  // defined(HAVE_VALGRIND_H)
+#include <boost/coroutine/protected_stack_allocator.hpp>
+#include <boost/coroutine/stack_context.hpp>
+
 #include <fibio/fibers/fiber.hpp>
 #include <fibio/fibers/fss.hpp>
 #include <fibio/fibers/mutex.hpp>
@@ -16,18 +29,6 @@
 #include "fiber_object.hpp"
 #include "scheduler_object.hpp"
 
-#if defined(HAVE_VALGRIND_H)
-#   if BOOST_VERSION>=105700
-// For boost 1.57 and up, enable built-in valgrind support
-#       define BOOST_USE_VALGRIND
-#   else
-#include <unordered_map>
-#include <boost/coroutine/stack_allocator.hpp>
-#include <boost/coroutine/stack_context.hpp>
-#include "valgrind.h"
-#   endif
-#endif  // defined(HAVE_VALGRIND_H)
-
 static const auto NOT_A_FIBER=fibio::fiber_exception(boost::system::errc::no_such_process);
 static const auto DEADLOCK=fibio::fiber_exception(boost::system::errc::resource_deadlock_would_occur);
 
@@ -35,7 +36,7 @@ namespace fibio { namespace fibers { namespace detail {
 #ifdef BOOST_USE_SEGMENTED_STACKS
 #   define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_segmented_stack_allocator
 #else
-#   define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_standard_stack_allocator
+#   define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_protected_stack_allocator
 #endif
 
     // Define a fibio_stack_allocator, use valgrind_stack_allocator when building
