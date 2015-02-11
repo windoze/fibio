@@ -34,13 +34,13 @@
 #endif
 
 #if defined(DEBUG) && !defined(NDEBUG)
-#   define CHECK_CALLER(f) do { if (!f->caller_) BOOST_ASSERT(false); } while(0)
+#   define CHECK_CALLER(f) do { if (!f->caller_) assert(false); } while(0)
 #else
 #   define CHECK_CALLER(f)
 #endif
 
 #if defined(DEBUG) && !defined(NDEBUG)
-#   define CHECK_CURRENT_FIBER BOOST_ASSERT(::fibio::fibers::detail::fiber_object::current_fiber_)
+#   define CHECK_CURRENT_FIBER assert(::fibio::fibers::detail::fiber_object::current_fiber_)
 #else
 #   define CHECK_CURRENT_FIBER
 #endif

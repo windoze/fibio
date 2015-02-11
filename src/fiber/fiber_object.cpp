@@ -6,6 +6,11 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
+#ifdef __WIN32
+//  <winsock2.h> must be included before <windows.h>
+#   include <winsock2.h>
+#endif
+
 #include <memory>
 #include <algorithm>
 #if defined(HAVE_VALGRIND_H)
@@ -18,7 +23,11 @@
 #       include <unordered_map>
 #   endif
 #endif  // defined(HAVE_VALGRIND_H)
-#include <boost/coroutine/protected_stack_allocator.hpp>
+#ifdef __WIN32
+#   include <boost/coroutine/standard_stack_allocator.hpp>
+#else
+#   include <boost/coroutine/protected_stack_allocator.hpp>
+#endif
 #include <boost/coroutine/stack_context.hpp>
 
 #include <fibio/fibers/fiber.hpp>
@@ -36,7 +45,11 @@ namespace fibio { namespace fibers { namespace detail {
 #ifdef BOOST_USE_SEGMENTED_STACKS
 #   define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_segmented_stack_allocator
 #else
-#   define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_protected_stack_allocator
+#   ifdef __WIN32
+#       define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_standard_stack_allocator
+#   else
+#       define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_protected_stack_allocator
+#   endif
 #endif
 
     // Define a fibio_stack_allocator, use valgrind_stack_allocator when building
@@ -229,7 +242,7 @@ namespace fibio { namespace fibers { namespace detail {
     void fiber_object::pause() {
         // Pre-condition
         // Can only pause current running fiber
-        BOOST_ASSERT(current_fiber_==this);
+        assert(current_fiber_==this);
         
         set_state(BLOCKED);
         
@@ -243,7 +256,7 @@ namespace fibio { namespace fibers { namespace detail {
     inline void activate_fiber(fiber_ptr_t this_fiber) {
         // Pre-condition
         // Cannot activate current running fiber
-        BOOST_ASSERT(fiber_object::current_fiber_!=this_fiber.get());
+        assert(fiber_object::current_fiber_!=this_fiber.get());
         
         this_fiber->state_=fiber_object::READY;
         this_fiber->one_step();
@@ -268,8 +281,8 @@ namespace fibio { namespace fibers { namespace detail {
     void fiber_object::yield(fiber_ptr_t hint) {
         // Pre-condition
         // Can only pause current running fiber
-        BOOST_ASSERT(current_fiber_==this);
-        BOOST_ASSERT(state_==RUNNING);
+        assert(current_fiber_==this);
+        assert(state_==RUNNING);
 
         // Do yeild when:
         //  1. there is only 1 thread in this scheduler

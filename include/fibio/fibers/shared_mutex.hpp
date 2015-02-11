@@ -44,7 +44,7 @@ namespace fibio { namespace fibers {
             void assert_lock_shared () const {
                 assert( ! exclusive );
                 assert( shared_count>0 );
-                //BOOST_ASSERT( (! upgrade) || (shared_count>1));
+                //assert( (! upgrade) || (shared_count>1));
                 // if upgraded there are at least 2 fibers sharing the mutex,
                 // except when unlock_upgrade_and_lock has decreased the number of readers but has not taken yet exclusive ownership.
             }
