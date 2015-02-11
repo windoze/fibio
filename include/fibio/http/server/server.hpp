@@ -57,12 +57,12 @@ namespace fibio { namespace http {
         };
 
         server()=default;
-        server(uint p) { port(p); }
-        server(const std::string &a, uint p) { address(a).port(p); }
+        server(unsigned short p) { port(p); }
+        server(const std::string &a, unsigned short p) { address(a).port(p); }
         ~server();
         
         server &address(const std::string &a) { s_.address_=a; return *this; }
-        server &port(uint p) { s_.port_=p; return *this; }
+        server &port(unsigned short p) { s_.port_=p; return *this; }
 #ifdef HAVE_SSL
         server &ssl(ssl::context &c) { s_.ctx_=&c; return *this; }
 #endif

@@ -39,7 +39,7 @@ namespace fibio { namespace http { namespace common {
         };
         
         const std::map<http_method, std::string> method_name_map={
-            {http_method::DELETE, "DELETE"},
+            {http_method::DELETE_, "DELETE"},
             {http_method::GET, "GET"},
             {http_method::HEAD, "HEAD"},
             {http_method::POST, "POST"},
@@ -73,7 +73,7 @@ namespace fibio { namespace http { namespace common {
         };
 
         const std::map<std::string, http_method, iless> name_method_map={
-            {"DELETE",  http_method::DELETE},
+            {"DELETE",  http_method::DELETE_},
             {"GET",     http_method::GET},
             {"HEAD",    http_method::HEAD},
             {"POST",    http_method::POST},
