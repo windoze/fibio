@@ -186,10 +186,6 @@ namespace fibio { namespace stream {
         return is;
     }
 
-    // streams
-    typedef iostream<boost::asio::ip::tcp::socket> tcp_stream;
-    typedef iostream<boost::asio::posix::stream_descriptor> posix_stream;
-    typedef iostream<boost::asio::local::stream_protocol::socket> local_stream;
     
     template<typename Stream>
     struct stream_acceptor {
@@ -266,10 +262,6 @@ namespace fibio { namespace stream {
         
         acceptor_type acc_;
     };
-    
-    // acceptors
-    typedef stream_acceptor<tcp_stream> tcp_stream_acceptor;
-    typedef stream_acceptor<local_stream> local_stream_acceptor;
     
     template<typename Stream>
     struct stream_traits {
@@ -381,19 +373,48 @@ namespace fibio { namespace stream {
         std::unique_ptr<promise<void>> stop_signal_;
     };
     
-    // listeners
+    // TCP
+    typedef iostream<boost::asio::ip::tcp::socket> tcp_stream;
+    typedef stream_acceptor<tcp_stream> tcp_stream_acceptor;
     typedef listener<tcp_stream> tcp_listener;
+
+#if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
+    // Unix-domain socket
+    typedef iostream<boost::asio::local::stream_protocol::socket> local_stream;
+    typedef stream_acceptor<local_stream> local_stream_acceptor;
     typedef listener<local_stream> local_listener;
+#endif
+    
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+    // POSIX native stream
+    typedef iostream<boost::asio::posix::stream_descriptor> posix_stream;
+#endif
+    
+#ifdef BOOST_ASIO_HAS_WINDOWS_STREAM_HANDLE
+    // Windows stream handle
+    typedef iostream<boost::asio::windows::stream_handle> handle_stream;
+#endif
+
 }}  // End of namespace fibio::stream
 
 namespace fibio {
     using stream::tcp_stream;
-    using stream::posix_stream;
-    using stream::local_stream;
     using stream::tcp_stream_acceptor;
-    using stream::local_stream_acceptor;
     using stream::tcp_listener;
+
+#if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
+    using stream::local_stream;
+    using stream::local_stream_acceptor;
     using stream::local_listener;
+#endif
+
+#ifdef BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
+    using stream::posix_stream;
+#endif
+    
+#ifdef BOOST_ASIO_HAS_WINDOWS_STREAM_HANDLE
+    using stream::handle_stream;
+#endif
 }
 
 #endif
