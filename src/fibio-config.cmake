@@ -4,7 +4,7 @@
 #  FIBIO_LIBRARIES
 
 find_package(Threads REQUIRED)
-find_package(Boost 1.56 COMPONENTS system coroutine context iostreams REQUIRED)
+find_package(Boost 1.56 COMPONENTS system thread coroutine context iostreams REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 
