@@ -46,7 +46,9 @@ namespace fibio { namespace fibers {
             
             ~guard() {
                 flush(stream_);
+#if BOOST_ASIO_HAS_POSIX_STREAM_DESCRIPTOR
                 new_buf_->release();
+#endif
                 stream_.rdbuf(old_buf_);
             }
             
@@ -70,9 +72,20 @@ namespace fibio { namespace fibers {
         // Windows platform
         typedef boost::asio::windows::stream_handle std_handle_type;
         typedef std_handle_type::native_handle_type native_handle_type;
-        native_handle_type std_in_handle() { return ::GetStdHandle(STD_INPUT_HANDLE); }
-        native_handle_type std_out_handle() { return ::GetStdHandle(STD_OUTPUT_HANDLE); }
-        native_handle_type std_err_handle() { return ::GetStdHandle(STD_ERROR_HANDLE); }
+        inline native_handle dup_handle(native_handle h) {
+            native_handle ret;
+            ::DuplicateHandle(::GetCurrentProcess(),
+                              h,
+                              ::GetCurrentProcess(),
+                              &ret,
+                              0,
+                              FALSE,
+                              DUPLICATE_SAME_ACCESS);
+            return ret
+        }
+        native_handle_type std_in_handle() { return dup_handle(::GetStdHandle(STD_INPUT_HANDLE)); }
+        native_handle_type std_out_handle() { return dup_handle(::GetStdHandle(STD_OUTPUT_HANDLE)); }
+        native_handle_type std_err_handle() { return dup_handle(::GetStdHandle(STD_ERROR_HANDLE)); }
 #else
 #   error("Unsupported platform")
 #endif
