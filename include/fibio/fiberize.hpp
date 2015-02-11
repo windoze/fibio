@@ -23,6 +23,11 @@
 /// Define this to stop using default main implementation
 //#define FIBIO_DONT_USE_DEFAULT_MAIN
 
+// Doesn't work under Windows
+#ifdef __WIN32
+#   define FIBIO_DONT_FIBERIZE_STD_STREAM
+#endif
+
 namespace fibio { namespace fibers {
     namespace detail {
 #if !defined(FIBIO_DONT_FIBERIZE_STD_STREAM)
@@ -72,20 +77,9 @@ namespace fibio { namespace fibers {
         // Windows platform
         typedef boost::asio::windows::stream_handle std_handle_type;
         typedef std_handle_type::native_handle_type native_handle_type;
-        inline native_handle dup_handle(native_handle h) {
-            native_handle ret;
-            ::DuplicateHandle(::GetCurrentProcess(),
-                              h,
-                              ::GetCurrentProcess(),
-                              &ret,
-                              0,
-                              FALSE,
-                              DUPLICATE_SAME_ACCESS);
-            return ret
-        }
-        native_handle_type std_in_handle() { return dup_handle(::GetStdHandle(STD_INPUT_HANDLE)); }
-        native_handle_type std_out_handle() { return dup_handle(::GetStdHandle(STD_OUTPUT_HANDLE)); }
-        native_handle_type std_err_handle() { return dup_handle(::GetStdHandle(STD_ERROR_HANDLE)); }
+        native_handle_type std_in_handle() { return ::GetStdHandle(STD_INPUT_HANDLE); }
+        native_handle_type std_out_handle() { return ::GetStdHandle(STD_OUTPUT_HANDLE); }
+        native_handle_type std_err_handle() { return ::GetStdHandle(STD_ERROR_HANDLE); }
 #else
 #   error("Unsupported platform")
 #endif
