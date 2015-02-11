@@ -14,6 +14,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/posix/stream_descriptor.hpp>
 #include <boost/asio/local/stream_protocol.hpp>
+#include <boost/asio/windows/stream_handle.hpp>
 #include <boost/lexical_cast.hpp>
 #include <fibio/fiber.hpp>
 #include <fibio/future.hpp>
@@ -77,10 +78,12 @@ namespace fibio { namespace stream {
             return res->endpoint();
         }
         
+#if defined(BOOST_ASIO_HAS_LOCAL_SOCKETS)
         template<>
         inline boost::asio::local::stream_protocol::endpoint make_endpoint<boost::asio::local::stream_protocol::endpoint>(const std::string &access_point) {
             return boost::asio::local::stream_protocol::endpoint(access_point);
         }
+#endif
     }
     
     // Closable stream
