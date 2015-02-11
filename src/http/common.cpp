@@ -12,6 +12,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/throw_exception.hpp>
@@ -747,16 +748,30 @@ namespace fibio { namespace http { namespace common {
                 } else if(ieq(name, "path")) {
                     path=std::move(value);
                 } else if(ieq(name, "expires")) {
+                    tm t;
+#ifndef FIBIO_USE_STRPTIME
+                    try {
+                        std::stringstream ss(value);
+                        ss.imbue(std::locale(std::locale::classic(),
+                                             new boost::local_time::local_time_input_facet("%a, %d-%b-%Y %H:%M:%S GMT")));
+                        boost::local_time::local_date_time dt(boost::local_time::local_sec_clock::local_time(boost::local_time::time_zone_ptr()));
+                        ss >> dt;
+                        t=boost::local_time::to_tm(dt);
+                        expires=std::chrono::system_clock::from_time_t(mktime(&t));
+                    } catch(...) {
+                        BOOST_THROW_EXCEPTION(invalid_argument());
+                    }
+#else
                     // TODO: Windows doesn't support strptime
                     // FIXME: Linux strptime doesn't process time zone
                     //        This code doesn't work on system with time zone differs to UTC
-                    tm t;
                     if(strptime(value.c_str(), "%a, %d-%b-%Y %H:%M:%S %Z", &t)) {
                         expires=std::chrono::system_clock::from_time_t(mktime(&t));
                     } else {
                         // TODO: Time parse error
                         BOOST_THROW_EXCEPTION(invalid_argument());
                     }
+#endif
                 } else if(ieq(name, "max-age")) {
                     expires=std::chrono::system_clock::now()+std::chrono::seconds(boost::lexical_cast<int>(value));
                 } else {
@@ -847,7 +862,12 @@ namespace fibio { namespace http { namespace common {
             //ss << std::put_time(std::gmtime(&exp_c), "%a, %d-%b-%Y %H:%M:%S GMT");
             tm exp_tm;
             char buf[255];
-            strftime(buf, 255, "%a, %d-%b-%Y %H:%M:%S GMT", gmtime_r(&exp_c, &exp_tm));
+#ifdef __WIN32
+            localtime_s(&exp_c, &exp_tm);
+            strftime(buf, 255, "%a, %d-%b-%Y %H:%M:%S GMT", &exp_tm);;
+#else
+            strftime(buf, 255, "%a, %d-%b-%Y %H:%M:%S GMT", localtime_r(&exp_c, &exp_tm));
+#endif
             ss << buf;
         }
         if(secure) ss << "; Secure";
