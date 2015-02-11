@@ -11,6 +11,7 @@
 #include <boost/iostreams/restrict.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/find.hpp>
 #include <fibio/future.hpp>
 #include <fibio/http/server/server.hpp>
 
@@ -296,7 +297,7 @@ namespace fibio { namespace http {
     
     bool server_request::accept_compressed() const {
         // TODO: Kinda buggy
-        return strcasestr(request::header("Accept-Encoding").c_str(), "gzip")!=NULL;
+        return !(boost::algorithm::ifind_first(request::header("Accept-Encoding"), "gzip").empty());
     }
     
     bool server_request::read(std::istream &is) {
