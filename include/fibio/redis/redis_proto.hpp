@@ -21,12 +21,12 @@
 
 namespace fibio { namespace redis {
     enum redis_data_type {
-        SIMPLE_STRING,
-        ERROR,
-        INTEGER,
-        BULK_STRING,
-        NIL,
-        ARRAY
+        RDT_SIMPLE_STRING,
+        RDT_ERROR,
+        RDT_INTEGER,
+        RDT_BULK_STRING,
+        RDT_NIL,
+        RDT_ARRAY
     };
     
     class redis_error : public std::runtime_error{

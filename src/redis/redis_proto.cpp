@@ -19,17 +19,17 @@ namespace fibio { namespace redis {
         
         struct data_type_vistor : boost::static_visitor<redis_data_type> {
             redis_data_type operator()(const std::nullptr_t &) const
-            { return NIL; }
+            { return RDT_NIL; }
             redis_data_type operator()(const int64_t &) const
-            { return INTEGER; }
+            { return RDT_INTEGER; }
             redis_data_type operator()(const simple_string &) const
-            { return SIMPLE_STRING; }
+            { return RDT_SIMPLE_STRING; }
             redis_data_type operator()(const error &) const
-            { return ERROR; }
+            { return RDT_ERROR; }
             redis_data_type operator()(const bulk_string &) const
-            { return BULK_STRING; }
+            { return RDT_BULK_STRING; }
             redis_data_type operator()(const array &) const
-            { return ARRAY; }
+            { return RDT_ARRAY; }
         };
         
         struct result_checker : boost::static_visitor<> {

@@ -546,7 +546,7 @@ namespace fibio { namespace redis {
         if (xx) {
             cmd << "XX";
         }
-        return data_type(call(cmd))==SIMPLE_STRING;
+        return data_type(call(cmd))==RDT_SIMPLE_STRING;
     }
     
     bool client::setbit(const std::string &key, int64_t offset, bool value) {
@@ -783,7 +783,7 @@ namespace fibio { namespace redis {
     
     boost::optional<int64_t> client::zrank(const std::string &key, const std::string &member) {
         redis_data ret=call<redis_data>("ZRANK", key, member);
-        if (data_type(ret)==NIL) {
+        if (data_type(ret)==RDT_NIL) {
             return boost::optional<int64_t>();
         }
         return boost::optional<int64_t>(extract<int64_t>(std::move(ret)));
@@ -862,7 +862,7 @@ namespace fibio { namespace redis {
     
     boost::optional<int64_t> client::zrevrank(const std::string &key, const std::string &member) {
         redis_data ret=call<redis_data>("ZREVRANK", key, member);
-        if (data_type(ret)==NIL) {
+        if (data_type(ret)==RDT_NIL) {
             return boost::optional<int64_t>();
         }
         return boost::optional<int64_t>(extract<int64_t>(std::move(ret)));
