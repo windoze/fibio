@@ -862,12 +862,7 @@ namespace fibio { namespace http { namespace common {
             //ss << std::put_time(std::gmtime(&exp_c), "%a, %d-%b-%Y %H:%M:%S GMT");
             tm exp_tm;
             char buf[255];
-#ifdef __WIN32
-            localtime_s(&exp_c, &exp_tm);
-            strftime(buf, 255, "%a, %d-%b-%Y %H:%M:%S GMT", &exp_tm);;
-#else
             strftime(buf, 255, "%a, %d-%b-%Y %H:%M:%S GMT", localtime_r(&exp_c, &exp_tm));
-#endif
             ss << buf;
         }
         if(secure) ss << "; Secure";
