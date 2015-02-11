@@ -246,7 +246,7 @@ namespace fibio { namespace http {
     { return (method_is(http_method::PUT) || method_is(http_method::PATCH)) && path_(pattern); }
 
     inline match delete_(const std::string &pattern)
-    { return (method_is(http_method::DELETE) || method_is(http_method::PURGE)) && path_(pattern); }
+    { return (method_is(http_method::DELETE_) || method_is(http_method::PURGE)) && path_(pattern); }
     
     /**
      * Stock response with specific status code, can be used with http server or routing table

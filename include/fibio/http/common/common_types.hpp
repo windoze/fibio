@@ -26,7 +26,8 @@ namespace fibio { namespace http { namespace common {
     };
     
     enum class http_method : uint16_t {
-        DELETE=0,
+        // Name conflict
+        DELETE_=0,
         GET=1,
         HEAD=2,
         POST=3,
