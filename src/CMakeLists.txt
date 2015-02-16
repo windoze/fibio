@@ -103,7 +103,8 @@ endif(WITH_REDIS)
 add_library(fibio ${HDRS} ${SRCS})
 target_link_libraries(${FIBIO_DEPS})
 
-INSTALL(FILES ${FIBER_HDR} DESTINATION include)
+INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/include/fibio DESTINATION include
+	FILES_MATCHING PATTERN "[a-z]*.hpp")
 INSTALL (TARGETS fibio EXPORT fibio-targets DESTINATION lib/fibio)
 INSTALL(EXPORT fibio-targets DESTINATION lib/fibio)
 INSTALL(FILES fibio-config.cmake DESTINATION lib/fibio)
