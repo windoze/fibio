@@ -14,9 +14,7 @@
 #include <functional>
 #include <system_error>
 #include <fibio/stream/iostream.hpp>
-#ifdef HAVE_SSL
 #include <fibio/stream/ssl.hpp>
-#endif
 #include <fibio/http/server/request.hpp>
 #include <fibio/http/server/response.hpp>
 
@@ -51,9 +49,7 @@ namespace fibio { namespace http {
             timeout_type read_timeout_=DEFAULT_TIMEOUT;
             timeout_type write_timeout_=DEFAULT_TIMEOUT;
             unsigned max_keep_alive_=DEFAULT_MAX_KEEP_ALIVE;
-#ifdef HAVE_SSL
             ssl::context *ctx_=nullptr;
-#endif
         };
 
         server()=default;
@@ -63,9 +59,7 @@ namespace fibio { namespace http {
         
         server &address(const std::string &a) { s_.address_=a; return *this; }
         server &port(unsigned short p) { s_.port_=p; return *this; }
-#ifdef HAVE_SSL
         server &ssl(ssl::context &c) { s_.ctx_=&c; return *this; }
-#endif
         server &timeout(timeout_type t) { s_.read_timeout_=s_.write_timeout_=t; return *this; }
         server &max_keepalive(unsigned m) { s_.max_keep_alive_=m; return *this; }
         server &handler(request_handler h) { s_.default_request_handler_=h; return *this; }
@@ -78,9 +72,7 @@ namespace fibio { namespace http {
         struct impl;
     private:
         void init_engine();
-#ifdef HAVE_SSL
         bool ssl() const { return s_.ctx_; }
-#endif
         settings s_;
         impl *engine_=nullptr;
         std::unique_ptr<fiber> servant_;

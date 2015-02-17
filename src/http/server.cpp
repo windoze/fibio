@@ -36,7 +36,6 @@ namespace fibio { namespace http {
             }
         };
         
-#ifdef HAVE_SSL
         template<>
         struct stream_traits<ssl::tcp_stream> {
             typedef ssl::tcp_stream stream_type;
@@ -48,7 +47,6 @@ namespace fibio { namespace http {
                 return new stream_type(*arg);
             }
         };
-#endif
         
         template<typename Stream>
         struct connection {
@@ -397,19 +395,15 @@ namespace fibio { namespace http {
     //////////////////////////////////////////////////////////////////////////////////////////
     
     typedef detail::server_engine<tcp_stream> server_engine;
-#ifdef HAVE_SSL
     typedef detail::server_engine<ssl::tcp_stream> ssl_server_engine;
-#endif
     
     static inline server_engine *get_engine(server::impl *impl) {
         return reinterpret_cast<server_engine *>(impl);
     }
 
-#ifdef HAVE_SSL
     static inline ssl_server_engine *get_ssl_engine(server::impl *impl) {
         return reinterpret_cast<ssl_server_engine *>(impl);
     }
-#endif
     
     template<typename Stream>
     static std::string get_default_host_name(uint16_t port) {
@@ -423,20 +417,17 @@ namespace fibio { namespace http {
     
     server::~server() {
         stop();
-#ifdef HAVE_SSL
         if (ssl())
         {
             delete get_ssl_engine(engine_);
         }
         else
-#endif
         {
             delete get_engine(engine_);
         }
     }
     
     void server::init_engine() {
-#ifdef HAVE_SSL
         if(ssl())
         {
             engine_=reinterpret_cast<impl *>(new ssl_server_engine(s_.ctx_,
@@ -449,7 +440,6 @@ namespace fibio { namespace http {
             get_ssl_engine(engine_)->max_keep_alive_=s_.max_keep_alive_;
         }
         else
-#endif
         {
             engine_=reinterpret_cast<impl *>(new server_engine(0,
                                                                s_.address_,
@@ -464,13 +454,11 @@ namespace fibio { namespace http {
     
     server &server::start() {
         init_engine();
-#ifdef HAVE_SSL
         if (ssl())
         {
             servant_.reset(new fiber(&ssl_server_engine::start, get_ssl_engine(engine_)));
         }
         else
-#endif
         {
             servant_.reset(new fiber(&server_engine::start, get_engine(engine_)));
         }
@@ -479,13 +467,11 @@ namespace fibio { namespace http {
     
     void server::stop() {
         if (servant_) {
-#ifdef HAVE_SSL
             if (ssl())
             {
                 get_ssl_engine(engine_)->close();
             }
             else
-#endif
             {
                 get_engine(engine_)->close();
             }

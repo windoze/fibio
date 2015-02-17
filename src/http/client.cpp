@@ -9,7 +9,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/iostreams/restrict.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
+#ifdef HAVE_ZLIB
+#   include <boost/iostreams/filter/gzip.hpp>
+#endif
 #include <fibio/http/client/client.hpp>
 
 namespace fibio { namespace http {
@@ -46,17 +48,17 @@ namespace fibio { namespace http {
         return *this;
     }
     
-#ifdef HAVE_ZLIB
     client_request &client_request::accept_compressed(bool c) {
         if (c) {
+#ifdef HAVE_ZLIB
             // Support gzip only for now
             set_header("Accept-Encoding", "gzip");
+#endif
         } else {
             headers.erase("Accept-Encoding");
         }
         return *this;
     }
-#endif
     
     bool client_request::write_header(std::ostream &os) {
         set_header("Connection", keep_alive() ? "keep-alive" : "close");
@@ -85,15 +87,17 @@ namespace fibio { namespace http {
         common::response::clear();
     }
     
-#ifdef HAVE_ZLIB
     void client_response::auto_decompression(bool c) {
+#ifdef HAVE_ZLIB
         auto_decompress_=c;
+#else
+        auto_decompress_=false;
+#endif
     }
     
     bool client_response::auto_decompression() const {
         return auto_decompress_;
     }
-#endif
     
     bool client_response::read(std::istream &is) {
         clear();
@@ -103,14 +107,14 @@ namespace fibio { namespace http {
             // Setup body stream
             namespace bio = boost::iostreams;
             bio::filtering_istream *in=new bio::filtering_istream;
-#ifdef HAVE_ZLIB
             if (auto_decompress_) {
+#ifdef HAVE_ZLIB
                 // Support gzip only for now
                 if (common::iequal()(header("Content-Encoding"), "gzip")) {
                     in->push(boost::iostreams::gzip_decompressor());
                 }
-            }
 #endif
+            }
             restriction_.reset(new bio::restriction<std::istream>(is, 0, content_length));
             in->push(*restriction_);
             body_stream_.reset(in);
@@ -148,7 +152,6 @@ namespace fibio { namespace http {
         }
     }
     
-#ifdef HAVE_SSL
     client::client(ssl::context &ctx, const std::string &server, const std::string &port)
     : ctx_(&ctx)
     {
@@ -166,17 +169,14 @@ namespace fibio { namespace http {
             BOOST_THROW_EXCEPTION(boost::system::system_error(ec, "HTTP client connect"));
         }
     }
-#endif
     
     client::~client() {
         if (stream_) {
-#ifdef HAVE_SSL
             if (ctx_)
             {
                     delete static_cast<ssl::tcp_stream *>(stream_);
             }
             else
-#endif
             {
                 delete static_cast<tcp_stream *>(stream_);
             }
@@ -194,7 +194,6 @@ namespace fibio { namespace http {
         return connect(server, boost::lexical_cast<std::string>(port));
     }
     
-#ifdef HAVE_SSL
     boost::system::error_code client::connect(ssl::context &ctx, const std::string &server, const std::string &port) {
         server_=server;
         port_=port;
@@ -205,7 +204,6 @@ namespace fibio { namespace http {
     boost::system::error_code client::connect(ssl::context &ctx, const std::string &server, int port) {
         return connect(ctx, server, boost::lexical_cast<std::string>(port));
     }
-#endif
     
     void client::disconnect() {
         if (stream_) {
@@ -213,15 +211,17 @@ namespace fibio { namespace http {
         }
     }
     
-#ifdef HAVE_ZLIB
     void client::auto_decompress(bool c) {
+#ifdef HAVE_ZLIB
         auto_decompress_=c;
+#else
+        auto_decompress_=false;
+#endif
     }
     
     bool client::auto_decompress() const {
         return auto_decompress_;
     }
-#endif
     
     bool client::send_request(request &req, response &resp) {
         if (!stream_->is_open() || stream_->eof() || stream_->fail() || stream_->bad()) return false;
@@ -230,6 +230,9 @@ namespace fibio { namespace http {
 #ifdef HAVE_ZLIB
         req.accept_compressed(auto_decompress_);
         resp.auto_decompression(auto_decompress_);
+#else
+        req.accept_compressed(false);
+        resp.auto_decompression(false);
 #endif
         if(!req.write(*stream_)) return false;
         if (!stream_->is_open() || stream_->eof() || stream_->fail() || stream_->bad()) return false;
@@ -305,25 +308,21 @@ namespace fibio { namespace http {
                 if ((the_client_->server_!=host) || (the_client_->port_!=boost::lexical_cast<std::string>(port))) {
                     the_response_.drop_body();
                     the_client_->disconnect();
-#ifdef HAVE_SSL
                     if (ssl)
                     {
                         the_client_.reset(new client(settings_.ctx, host, port));
                     }
                     else
-#endif
                     {
                         the_client_.reset(new client(host, port));
                     }
                 }
             } else {
-#ifdef HAVE_SSL
                 if (ssl)
                 {
                     the_client_.reset(new client(settings_.ctx, host, port));
                 }
                 else
-#endif
                 {
                     the_client_.reset(new client(host, port));
                 }
