@@ -281,10 +281,9 @@ namespace fibio { namespace http {
     /**
      * Routing table
      */
-    template<typename Fn,
-        typename std::enable_if<!std::is_constructible<server::request_handler, Fn>::value>::type* = nullptr
-    >
-    inline routing_rule rule(match &&m, Fn &&func)
+    template<typename Fn>
+    inline auto rule(match &&m, Fn &&func)
+    -> typename std::enable_if<!std::is_constructible<server::request_handler, Fn>::value, routing_rule>::type
     { return routing_rule{std::move(m), handler_(std::forward<Fn>(func))}; }
     
     inline routing_rule rule(match &&m, server::request_handler &&h)

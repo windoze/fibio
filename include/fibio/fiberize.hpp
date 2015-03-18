@@ -147,9 +147,9 @@ namespace fibio { namespace fibers {
      * @param fn the entry point of the fiber
      * @param args the arguments for the fiber
      */
-    template<typename Fn, typename ...Args, typename std::enable_if<!std::is_same<Fn, fibio::scheduler>::value>::type * = nullptr>
+    template<typename Fn, typename ...Args>
     auto fiberize(Fn &&fn, Args&& ...args)
-    -> typename std::result_of<Fn(Args...)>::type
+    -> typename std::enable_if<!std::is_same<Fn, fibio::scheduler>::value, typename std::result_of<Fn(Args...)>::type>::type
     {
         struct resetter { ~resetter() { fibio::scheduler::reset_instance(); } } r;
         return fiberize(fibio::scheduler::get_instance(),
