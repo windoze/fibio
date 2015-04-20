@@ -387,7 +387,7 @@ namespace fibio { namespace redis {
     }
     
     std::string client::object_encoding(const std::string &key) {
-        return call<std::string>("OBJECT", "ENCODING", key);
+        return call<simple_string>("OBJECT", "ENCODING", key);
     }
     
     int64_t client::object_idletime(const std::string &key) {

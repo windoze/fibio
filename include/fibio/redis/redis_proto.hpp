@@ -170,6 +170,11 @@ namespace fibio { namespace redis {
     }
     
     template<>
+    inline redis_data extract<redis_data>(redis_data &&d) {
+        return std::move(d);
+    }
+    
+    template<>
     inline bool extract<bool>(redis_data &&d) {
         struct to_bool : boost::static_visitor<bool> {
             bool operator()(bulk_string &s) const {
