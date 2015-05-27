@@ -186,58 +186,7 @@ namespace fibio { namespace http {
     { return [=](server::request &req)->bool { return detail::find_and_test(req.params, p, pred); }; }
     
     // Match path pattern and extract parameters into match_info
-    inline match path_(const std::string &tmpl) {
-        typedef std::list<std::string> components_type;
-        typedef components_type::const_iterator component_iterator;
-        struct matcher {
-            bool operator()(server::request &req) {
-                std::map<std::string, std::string> m;
-                parse_url(req.url, req.parsed_url);
-                component_iterator p=pattern.cbegin();
-                for (auto &i : req.parsed_url.path_components) {
-                    // Skip empty component
-                    if (i.empty()) continue;
-                    if (p==pattern.cend()) {
-                        // End of pattern
-                        return false;
-                    } else if ((*p)[0]==':') {
-                        // This pattern component is a parameter
-                        m.insert({std::string(p->begin()+1, p->end()), i});
-                    } else if ((*p)[0]=='*') {
-                        // Ignore anything remains if the wildcard doesn't have a name
-                        if (p->length()==1) return true;
-                        std::string param_name(p->begin()+1, p->end());
-                        //auto mi=m.find(param_name);
-                        auto mi=std::find_if(m.begin(), m.end(), [&](const std::pair<std::string, std::string> &e){return e.first==param_name;});
-                        if (mi==m.end()) {
-                            // Not found
-                            m.insert({param_name, i});
-                        } else {
-                            // Concat this component to existing parameter
-                            mi->second.push_back('/');
-                            mi->second.append(i);
-                        }
-                        // NOTE: Do not increment p
-                        continue;
-                    } else if (*p!=i) {
-                        // Not match
-                        return false;
-                    }
-                    ++p;
-                }
-                // Either pattern consumed or ended with a wildcard
-                bool ret=(p==pattern.end() || (*p)[0]=='*');
-                if (ret) std::move(m.begin(), m.end(), std::inserter(req.params, req.params.end()));
-                return ret;
-            }
-            std::list<std::string> pattern;
-            common::iequal eq;
-        };
-        matcher m;
-        std::vector<std::string> c;
-        common::parse_path_components(tmpl, m.pattern);
-        return std::move(m);
-    }
+    match path_(const std::string &tmpl);
     
     // Convenience
     inline match get_(const std::string &pattern)
