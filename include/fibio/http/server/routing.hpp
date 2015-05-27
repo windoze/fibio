@@ -129,9 +129,13 @@ namespace fibio { namespace http {
     inline match operator||(const match &lhs, const match &rhs)
     { return [=](server::request &req)->bool{ return lhs(req) || rhs(req); }; }
     
+#ifndef _MSC_VER
+    // Conflict with something in ppltasks.h?
     inline match operator!(const match &m)
     { return [=](server::request &req)->bool{ return !m(req); }; }
-    
+#endif
+    inline match not_(const match &m)
+    { return [=](server::request &req)->bool{ return !m(req); }; }
 
     /**
      * Match all

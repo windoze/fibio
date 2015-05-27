@@ -118,7 +118,7 @@ auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> hand
              resource("/test6ro", ro),                                    // read-only singletin resource
              resources("/test7rw", rwv),                                  // resource collection
              resources("/test7ro", rov),                                  // read-only resource collection
-             !method_is(http_method::GET) >> stock_handler(http_status_code::BAD_REQUEST)
+             not_(method_is(http_method::GET)) >> stock_handler(http_status_code::BAD_REQUEST)
              );
 
 void the_client() {
