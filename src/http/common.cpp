@@ -749,7 +749,6 @@ namespace fibio { namespace http { namespace common {
                     path=std::move(value);
                 } else if(ieq(name, "expires")) {
                     tm t;
-#ifndef FIBIO_USE_STRPTIME
                     try {
                         std::stringstream ss(value);
                         ss.imbue(std::locale(std::locale::classic(),
@@ -761,17 +760,6 @@ namespace fibio { namespace http { namespace common {
                     } catch(...) {
                         BOOST_THROW_EXCEPTION(invalid_argument());
                     }
-#else
-                    // TODO: Windows doesn't support strptime
-                    // FIXME: Linux strptime doesn't process time zone
-                    //        This code doesn't work on system with time zone differs to UTC
-                    if(strptime(value.c_str(), "%a, %d-%b-%Y %H:%M:%S %Z", &t)) {
-                        expires=std::chrono::system_clock::from_time_t(mktime(&t));
-                    } else {
-                        // TODO: Time parse error
-                        BOOST_THROW_EXCEPTION(invalid_argument());
-                    }
-#endif
                 } else if(ieq(name, "max-age")) {
                     expires=std::chrono::system_clock::now()+std::chrono::seconds(boost::lexical_cast<int>(value));
                 } else {
