@@ -846,11 +846,14 @@ namespace fibio { namespace http { namespace common {
         if(expires!=timepoint_type()){
             ss << "; Expires=";
             std::time_t exp_c=std::chrono::system_clock::to_time_t(expires);
-#if (defined(_WIN32) && defined(_MSC_VER)) || defined(_LIBCPP_VERSION)
-            ss << std::put_time(std::gmtime(&exp_c), "%a, %d-%b-%Y %H:%M:%S GMT");
+            tm exp_tm;
+            // TODO: Fix this time zone mess
+#if (defined(_WIN32) && defined(_MSC_VER))
+            ss << std::put_time(localtime(&exp_c, &exp_tm), "%a, %d-%b-%Y %H:%M:%S GMT");
+#elif defined(_LIBCPP_VERSION)
+            ss << std::put_time(localtime_r(&exp_c, &exp_tm), "%a, %d-%b-%Y %H:%M:%S GMT");
 #else
             // GCC 4.8.1 doesn't have `put_time`
-            tm exp_tm;
             char buf[255];
             strftime(buf, 255, "%a, %d-%b-%Y %H:%M:%S GMT", localtime_r(&exp_c, &exp_tm));
             ss << buf;
