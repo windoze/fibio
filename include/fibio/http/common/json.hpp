@@ -756,7 +756,7 @@ namespace fibio { namespace http {
 					while(1)
 					{
                         auto v = decode_value();
-						if (crow_json_unlikely(!v))
+						if (crow_json_unlikely(!bool(v)))
                         {
                             ret.set_error();
                             break;
@@ -970,7 +970,7 @@ namespace fibio { namespace http {
                     while(1)
                     {
                         auto t = decode_string();
-                        if (crow_json_unlikely(!t))
+                        if (crow_json_unlikely(!bool(t)))
                         {
                             ret.set_error();
                             break;
@@ -988,7 +988,7 @@ namespace fibio { namespace http {
 
 						ws_skip();
                         auto v = decode_value();
-                        if (crow_json_unlikely(!v))
+                        if (crow_json_unlikely(!bool(v)))
                         {
                             ret.set_error();
                             break;
@@ -1241,7 +1241,7 @@ namespace fibio { namespace http {
                 if (t_ != type::List)
                     reset();
                 t_ = type::List;
-                if (!l)
+                if (!bool(l))
                     l = std::move(std::unique_ptr<std::vector<wvalue>>(new std::vector<wvalue>{}));
                 l->clear();
                 l->resize(v.size());
@@ -1258,7 +1258,7 @@ namespace fibio { namespace http {
                 if (t_ != type::List)
                     reset();
                 t_ = type::List;
-                if (!l)
+                if (!bool(l))
                     l = std::move(std::unique_ptr<std::vector<wvalue>>(new std::vector<wvalue>{}));
                 if (l->size() < index+1)
                     l->resize(index+1);
@@ -1269,7 +1269,7 @@ namespace fibio { namespace http {
 			{
                 if (t_ != type::Object)
                     return 0;
-                if (!o)
+                if (!bool(o))
                     return 0;
                 return int(o->count(str));
 			}
@@ -1279,7 +1279,7 @@ namespace fibio { namespace http {
                 if (t_ != type::Object)
                     reset();
                 t_ = type::Object;
-                if (!o)
+                if (!bool(o))
                     o = std::move(
                         std::unique_ptr<
                                 std::unordered_map<std::string, wvalue>
