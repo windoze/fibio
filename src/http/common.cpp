@@ -858,12 +858,15 @@ namespace fibio { namespace http { namespace common {
         if(expires!=timepoint_type()){
             ss << "; Expires=";
             std::time_t exp_c=std::chrono::system_clock::to_time_t(expires);
+#if (defined(_WIN32) && defined(_MSC_VER)) || defined(_LIBCPP_VERSION)
+            ss << std::put_time(std::gmtime(&exp_c), "%a, %d-%b-%Y %H:%M:%S GMT");
+#else
             // GCC 4.8.1 doesn't have `put_time`
-            //ss << std::put_time(std::gmtime(&exp_c), "%a, %d-%b-%Y %H:%M:%S GMT");
             tm exp_tm;
             char buf[255];
             strftime(buf, 255, "%a, %d-%b-%Y %H:%M:%S GMT", localtime_r(&exp_c, &exp_tm));
             ss << buf;
+#endif
         }
         if(secure) ss << "; Secure";
         if(http_only) ss << "; HttpOnly";
