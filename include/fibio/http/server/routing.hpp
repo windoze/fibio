@@ -258,25 +258,30 @@ namespace fibio { namespace http {
     server::request_handler stock_handler(http_status_code c)
     { return [=](server::request &, server::response &resp)->bool{ resp.status_code(c); return true; }; }
     
+    inline server::request_handler handler_(server::request_handler &&func){
+        return std::forward<server::request_handler>(func);
+    }
+    
     template<typename Fn>
     inline server::request_handler handler_(Fn func){
-        return [func](server::request &req, server::response &resp)
-        { return detail::apply(req, resp, func); };
+        return server::request_handler([func](server::request &req, server::response &resp) {
+            return detail::apply(req, resp, func);
+        });
     }
     
-    template<typename Fn>
-    inline server::request_handler handler_(Fn func, std::function<void(server::response &)> post_proc) {
-        return [func, post_proc](server::request &req, server::response &resp){
-            bool ret=detail::apply(req, resp, func);
+    inline server::request_handler post_proc_(server::request_handler func,
+                                              std::function<void(server::response &)> post_proc) {
+        return server::request_handler([func, post_proc](server::request &req, server::response &resp){
+            bool ret=func(req, resp);
             post_proc(resp);
             return ret;
-        };
+        });
     }
-    
-    template<typename Fn>
-    inline server::request_handler handler_(Fn func, std::function<void(server::request &, server::response &)> post_proc) {
+
+    inline server::request_handler post_proc_(server::request_handler func,
+                                              std::function<void(server::request &, server::response &)> post_proc) {
         return [func, post_proc](server::request &req, server::response &resp){
-            bool ret=detail::apply(req, resp, func);
+            bool ret=func(req, resp);
             post_proc(req, resp);
             return ret;
         };
@@ -299,7 +304,7 @@ namespace fibio { namespace http {
     
     template<typename Fn>
     inline server::request_handler with_content_type(const std::string &ct, Fn &&func)
-    { return handler_(func, [ct](server::response &resp){ resp.content_type(ct); }); }
+    { return post_proc_(handler_(func), std::function<void(server::response &)>([ct](server::response &resp){ resp.content_type(ct); })); }
     
     template<typename Fn>
     inline server::request_handler html_(Fn &&func)
