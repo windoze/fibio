@@ -20,8 +20,14 @@
 
 namespace fibio { namespace http {
     constexpr unsigned DEFAULT_MAX_KEEP_ALIVE=100;
+#if defined(_WIN32)
+    // NOTE: std::chrono::seconds constructor is not constexpr in VC
+    static const timeout_type DEFAULT_TIMEOUT=std::chrono::seconds(60);
+    static const timeout_type NO_TIMEOUT=std::chrono::seconds(0);
+#else
     constexpr timeout_type DEFAULT_TIMEOUT=std::chrono::seconds(60);
     constexpr timeout_type NO_TIMEOUT=std::chrono::seconds(0);
+#endif
     
     struct server_error : std::runtime_error {
         server_error(http_status_code c)
