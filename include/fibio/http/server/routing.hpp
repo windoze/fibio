@@ -255,7 +255,7 @@ namespace fibio { namespace http {
     /**
      * Stock response with specific status code, can be used with http server or routing table
      */
-    server::request_handler stock_handler(http_status_code c)
+    inline server::request_handler stock_handler(http_status_code c)
     { return [=](server::request &, server::response &resp)->bool{ resp.status_code(c); return true; }; }
     
     inline server::request_handler handler_(server::request_handler &&func){
