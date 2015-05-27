@@ -14,6 +14,8 @@
 #include <map>
 #include <list>
 #include <chrono>
+#include <boost/algorithm/string/compare.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
 #include <fibio/http/common/content_type.hpp>
 
@@ -129,12 +131,13 @@ namespace fibio { namespace http { namespace common {
     
     struct iless {
         inline bool operator()(const header_key_type &lhs, const header_key_type &rhs) const
-        { return strcasecmp(lhs.c_str(), rhs.c_str())<0; }
+        { return boost::algorithm::lexicographical_compare(lhs, rhs, op_); }
+        boost::algorithm::is_iless op_;
     };
     
     struct iequal {
         inline bool operator()(const header_key_type &lhs, const header_key_type &rhs) const
-        { return strcasecmp(lhs.c_str(), rhs.c_str())==0; }
+        { return boost::iequals(lhs, rhs); }
     };
 
     typedef std::multimap<header_key_type, header_value_type, iless> header_map;
