@@ -181,7 +181,7 @@ int main() {
     std::vector<std::thread> threads;
     for(size_t i=0; i<10; i++) {
         threads.emplace_back([i](){
-            fibio::fiberize(fibio::scheduler(), main_fiber, i);
+            fibio::fiberize_with_sched(fibio::scheduler(), main_fiber, i);
             std::lock_guard<std::mutex> lk(cout_mtx);
             std::cout << "scheduler[" << i << "] destroyed" << std::endl;
         });

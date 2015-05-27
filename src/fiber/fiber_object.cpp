@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#ifdef __WIN32
+#if defined(_WIN32)
 //  <winsock2.h> must be included before <windows.h>
 #   include <winsock2.h>
 #endif
@@ -23,7 +23,7 @@
 #       include <unordered_map>
 #   endif
 #endif  // defined(HAVE_VALGRIND_H)
-#ifdef __WIN32
+#if defined(_WIN32)
 #   include <boost/coroutine/standard_stack_allocator.hpp>
 #else
 #   include <boost/coroutine/protected_stack_allocator.hpp>
@@ -45,7 +45,7 @@ namespace fibio { namespace fibers { namespace detail {
 #ifdef BOOST_USE_SEGMENTED_STACKS
 #   define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_segmented_stack_allocator
 #else
-#   ifdef __WIN32
+#   if defined(_WIN32)
 #       define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_standard_stack_allocator
 #   else
 #       define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_protected_stack_allocator

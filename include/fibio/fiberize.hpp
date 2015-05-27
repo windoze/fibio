@@ -24,7 +24,7 @@
 //#define FIBIO_DONT_USE_DEFAULT_MAIN
 
 // Doesn't work under Windows
-#ifdef __WIN32
+#if defined(_WIN32)
 #   define FIBIO_DONT_FIBERIZE_STD_STREAM
 #endif
 
@@ -118,8 +118,9 @@ namespace fibio { namespace fibers {
      * @param fn the entry point of the fiber
      * @param args the arguments for the fiber
      */
+    // NOTE: I cannot make this specialization work in VC2015, gave up and changed the name...
     template<typename Fn, typename ...Args>
-    auto fiberize(fibio::scheduler &&sched, Fn &&fn, Args&& ...args)
+    auto fiberize_with_sched(fibio::scheduler &&sched, Fn &&fn, Args&& ...args)
     -> typename std::result_of<Fn(Args...)>::type
     {
         typedef typename std::result_of<Fn(Args...)>::type result_type;
@@ -149,16 +150,17 @@ namespace fibio { namespace fibers {
      */
     template<typename Fn, typename ...Args>
     auto fiberize(Fn &&fn, Args&& ...args)
-    -> typename std::enable_if<!std::is_same<Fn, fibio::scheduler>::value, typename std::result_of<Fn(Args...)>::type>::type
+    -> typename std::result_of<Fn(Args...)>::type
     {
         struct resetter { ~resetter() { fibio::scheduler::reset_instance(); } } r;
-        return fiberize(fibio::scheduler::get_instance(),
-                        std::forward<Fn>(fn),
-                        std::forward<Args>(args)...);
+        return fiberize_with_sched(fibio::scheduler::get_instance(),
+                                   std::forward<Fn>(fn),
+                                   std::forward<Args>(args)...);
     }
 }}  // End of namespace fibio::fibers
 
 namespace fibio {
+    using fibers::fiberize_with_sched;
     using fibers::fiberize;
 }
 

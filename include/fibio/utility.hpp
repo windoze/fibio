@@ -40,6 +40,10 @@ namespace utility {
         typedef typename make_indices_imp<Sp, tuple_indices<>, Ep>::type type;
     };
     
+#if defined(_WIN32) && (_MSC_VER>=1900)
+    // Visual C++ 2015 supports C++17 std::invoke
+    using std::invoke;
+#else
     // invoke
     template <class Fp, class A0, class... Args>
     inline auto invoke(Fp&& f, A0&& a0, Args&&... args)
@@ -65,6 +69,7 @@ namespace utility {
     inline auto invoke(Fp&& f, Args&&... args)
     -> decltype(std::forward<Fp>(f)(std::forward<Args>(args)...))
     { return std::forward<Fp>(f)(std::forward<Args>(args)...); }
+#endif
     
     /// decay_copy
     template <class T>
