@@ -112,7 +112,7 @@ namespace fibio { namespace fibers { namespace detail {
         
         void add_cleanup_function(std::function<void()> &&f);
         
-        scheduler_ptr_t get_scheduler() { return sched_; }
+        scheduler_ptr_t get_scheduler() override { return sched_; }
         
         static THREAD_LOCAL fiber_object *current_fiber_;
 
