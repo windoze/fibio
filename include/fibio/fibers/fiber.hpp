@@ -56,11 +56,6 @@ namespace fibio { namespace fibers {
          */
         static scheduler get_instance();
 
-        /**
-         * releases the scheduler singleton
-         */
-        static void reset_instance();
-        
         scheduler(std::shared_ptr<detail::scheduler_object>);
     private:
         std::shared_ptr<detail::scheduler_object> impl_;

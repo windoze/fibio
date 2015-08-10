@@ -86,8 +86,6 @@ namespace fibio { namespace fibers { namespace detail {
     typedef BOOST_COROUTINE_STACK_ALLOCATOR<boost::coroutines::stack_traits> fibio_stack_allocator;
 #endif  // !defined(HAVE_VALGRIND_H)
     
-    THREAD_LOCAL fiber_object *fiber_object::current_fiber_=0;
-    
     fiber_object::fiber_object(scheduler_ptr_t sched, fiber_data_base *entry)
     : sched_(sched)
     , fiber_strand_(std::make_shared<boost::asio::strand>(sched_->io_service_))
@@ -197,11 +195,11 @@ namespace fibio { namespace fibers { namespace detail {
     void fiber_object::one_step() {
         struct tls_guard {
             tls_guard(fiber_object *pthis) {
-                fiber_object::current_fiber_=pthis;
+                fiber_object::get_current_fiber_object()=pthis;
             }
             
             ~tls_guard() {
-                fiber_object::current_fiber_=0;
+                fiber_object::get_current_fiber_object()=0;
             }
         };
         if (state_==READY) {
@@ -242,7 +240,7 @@ namespace fibio { namespace fibers { namespace detail {
     void fiber_object::pause() {
         // Pre-condition
         // Can only pause current running fiber
-        assert(current_fiber_==this);
+        assert(get_current_fiber_object()==this);
         
         set_state(BLOCKED);
         
@@ -256,16 +254,16 @@ namespace fibio { namespace fibers { namespace detail {
     inline void activate_fiber(fiber_ptr_t this_fiber) {
         // Pre-condition
         // Cannot activate current running fiber
-        assert(fiber_object::current_fiber_!=this_fiber.get());
+        assert(fiber_object::get_current_fiber_object()!=this_fiber.get());
         
         this_fiber->state_=fiber_object::READY;
         this_fiber->one_step();
     }
     
     void fiber_object::activate() {
-        if (fiber_object::current_fiber_
-            && fiber_object::current_fiber_->sched_
-            && (fiber_object::current_fiber_->sched_==sched_))
+        if (fiber_object::get_current_fiber_object()
+            && fiber_object::get_current_fiber_object()->sched_
+            && (fiber_object::get_current_fiber_object()->sched_==sched_))
         {
             get_fiber_strand().dispatch(std::bind(activate_fiber, shared_from_this()));
         } else {
@@ -281,7 +279,7 @@ namespace fibio { namespace fibers { namespace detail {
     void fiber_object::yield(fiber_ptr_t hint) {
         // Pre-condition
         // Can only pause current running fiber
-        assert(current_fiber_==this);
+        assert(get_current_fiber_object()==this);
         assert(state_==RUNNING);
 
         // Do yeild when:
@@ -375,35 +373,35 @@ namespace fibio { namespace fibers { namespace detail {
                       void* fss_data,
                       bool cleanup_existing)
     {
-        if (fiber_object::current_fiber_) {
+        if (fiber_object::get_current_fiber_object()) {
             if (!func && !fss_data) {
                 // Remove fss if both func and data are NULL
-                fss_map_t::iterator i=fiber_object::current_fiber_->fss_.find(key);
-                if (i!=fiber_object::current_fiber_->fss_.end() ) {
+                fss_map_t::iterator i=fiber_object::get_current_fiber_object()->fss_.find(key);
+                if (i!=fiber_object::get_current_fiber_object()->fss_.end() ) {
                     // Clean up existing if it has a cleanup func
                     if(i->second.first)
                         (*(i->second.first.get()))(i->second.second);
-                    fiber_object::current_fiber_->fss_.erase(i);
+                    fiber_object::get_current_fiber_object()->fss_.erase(i);
                 }
             } else {
                 // Clean existing if needed
                 if (cleanup_existing) {
-                    fss_map_t::iterator i=fiber_object::current_fiber_->fss_.find(key);
-                    if (i!=fiber_object::current_fiber_->fss_.end() && (i->second.first)) {
+                    fss_map_t::iterator i=fiber_object::get_current_fiber_object()->fss_.find(key);
+                    if (i!=fiber_object::get_current_fiber_object()->fss_.end() && (i->second.first)) {
                         // Clean up existing if it has a cleanup func
                         (*(i->second.first.get()))(i->second.second);
                     }
                 }
                 // Insert/update the key
-                fiber_object::current_fiber_->fss_[key]={func, fss_data};
+                fiber_object::get_current_fiber_object()->fss_[key]={func, fss_data};
             }
         }
     }
     
     void* get_fss_data(void const* key) {
-        if (fiber_object::current_fiber_) {
-            fss_map_t::iterator i=fiber_object::current_fiber_->fss_.find(key);
-            if (i!=fiber_object::current_fiber_->fss_.end()) {
+        if (fiber_object::get_current_fiber_object()) {
+            fss_map_t::iterator i=fiber_object::get_current_fiber_object()->fss_.find(key);
+            if (i!=fiber_object::get_current_fiber_object()->fss_.end()) {
                 return i->second.second;
             } else {
                 // Create if not exist
@@ -414,11 +412,11 @@ namespace fibio { namespace fibers { namespace detail {
     }
     
     fiber_base::ptr_t get_current_fiber_ptr() {
-        if(!fiber_object::current_fiber_) {
+        if(!fiber_object::get_current_fiber_object()) {
             // Not a fiber
             BOOST_THROW_EXCEPTION(NOT_A_FIBER);
         }
-        return std::static_pointer_cast<fiber_base>(fiber_object::current_fiber_->shared_from_this());
+        return std::static_pointer_cast<fiber_base>(fiber_object::get_current_fiber_object()->shared_from_this());
     }
 }}}   // End of namespace fibio::fibers::detail
 

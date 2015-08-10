@@ -10,8 +10,8 @@
 #include "scheduler_object.hpp"
 
 namespace fibio { namespace fibers { namespace detail {
-    std::once_flag scheduler_object::instance_inited_;
-    std::shared_ptr<scheduler_object> scheduler_object::the_instance_;
+    //std::once_flag scheduler_object::instance_inited_;
+    //std::shared_ptr<scheduler_object> scheduler_object::the_instance_;
     
     scheduler_object::scheduler_object()
     : fiber_count_(0)
@@ -109,13 +109,14 @@ namespace fibio { namespace fibers { namespace detail {
         }
     }
     
-    static inline void init_instance() {
-        scheduler_object::the_instance_=std::make_shared<scheduler_object>();
-    }
-
     std::shared_ptr<scheduler_object> scheduler_object::get_instance() {
-        std::call_once(instance_inited_, init_instance);
-        return scheduler_object::the_instance_;
+        static std::once_flag instance_inited_;
+        static std::shared_ptr<scheduler_object> the_instance_;
+
+        std::call_once(instance_inited_, [&](){
+            the_instance_=std::make_shared<scheduler_object>();
+        });
+        return the_instance_;
     }
 }}} // End of namespace fibio::fibers::detail
 
@@ -149,11 +150,5 @@ namespace fibio { namespace fibers {
     
     scheduler scheduler::get_instance() {
         return scheduler(detail::scheduler_object::get_instance());
-    }
-    
-    void scheduler::reset_instance() {
-        if (detail::scheduler_object::the_instance_) {
-            return detail::scheduler_object::the_instance_.reset();
-        }
     }
 }}  // End of namespace fibio::fibers

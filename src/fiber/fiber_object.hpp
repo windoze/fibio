@@ -114,7 +114,10 @@ namespace fibio { namespace fibers { namespace detail {
         
         scheduler_ptr_t get_scheduler() override { return sched_; }
         
-        static THREAD_LOCAL fiber_object *current_fiber_;
+        static fiber_object *& get_current_fiber_object() {
+            static THREAD_LOCAL fiber_object *current_fiber_=0;
+            return current_fiber_;
+        }
 
         scheduler_ptr_t sched_;
         strand_ptr_t fiber_strand_;
@@ -151,7 +154,7 @@ namespace fibio { namespace fibers { namespace detail {
 
 namespace fibio { namespace fibers {
     inline detail::fiber_object *current_fiber() noexcept {
-        return detail::fiber_object::current_fiber_;
+        return detail::fiber_object::get_current_fiber_object();
     }
     
     inline detail::fiber_ptr_t current_fiber_ptr() {

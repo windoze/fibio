@@ -41,8 +41,8 @@ namespace fibio { namespace fibers { namespace detail {
         std::atomic<bool> started_;
         std::unique_ptr<timer_t> check_timer;
         
-        static std::once_flag instance_inited_;
-        static std::shared_ptr<scheduler_object> the_instance_;
+        //static std::once_flag instance_inited_;
+        //static std::shared_ptr<scheduler_object> the_instance_;
     };
 }}} // End of namespace fibio::fibers::detail
 

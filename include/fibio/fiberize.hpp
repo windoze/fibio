@@ -152,7 +152,6 @@ namespace fibio { namespace fibers {
     auto fiberize(Fn &&fn, Args&& ...args)
     -> typename std::result_of<Fn(Args...)>::type
     {
-        struct resetter { ~resetter() { fibio::scheduler::reset_instance(); } } r;
         return fiberize_with_sched(fibio::scheduler::get_instance(),
                                    std::forward<Fn>(fn),
                                    std::forward<Args>(args)...);
