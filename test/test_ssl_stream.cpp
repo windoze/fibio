@@ -48,7 +48,8 @@ void ssl_child() {
 }
 
 /**
- * Copy boost/libs/asio/example/cpp03/ssl/{ca,dh512,server}.pem to working directory before running
+ * Copy boost/libs/asio/example/cpp03/ssl/{ca,server}.pem to working directory before running
+ * Regenerate dh2048.pem as 512 bits is too short and unsupported by new version of OpenSSL
  */
 void ssl_parent() {
     fiber f(ssl_child);
@@ -66,7 +67,7 @@ void ssl_parent() {
     assert(!ec);
     ctx.use_private_key_file("server.pem", ssl::context::pem, ec);
     assert(!ec);
-    ctx.use_tmp_dh_file("dh512.pem", ec);
+    ctx.use_tmp_dh_file("dh2048.pem", ec);
     assert(!ec);
 
     ssl::tcp_stream str(ctx);

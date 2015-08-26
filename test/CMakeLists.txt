@@ -59,7 +59,7 @@ add_test(redis_proto test_redis_proto)
 add_test(redis_client test_redis_client)
 
 IF(OPENSSL_FOUND)
-file(COPY "ca.pem" "dh512.pem" "server.pem" DESTINATION ${CMAKE_BINARY_DIR}/test)
+file(COPY "ca.pem" "dh2048.pem" "server.pem" DESTINATION ${CMAKE_BINARY_DIR}/test)
 add_executable(test_ssl_stream test_ssl_stream.cpp)
 TARGET_LINK_LIBRARIES(test_ssl_stream ${FIBIO_LIBS})
 add_test(SSL_stream test_ssl_stream)

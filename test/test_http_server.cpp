@@ -503,7 +503,7 @@ void test_https_server() {
     assert(!ec);
     ctx.use_private_key_file("server.pem", ssl::context::pem, ec);
     assert(!ec);
-    ctx.use_tmp_dh_file("dh512.pem", ec);
+    ctx.use_tmp_dh_file("dh2048.pem", ec);
     assert(!ec);
 
     server svr;
