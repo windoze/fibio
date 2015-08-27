@@ -90,8 +90,6 @@ void rparent() {
 }
 
 int fibio::main(int argc, char *argv[]) {
-    this_fiber::get_scheduler().add_worker_thread(3);
-
     fiber_group fibers;
     fibers.create_fiber(parent);
     fibers.create_fiber(rparent);
