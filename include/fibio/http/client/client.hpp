@@ -92,6 +92,7 @@ namespace fibio { namespace http {
                                          const common::header_map &hdr=common::header_map(),
                                          unsigned max_redirection=50)
         {
+            the_request_.clear();
             if(prepare(url)) {
                 the_request_.method(http_method::GET);
                 if (!hdr.empty()) the_request_.headers.insert(hdr.begin(), hdr.end());
@@ -114,6 +115,7 @@ namespace fibio { namespace http {
                                   const common::header_map &hdr=common::header_map(),
                                   unsigned max_redirection=std::numeric_limits<unsigned>::max())
         {
+            the_request_.clear();
             if(prepare(url)) {
                 the_request_.method(http_method::POST).content_type("application/x-www-form-urlencoded");
                 // Write URL encoded body into body stream
