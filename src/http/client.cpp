@@ -275,12 +275,13 @@ namespace fibio { namespace http {
         }
         the_request_.url().reserve(url.length());
         the_request_.url(purl.path);
+        if(the_request_.url().empty()) { the_request_.url("/"); }
         if(!purl.query.empty()) {
             the_request_.url()+='?';
             the_request_.url()+=purl.query;
         }
         if(!purl.fragment.empty()) {
-            the_request_.url()+='?';
+            the_request_.url()+='#';
             the_request_.url()+=purl.fragment;
         }
         the_request_.version(http_version::HTTP_1_1);
@@ -290,6 +291,7 @@ namespace fibio { namespace http {
         return true;
     }
     
+#if 0
     template<typename Port>
     std::string host_name(bool ssl, const std::string &host, Port port) {
         std::string ret=host;
@@ -301,6 +303,7 @@ namespace fibio { namespace http {
         }
         return ret;
     }
+#endif
     
     bool url_client::make_client(bool ssl, const std::string &host, uint16_t port) {
         try {

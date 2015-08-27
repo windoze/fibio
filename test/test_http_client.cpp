@@ -53,12 +53,10 @@ void the_client() {
 
 void the_url_client() {
     url_client uc;
-    if(0)
     {
         client::response &resp=uc.request("http://0d0a.com/");
         assert(resp.status_code==http_status_code::OK);
     }
-    if(0)
     {
         client::response &resp=uc.request("http://www.baidu.com/");
         assert(resp.status_code==http_status_code::OK);
@@ -73,7 +71,7 @@ void the_url_client() {
 int fibio::main(int argc, char *argv[]) {
     fiber_group fibers;
     for (int i=0; i<1; i++) {
-        //fibers.create_fiber(the_client);
+        fibers.create_fiber(the_client);
         fibers.create_fiber(the_url_client);
     }
     fibers.join_all();
