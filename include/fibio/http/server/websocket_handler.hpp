@@ -14,6 +14,7 @@
 
 namespace fibio { namespace http { namespace websocket {
     struct handler {
+        handler(connection_handler handler);
         handler(const std::string protocol, connection_handler handler);
         
         bool operator()(server::request &req, server::response &resp);

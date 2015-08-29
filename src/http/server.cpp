@@ -543,7 +543,6 @@ namespace fibio { namespace http {
                 return ret;
             }
             std::list<std::string> pattern;
-            common::iequal eq;
         };
         matcher m;
         std::vector<std::string> c;
@@ -576,14 +575,30 @@ namespace fibio { namespace http {
             return os.str();
         }
         
+        bool find_subprotocol(const std::string &src, const std::string &prot) {
+            typedef std::vector<boost::iterator_range<std::string::const_iterator> > split_vector_type;
+            split_vector_type splits;
+            boost::split(splits, src, boost::is_any_of(", "), boost::token_compress_on);
+            for (auto &s : splits) {
+                if (boost::iequals(s, prot)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        handler::handler(connection_handler handler)
+        : handler_(handler)
+        {}
+        
         handler::handler(const std::string protocol, connection_handler handler)
         : protocol_(protocol)
         , handler_(handler)
         {}
         
         bool handler::operator()(server::request &req, server::response &resp) {
-            if(common::iequal()(req.header("Connection"), "Upgrade")
-               && common::iequal()(req.header("Upgrade"), "websocket")
+            if(boost::iequals(req.header("Connection"), "Upgrade")
+               && boost::iequals(req.header("Upgrade"), "websocket")
                // Support version 13 and newer only
                && (boost::lexical_cast<int>(req.header("Sec-WebSocket-Version"))>=13))
             {
@@ -606,7 +621,17 @@ namespace fibio { namespace http {
                 resp.set_header("Upgrade", "websocket");
                 resp.set_header("Connection", "Upgrade");
                 resp.set_header("Sec-WebSocket-Accept", accept);
-                resp.set_header("Sec-WebSocket-Protocol", protocol_);
+                if (!protocol_.empty()) {
+                    // Subprotocol negotiation
+                    for (auto &h : req.headers) {
+                        if (boost::iequals(h.first, "Sec-WebSocket-Protocol")) {
+                            if (find_subprotocol(h.second, protocol_)) {
+                                resp.set_header("Sec-WebSocket-Protocol", protocol_);
+                                break;
+                            }
+                        }
+                    }
+                }
                 resp.raw_stream() << resp;
                 resp.raw_stream().flush();
                 

@@ -110,7 +110,7 @@ namespace fibio { namespace http {
             if (auto_decompress_) {
 #ifdef HAVE_ZLIB
                 // Support gzip only for now
-                if (common::iequal()(header("Content-Encoding"), "gzip")) {
+                if (boost::iequals(header("Content-Encoding"), "gzip")) {
                     in->push(boost::iostreams::gzip_decompressor());
                 }
 #endif
@@ -251,7 +251,7 @@ namespace fibio { namespace http {
             return false;
         // TODO: HTTPS
         std::string host=purl.host;
-        if (common::iequal()(purl.schema, "http")) {
+        if (boost::iequals(purl.schema, "http")) {
             if(purl.port==0) {
                 purl.port=80;
             } else {
@@ -260,7 +260,7 @@ namespace fibio { namespace http {
             }
             if(!make_client(false, purl.host, purl.port))
                 return false;
-        } else if (common::iequal()(purl.schema, "https")) {
+        } else if (boost::iequals(purl.schema, "https")) {
             if(purl.port==0) {
                 purl.port=443;
             } else {
