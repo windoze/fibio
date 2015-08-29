@@ -249,6 +249,9 @@ namespace fibio { namespace http {
                     } catch(server_error &e) {
                         resp.status_code(e.code);
                         resp.body(e.what());
+                        if(!e.additional_headers.empty()) {
+                            resp.headers.insert(e.additional_headers.begin(), e.additional_headers.end());
+                        }
                     } catch(std::exception &e) {
                         resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
                         resp.keep_alive(false);

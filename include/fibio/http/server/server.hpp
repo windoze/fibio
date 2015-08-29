@@ -39,7 +39,12 @@ namespace fibio { namespace http {
         server_error(http_status_code c, const char *msg)
         : std::runtime_error(msg)
         , code(c) {}
+        server_error(http_status_code c, const std::string &msg, const common::header_map &hdrs)
+        : std::runtime_error(msg)
+        , code(c)
+        , additional_headers(hdrs) {}
         http_status_code code;
+        common::header_map additional_headers;
     };
     
     struct server {
