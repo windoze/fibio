@@ -1,4 +1,5 @@
 #include <fibio/http/server/server.hpp>
+#include <fibio/http/server/websocket_handler.hpp>
 #include <fibio/http/server/routing.hpp>
 #include <fibio/http/server/restful.hpp>
 #include <fibio/http/server/template.hpp>

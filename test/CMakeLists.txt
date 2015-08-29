@@ -41,9 +41,6 @@ TARGET_LINK_LIBRARIES(test_redis_proto ${FIBIO_LIBS})
 add_executable(test_redis_client test_redis_client.cpp)
 TARGET_LINK_LIBRARIES(test_redis_client ${FIBIO_LIBS})
 
-add_executable(echo_server echo_server.cpp)
-TARGET_LINK_LIBRARIES(echo_server ${FIBIO_LIBS})
-
 add_test(fibers test_fibers)
 add_test(fss test_fss)
 add_test(mutex test_mutex)

@@ -68,11 +68,13 @@ if(WITH_HTTP)
 		${CMAKE_SOURCE_DIR}/include/fibio/http/common/string_pred.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/common/url_codec.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/common/url_parser.hpp
+		${CMAKE_SOURCE_DIR}/include/fibio/http/common/websocket.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/server/request.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/server/response.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/server/restful.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/server/routing.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/server/server.hpp
+		${CMAKE_SOURCE_DIR}/include/fibio/http/server/websocket_handler.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/server/template.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/server/templates/mustache.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/server/templates/mustache_template.hpp

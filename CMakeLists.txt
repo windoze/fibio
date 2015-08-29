@@ -46,6 +46,7 @@ set(FIBIO_LIBS fibio ${FIBIO_DEPS})
 
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(test)
+ADD_SUBDIRECTORY(example)
 
 INCLUDE("CPackLists.txt")
 

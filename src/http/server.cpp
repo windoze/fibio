@@ -12,9 +12,14 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/find.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/uuid/sha1.hpp>
 #include <fibio/future.hpp>
 #include <fibio/http/common/url_parser.hpp>
 #include <fibio/http/server/server.hpp>
+#include <fibio/http/server/websocket_handler.hpp>
 
 namespace fibio { namespace http {
     namespace detail {
@@ -376,7 +381,9 @@ namespace fibio { namespace http {
     }
     
     bool server_response::write_header(std::ostream &os) {
-        response::set_header("Connection", keep_alive() ? "keep-alive" : "close");
+        if(response::header("Connection").empty()) {
+            response::set_header("Connection", keep_alive() ? "keep-alive" : "close");
+        }
         if (!common::response::write_header(os)) return false;
         return !os.eof() && !os.fail() && !os.bad();
     }
@@ -542,5 +549,78 @@ namespace fibio { namespace http {
         std::vector<std::string> c;
         common::parse_path_components(tmpl, m.pattern);
         return std::move(m);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    // WebSocket
+    //////////////////////////////////////////////////////////////////////////////////////////
+    
+    namespace websocket {
+        const std::string magic_key("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+        const std::string base64_padding[] = {"", "==","="};
+        
+        std::string base64_encode(const char *begin, size_t sz) {
+            namespace bai = boost::archive::iterators;
+            
+            std::stringstream os;
+            
+            // convert binary values to base64 characters
+            typedef bai::base64_from_binary
+            // retrieve 6 bit integers from a sequence of 8 bit bytes
+            <bai::transform_width<const char *, 6, 8> > base64_enc; // compose all the above operations in to a new iterator
+            
+            std::copy(base64_enc(begin), base64_enc(begin + sz),
+                      std::ostream_iterator<char>(os));
+            
+            os << base64_padding[sz % 3];
+            return os.str();
+        }
+        
+        handler::handler(const std::string protocol, connection_handler handler)
+        : protocol_(protocol)
+        , handler_(handler)
+        {}
+        
+        bool handler::operator()(server::request &req, server::response &resp) {
+            if(common::iequal()(req.header("Connection"), "Upgrade")
+               && common::iequal()(req.header("Upgrade"), "websocket")
+               // Support version 13 and newer only
+               && (boost::lexical_cast<int>(req.header("Sec-WebSocket-Version"))>=13))
+            {
+                std::string key=req.header("Sec-WebSocket-Key");
+                if(key.empty()) {
+                    resp.status_code(http_status_code::BAD_REQUEST);
+                    return true;
+                }
+
+                boost::uuids::detail::sha1 sha1;
+                sha1.process_bytes(key.c_str(), key.size());
+                sha1.process_bytes(magic_key.c_str(), magic_key.size());
+                unsigned int digest[5];
+                sha1.get_digest(digest);
+                for(int i=0; i<5; i++) { digest[i]=htonl(digest[i]); }
+                
+                std::string accept=base64_encode((char *)digest, 20);
+                
+                resp.status_code(http_status_code::SWITCHING_PROTOCOLS);
+                resp.set_header("Upgrade", "websocket");
+                resp.set_header("Connection", "Upgrade");
+                resp.set_header("Sec-WebSocket-Accept", accept);
+                resp.set_header("Sec-WebSocket-Protocol", protocol_);
+                resp.raw_stream() << resp;
+                resp.raw_stream().flush();
+                
+                if(handler_) {
+                    websocket::connection conn(req.raw_stream(), resp.raw_stream());
+                    handler_(conn);
+                }
+                
+                // Don't keep connection
+                return false;
+            }
+            // Not a websocket request, we can still reuse the connection for normal HTTP
+            resp.status_code(http_status_code::BAD_REQUEST);
+            return true;
+        }
     }
 }}  // End of namespace fibio::http
