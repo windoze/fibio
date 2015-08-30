@@ -17,6 +17,7 @@
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/uuid/sha1.hpp>
 #include <fibio/future.hpp>
+#include <fibio/http/common/chunked_stream.hpp>
 #include <fibio/http/common/url_parser.hpp>
 #include <fibio/http/server/server.hpp>
 #include <fibio/http/server/websocket_handler.hpp>
@@ -317,6 +318,9 @@ namespace fibio { namespace http {
             bio::filtering_istream *in=new bio::filtering_istream;
             in->push(*restriction_);
             body_stream_.reset(in);
+        } else if (chunked) {
+            common::chunked_istream *in=new common::chunked_istream(&is);
+            body_stream_.reset(in);
         }
         return true;
     }
@@ -387,12 +391,16 @@ namespace fibio { namespace http {
         if(response::header("Connection").empty()) {
             response::set_header("Connection", keep_alive() ? "keep-alive" : "close");
         }
+        if(chunked) {
+            set_header("Transfer-Encoding", "chunked");
+        } else {
+            response::set_header("Content-Length", boost::lexical_cast<std::string>(content_length()));
+        }
         if (!common::response::write_header(os)) return false;
         return !os.eof() && !os.fail() && !os.bad();
     }
     
     bool server_response::write(std::ostream &os) {
-        response::set_header("Content-Length", boost::lexical_cast<std::string>(content_length()));
         // Write headers
         if (!write_header(os)) return false;
         // Write body
@@ -401,6 +409,11 @@ namespace fibio { namespace http {
         return !os.eof() && !os.fail() && !os.bad();
     }
 
+    std::unique_ptr<std::ostream> server_response::write_chunked(std::ostream &os) {
+        chunked=true;
+        if(!write_header(os)) { return std::unique_ptr<std::ostream>(); }
+        return std::unique_ptr<std::ostream>(new common::chunked_ostream(&os));
+    }
     //////////////////////////////////////////////////////////////////////////////////////////
     // server
     //////////////////////////////////////////////////////////////////////////////////////////

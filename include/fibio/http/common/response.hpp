@@ -27,6 +27,7 @@ namespace fibio { namespace http { namespace common {
         std::string status_message;
         header_map headers;
         size_t content_length=0;
+        bool chunked=false;
         bool keep_alive=false;
     };
 }}} // End of namespace fibio::http::common

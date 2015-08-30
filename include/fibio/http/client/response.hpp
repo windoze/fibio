@@ -21,7 +21,7 @@ namespace fibio { namespace http {
         bool read(std::istream &is);
         
         inline bool has_body() const {
-            return content_length>0 && body_stream_.get();
+            return (chunked || content_length>0) && body_stream_.get();
         }
         
         inline std::istream &body_stream() {

@@ -234,6 +234,11 @@ namespace fibio { namespace http { namespace common {
                 req_.content_length=parser_.content_length;
                 if (req_.content_length==ULONG_MAX) req_.content_length=0;
                 
+                // Chunked
+                if (boost::iequals(req_.header("Transfer-Encoding"), "chunked")) {
+                    req_.chunked=true;
+                }
+                
                 // Set HTTP version
                 if (parser_.http_major==0 && parser_.http_minor==9) {
                     req_.version=http_version::HTTP_0_9;
@@ -420,6 +425,11 @@ namespace fibio { namespace http { namespace common {
                 // Set content length
                 resp_.content_length=parser_.content_length;
                 if (resp_.content_length==ULONG_MAX) resp_.content_length=0;
+                
+                // Chunked
+                if (boost::iequals(resp_.header("Transfer-Encoding"), "chunked")) {
+                    resp_.chunked=true;
+                }
                 
                 // Set HTTP version
                 if (parser_.http_major==0 && parser_.http_minor==9) {

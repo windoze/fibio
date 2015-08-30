@@ -61,12 +61,22 @@ void the_url_client() {
         client::response &resp=uc.request("https://github.com/");
         assert(resp.status_code==http_status_code::OK);
     }
+    {
+        // HTTP/1.1 Chunked encoding
+        client::response &resp=uc.request("http://jigsaw.w3.org/HTTP/ChunkedScript");
+        assert(resp.status_code==http_status_code::OK);
+        std::stringstream ss;
+        ss << resp.body_stream().rdbuf();
+        // 1000 lines repeated 0-9, each line contains 71 numbers and a \n
+        // plus some text before
+        assert(ss.str().size()==72200);
+    }
 }
 
 int fibio::main(int argc, char *argv[]) {
     fiber_group fibers;
     for (int i=0; i<1; i++) {
-        //fibers.create_fiber(the_client);
+        fibers.create_fiber(the_client);
         fibers.create_fiber(the_url_client);
     }
     fibers.join_all();

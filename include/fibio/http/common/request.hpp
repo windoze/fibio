@@ -30,6 +30,7 @@ namespace fibio { namespace http { namespace common {
         header_map headers;
         size_t content_length=0;
         bool keep_alive=false;
+        bool chunked=false;
         parsed_url_type parsed_url;
     };
 }}} // End of namespace fibio::http::common

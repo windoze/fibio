@@ -59,6 +59,7 @@ if(WITH_HTTP)
 		${CMAKE_SOURCE_DIR}/include/fibio/http/client/client.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/client/request.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/client/response.hpp
+		${CMAKE_SOURCE_DIR}/include/fibio/http/common/chunked_stream.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/common/common_types.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/common/content_type.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/common/cookie.hpp

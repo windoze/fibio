@@ -12,6 +12,7 @@
 #ifdef HAVE_ZLIB
 #   include <boost/iostreams/filter/gzip.hpp>
 #endif
+#include <fibio/http/common/chunked_stream.hpp>
 #include <fibio/http/client/client.hpp>
 
 namespace fibio { namespace http {
@@ -62,12 +63,16 @@ namespace fibio { namespace http {
     
     bool client_request::write_header(std::ostream &os) {
         set_header("Connection", keep_alive() ? "keep-alive" : "close");
+        if(chunked) {
+            set_header("Transfer-Encoding", "chunked");
+        } else {
+            set_header("Content-Length", boost::lexical_cast<std::string>(content_length()));
+        }
         if (!common::request::write_header(os)) return false;
         return !os.eof() && !os.fail() && !os.bad();
     }
     
     bool client_request::write(std::ostream &os) {
-        set_header("Content-Length", boost::lexical_cast<std::string>(content_length()));
         // Write header
         if (!write_header(os)) return false;
         // Write body
@@ -76,6 +81,12 @@ namespace fibio { namespace http {
         }
         os.flush();
         return !os.eof() && !os.fail() && !os.bad();
+    }
+    
+    std::unique_ptr<std::ostream> client_request::write_chunked(std::ostream &os) {
+        chunked=true;
+        if(!write_header(os)) { return std::unique_ptr<std::ostream>(); }
+        return std::unique_ptr<std::ostream>(new common::chunked_ostream(&os));
     }
     
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -117,6 +128,9 @@ namespace fibio { namespace http {
             }
             restriction_.reset(new bio::restriction<std::istream>(is, 0, content_length));
             in->push(*restriction_);
+            body_stream_.reset(in);
+        } else if (chunked) {
+            common::chunked_istream *in=new common::chunked_istream(&is);
             body_stream_.reset(in);
         }
         return true;
