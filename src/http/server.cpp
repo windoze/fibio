@@ -17,10 +17,10 @@
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/uuid/sha1.hpp>
 #include <fibio/future.hpp>
-#include <fibio/http/common/chunked_stream.hpp>
 #include <fibio/http/common/url_parser.hpp>
 #include <fibio/http/server/server.hpp>
 #include <fibio/http/server/websocket_handler.hpp>
+#include "chunked_stream.hpp"
 
 namespace fibio { namespace http {
     namespace detail {
@@ -115,7 +115,8 @@ namespace fibio { namespace http {
                     // Set write timeout
                     watchdog_timer_->expires_from_now(write_timeout_);
                 }
-                ret=resp.write(stream());
+                resp.raw_stream_=stream_.get();
+                ret=resp.write();
                 if (!resp.keep_alive()) {
                     stream().close();
                     return false;
@@ -245,22 +246,28 @@ namespace fibio { namespace http {
                     if(count>=max_keep_alive_) resp.keep_alive(false);
                     try {
                         if(!default_request_handler_(req, resp)) break;
+                        req.drop_body();
                     } catch(boost::bad_lexical_cast &e) {
+                        resp.clear();
                         resp.status_code(http_status_code::BAD_REQUEST);
                     } catch(server_error &e) {
+                        resp.clear();
                         resp.status_code(e.code);
                         resp.body(e.what());
                         if(!e.additional_headers.empty()) {
                             resp.headers.insert(e.additional_headers.begin(), e.additional_headers.end());
                         }
                     } catch(std::exception &e) {
+                        resp.clear();
                         resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
                         resp.keep_alive(false);
                     }
-                    resp.body_stream().flush();
-                    c.send(resp);
                     // Make sure we consumed all parts of the request
-                    req.drop_body();
+                    // Chunked response is written by handler
+                    if(!resp.chunked) {
+                        resp.body_stream().flush();
+                        c.send(resp);
+                    }
                     // Make sure all data are received and sent
                     c.stream().flush();
                     // Keepalive counter
@@ -400,19 +407,19 @@ namespace fibio { namespace http {
         return !os.eof() && !os.fail() && !os.bad();
     }
     
-    bool server_response::write(std::ostream &os) {
+    bool server_response::write() {
         // Write headers
-        if (!write_header(os)) return false;
+        if (!write_header(*raw_stream_)) return false;
         // Write body
-        os.write(&(raw_body_stream_.vector()[0]), raw_body_stream_.vector().size());
-        os.flush();
-        return !os.eof() && !os.fail() && !os.bad();
+        raw_stream_->write(&(raw_body_stream_.vector()[0]), raw_body_stream_.vector().size());
+        raw_stream_->flush();
+        return !raw_stream_->eof() && !raw_stream_->fail() && !raw_stream_->bad();
     }
 
-    std::unique_ptr<std::ostream> server_response::write_chunked(std::ostream &os) {
+    std::unique_ptr<std::ostream> server_response::write_chunked() {
         chunked=true;
-        if(!write_header(os)) { return std::unique_ptr<std::ostream>(); }
-        return std::unique_ptr<std::ostream>(new common::chunked_ostream(&os));
+        if(!write_header(*raw_stream_)) { return std::unique_ptr<std::ostream>(); }
+        return std::unique_ptr<std::ostream>(new common::chunked_ostream(raw_stream_));
     }
     //////////////////////////////////////////////////////////////////////////////////////////
     // server

@@ -102,6 +102,17 @@ namespace std {
     }
 }
 
+bool chunked_handler(server::request &req, server::response &resp, int n) {
+    std::unique_ptr<std::ostream> body_stream(resp.write_chunked());
+    for (int i=0; i<n; i++) {
+        (*body_stream) << "Hello, client\n";
+        // Each flush makes a new chunk
+        // Also auto-flush caused by full buffer makes a new chunk
+        body_stream->flush();
+    }
+    return true;
+}
+
 auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> handler,
              get_("/test1/:id/test2") >> handler,
              post_("/test2/*p") >> handler,                               // basic handler type
@@ -118,6 +129,7 @@ auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> hand
              resource("/test6ro", ro),                                    // read-only singletin resource
              resources("/test7rw", rwv),                                  // resource collection
              resources("/test7ro", rov),                                  // read-only resource collection
+             path_("/chunked/:n") >> chunked_handler,                     // chunked text
              not_(method_is(http_method::GET)) >> stock_handler(http_status_code::BAD_REQUEST)
              );
 
@@ -328,6 +340,14 @@ void the_url_client() {
     assert(resp.status_code==http_status_code::OK);
     resp.body_stream() >> r;
     assert(r==100);
+    {
+        c.request("http://127.0.0.1:23456/chunked/42");
+        assert(resp.status_code==http_status_code::OK);
+        std::stringstream ss;
+        ss << resp.body_stream().rdbuf();
+        // Server response "Hello, client\n" 42 times
+        assert(ss.str().size()==14*42);
+    }
 }
 
 void test_http_server() {
@@ -490,6 +510,14 @@ void the_ssl_url_client() {
     int r;
     resp.body_stream() >> r;
     assert(r==1008);
+    {
+        c.request("https://127.0.0.1:23457/chunked/42");
+        assert(resp.status_code==http_status_code::OK);
+        std::stringstream ss;
+        ss << resp.body_stream().rdbuf();
+        // Server response "Hello, client\n" 42 times
+        assert(ss.str().size()==14*42);
+    }
 }
 
 void test_https_server() {

@@ -12,8 +12,8 @@
 #ifdef HAVE_ZLIB
 #   include <boost/iostreams/filter/gzip.hpp>
 #endif
-#include <fibio/http/common/chunked_stream.hpp>
 #include <fibio/http/client/client.hpp>
+#include "chunked_stream.hpp"
 
 namespace fibio { namespace http {
     //////////////////////////////////////////////////////////////////////////////////////////
