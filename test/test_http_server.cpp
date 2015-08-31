@@ -103,9 +103,17 @@ namespace std {
 }
 
 bool chunked_handler(server::request &req, server::response &resp, int n) {
+    std::stringstream ss;
+    if(req.has_body()) {
+        ss << req.body_stream().rdbuf();
+    }
     std::unique_ptr<std::ostream> body_stream(resp.write_chunked());
     for (int i=0; i<n; i++) {
-        (*body_stream) << "Hello, client\n";
+        if (ss.str().empty()) {
+            (*body_stream) << "Hello, client\n";
+        } else {
+            (*body_stream) << ss.str();
+        }
         // Each flush makes a new chunk
         // Also auto-flush caused by full buffer makes a new chunk
         body_stream->flush();
@@ -295,6 +303,22 @@ void the_client() {
         assert(ret);
         assert(resp.status_code!=http_status_code::OK);
     }
+    {
+        ret=c.send_chunked_request(make_request(req, "/chunked/42"),
+                                   [](std::ostream &os){
+                                       os << "Hello, ";
+                                       os.flush();
+                                       os << "server" << std::endl;
+                                       return true;
+                                   },
+                                   resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        std::stringstream ss;
+        ss << resp.body_stream().rdbuf();
+        // Response body is "Hello, server\n"*42
+        assert(ss.str().size()==14*42);
+    }
 }
 
 void the_url_client() {
@@ -348,6 +372,20 @@ void the_url_client() {
         // Server response "Hello, client\n" 42 times
         assert(ss.str().size()==14*42);
     }
+    {
+        client::response &resp=c.chunked_request("http://127.0.0.1:23456/chunked/42",
+                          [](std::ostream &os){
+                              os << "Hello, ";
+                              os.flush();
+                              os << "server" << std::endl;
+                              return true;
+                          });
+        assert(resp.status_code==http_status_code::OK);
+        std::stringstream ss;
+        ss << resp.body_stream().rdbuf();
+        // Server response "Hello, server\n" 42 times
+        assert(ss.str().size()==14*42);
+    }
 }
 
 void test_http_server() {
@@ -357,7 +395,7 @@ void test_http_server() {
     {
         // Create some clients, do some requests
         fiber_group fibers;
-        size_t n=10;
+        size_t n=1;
         for (int i=0; i<n; i++) {
             fibers.create_fiber(the_client);
             fibers.create_fiber(the_url_client);
@@ -477,6 +515,22 @@ void the_ssl_client() {
         resp.body_stream() >> r;
         assert(r==1008);
     }
+    {
+        ret=c.send_chunked_request(make_request(req, "/chunked/42"),
+                                   [](std::ostream &os){
+                                       os << "Hello, ";
+                                       os.flush();
+                                       os << "server" << std::endl;
+                                       return true;
+                                   },
+                                   resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        std::stringstream ss;
+        ss << resp.body_stream().rdbuf();
+        // Response body is "Hello, server\n"*42
+        assert(ss.str().size()==14*42);
+    }
 }
 
 void the_ssl_url_client() {
@@ -512,6 +566,20 @@ void the_ssl_url_client() {
     assert(r==1008);
     {
         c.request("https://127.0.0.1:23457/chunked/42");
+        assert(resp.status_code==http_status_code::OK);
+        std::stringstream ss;
+        ss << resp.body_stream().rdbuf();
+        // Server response "Hello, client\n" 42 times
+        assert(ss.str().size()==14*42);
+    }
+    {
+        c.chunked_request("https://127.0.0.1:23457/chunked/42",
+                          [](std::ostream &os){
+                              os << "Hello, ";
+                              os.flush();
+                              os << "server" << std::endl;
+                              return true;
+                          });
         assert(resp.status_code==http_status_code::OK);
         std::stringstream ss;
         ss << resp.body_stream().rdbuf();

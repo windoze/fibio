@@ -40,6 +40,7 @@ namespace fibio { namespace http {
         bool auto_decompress() const;
         
         bool send_request(request &req, response &resp);
+        bool send_chunked_request(request &req, std::function<bool(std::ostream &)> body_writer, response &resp);
         
         std::string server_;
         std::string port_;
@@ -130,6 +131,34 @@ namespace fibio { namespace http {
                         if (the_response_.status_code==http_status_code::TEMPORARY_REDIRECT) {
                             // 307 needs to resend request with original method
                             return request(i->second, body, hdr, max_redirection-1);
+                        } else {
+                            // Other 3xx uses "POST-Redirection-GET"
+                            return request(i->second, hdr, max_redirection-1);
+                        }
+                    }
+                }
+            }
+            return the_response_;
+        }
+        
+        inline client::response &chunked_request(const std::string &url,
+                                                 std::function<bool(std::ostream &)> body_writer,
+                                                 const common::header_map &hdr=common::header_map(),
+                                                 unsigned max_redirection=std::numeric_limits<unsigned>::max())
+        {
+            the_request_.clear();
+            if(prepare(url)) {
+                the_request_.method(http_method::POST);
+                if (!hdr.empty()) the_request_.headers.insert(hdr.begin(), hdr.end());
+                the_client_->send_chunked_request(the_request_, body_writer, the_response_);
+                auto i=the_response_.headers.find("location");
+                if (max_redirection>0) {
+                    if (static_cast<uint16_t>(the_response_.status_code) / 100 == 3
+                        && i != the_response_.headers.end()) {
+                        // 3xx redirect with "Location" header
+                        if (the_response_.status_code==http_status_code::TEMPORARY_REDIRECT) {
+                            // 307 needs to resend request with original method
+                            return chunked_request(i->second, body_writer, hdr, max_redirection-1);
                         } else {
                             // Other 3xx uses "POST-Redirection-GET"
                             return request(i->second, hdr, max_redirection-1);

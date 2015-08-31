@@ -253,6 +253,19 @@ namespace fibio { namespace http {
         //if (!stream_.is_open()) return false;
         return resp.read(*stream_) && (resp.status_code!=http_status_code::INVALID_STATUS);
     }
+    
+    bool client::send_chunked_request(request &req, std::function<bool(std::ostream &)> body_writer, response &resp) {
+        if (!stream_->is_open() || stream_->eof() || stream_->fail() || stream_->bad()) return false;
+        // Make sure there is no pending data in the last response
+        resp.clear();
+        {
+            std::unique_ptr<std::ostream> body(req.write_chunked(*stream_));
+            if(!body || !body_writer(*body.get())) return false;
+        }
+        if (!stream_->is_open() || stream_->eof() || stream_->fail() || stream_->bad()) return false;
+        //if (!stream_.is_open()) return false;
+        return resp.read(*stream_) && (resp.status_code!=http_status_code::INVALID_STATUS);
+    }
 
     //////////////////////////////////////////////////////////////////////////////////////////
     // url_client
