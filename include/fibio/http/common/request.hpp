@@ -24,6 +24,10 @@ namespace fibio { namespace http { namespace common {
         bool read_header(std::istream &is);
         bool write_header(std::ostream &os);
         
+        inline void basic_auth(const std::string &user, const std::string &pass) {
+            set_header("Authorization", std::string("Basic ")+base64_encode(user+":"+pass));
+        }
+        
         http_method method=http_method::INVALID_METHOD;
         std::string url;
         http_version version=http_version::INVALID_VERSION;
@@ -33,6 +37,7 @@ namespace fibio { namespace http { namespace common {
         bool chunked=false;
         parsed_url_type parsed_url;
     };
+    
 }}} // End of namespace fibio::http::common
 
 #endif

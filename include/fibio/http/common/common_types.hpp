@@ -141,6 +141,10 @@ namespace fibio { namespace http { namespace common {
     };
 
     typedef std::multimap<header_key_type, header_value_type, iless> header_map;
+    
+    std::string base64_encode(const char *s, size_t sz);
+    std::string base64_encode(const std::string &s);
+    std::string base64_decode(const std::string& s);
 }}} // End of namespace fibio::http::common
 
 namespace fibio { namespace http {

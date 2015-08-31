@@ -201,6 +201,38 @@ namespace fibio { namespace http {
     inline match delete_(const std::string &pattern)
     { return (method_is(http_method::DELETE_) || method_is(http_method::PURGE)) && path_(pattern); }
     
+    inline match basic_auth(const std::string &realm, std::function<bool(const std::string &, const std::string &)> chk) {
+        struct matcher {
+            matcher(const std::string &realm, std::function<bool(const std::string &, const std::string &)> chk)
+            : chk_(chk)
+            {
+                hdr_.insert({"WWW-Authenticate", std::string("Basic realm=\"")+realm+"\""});
+            }
+            
+            bool operator()(server::request &req) const {
+                std::string auth_hdr=req.header("Authorization");
+                if(!auth_hdr.empty()) {
+                    if(auth_hdr.compare(0, 6, "Basic ")==0){
+                        std::string auth=common::base64_decode(std::string(auth_hdr.begin()+6, auth_hdr.end()));
+                        size_t colon=auth.find(':');
+                        if(colon!=std::string::npos) {
+                            std::string user(auth.begin(), auth.begin()+colon);
+                            std::string pass(auth.begin()+colon+1, auth.end());
+                            if(chk_(user, pass)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                throw server_error(http_status_code::UNAUTHORIZED, "Authorization required", hdr_);
+            }
+            
+            common::header_map hdr_;
+            std::function<bool(const std::string &, const std::string &)> chk_;
+        };
+        return matcher(realm, chk);
+    }
+    
     /**
      * Stock response with specific status code, can be used with http server or routing table
      */

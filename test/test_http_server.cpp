@@ -121,10 +121,15 @@ bool chunked_handler(server::request &req, server::response &resp, int n) {
     return true;
 }
 
+bool chk(const std::string &user, const std::string &pass) {
+    return user=="alibaba" && pass=="sesame";
+}
+
 auto r=route((path_("/") || path_("/index.html") || path_("/index.htm")) >> handler,
              get_("/test1/:id/test2") >> handler,
              post_("/test2/*p") >> handler,                               // basic handler type
-             get_("/prize/:id") >> mustache_(s, test_model),              // mustache template
+             (get_("/prize_with_auth/:id") && basic_auth("Prize", chk))  >> mustache_(s, test_model),              // mustache template
+             get_("/prize/:id")  >> mustache_(s, test_model),              // mustache template
              get_("/add/:x/:y") >> add,                                   // plain function
              get_("/sub/:x/:y") >> sub(),                                 // functor
              get_("/mul/:x/:y") >> [](int x, int y){return x*y;},         // lambda
@@ -318,6 +323,20 @@ void the_client() {
         ss << resp.body_stream().rdbuf();
         // Response body is "Hello, server\n"*42
         assert(ss.str().size()==14*42);
+    }
+    {
+        make_request(req, "/prize_with_auth/John%20Doe");
+        req.basic_auth("alibaba", "sesame");
+        ret=c.send_request(req, resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        const std::string text("Hello John Doe\nYou have just won 10000 dollars!\nWell, 6000 dollars, after taxes.\n");
+        assert(resp.status_code==http_status_code::OK);
+        assert(resp.content_length==text.length());
+        std::stringstream ss;
+        ss << resp.body_stream().rdbuf();
+        ss.flush();
+        assert(ss.str()==text);
     }
 }
 
@@ -530,6 +549,20 @@ void the_ssl_client() {
         ss << resp.body_stream().rdbuf();
         // Response body is "Hello, server\n"*42
         assert(ss.str().size()==14*42);
+    }
+    {
+        make_request(req, "/prize_with_auth/John%20Doe");
+        req.basic_auth("alibaba", "sesame");
+        ret=c.send_request(req, resp);
+        assert(ret);
+        assert(resp.status_code==http_status_code::OK);
+        const std::string text("Hello John Doe\nYou have just won 10000 dollars!\nWell, 6000 dollars, after taxes.\n");
+        assert(resp.status_code==http_status_code::OK);
+        assert(resp.content_length==text.length());
+        std::stringstream ss;
+        ss << resp.body_stream().rdbuf();
+        ss.flush();
+        assert(ss.str()==text);
     }
 }
 

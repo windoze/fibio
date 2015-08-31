@@ -12,9 +12,6 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/find.hpp>
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
 #include <boost/uuid/sha1.hpp>
 #include <fibio/future.hpp>
 #include <fibio/http/common/url_parser.hpp>
@@ -252,6 +249,8 @@ namespace fibio { namespace http {
                         resp.status_code(http_status_code::BAD_REQUEST);
                     } catch(server_error &e) {
                         resp.clear();
+                        resp.version(req.version);
+                        resp.keep_alive(req.keep_alive);
                         resp.status_code(e.code);
                         resp.body(e.what());
                         if(!e.additional_headers.empty()) {
@@ -259,6 +258,7 @@ namespace fibio { namespace http {
                         }
                     } catch(std::exception &e) {
                         resp.clear();
+                        resp.version(req.version);
                         resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
                         resp.keep_alive(false);
                     }
@@ -579,25 +579,7 @@ namespace fibio { namespace http {
     
     namespace websocket {
         const std::string magic_key("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-        const std::string base64_padding[] = {"", "==","="};
-        
-        std::string base64_encode(const char *begin, size_t sz) {
-            namespace bai = boost::archive::iterators;
-            
-            std::stringstream os;
-            
-            // convert binary values to base64 characters
-            typedef bai::base64_from_binary
-            // retrieve 6 bit integers from a sequence of 8 bit bytes
-            <bai::transform_width<const char *, 6, 8> > base64_enc; // compose all the above operations in to a new iterator
-            
-            std::copy(base64_enc(begin), base64_enc(begin + sz),
-                      std::ostream_iterator<char>(os));
-            
-            os << base64_padding[sz % 3];
-            return os.str();
-        }
-        
+
         bool find_subprotocol(const std::string &src, const std::string &prot) {
             typedef std::vector<boost::iterator_range<std::string::const_iterator> > split_vector_type;
             split_vector_type splits;
@@ -638,7 +620,7 @@ namespace fibio { namespace http {
                 sha1.get_digest(digest);
                 for(int i=0; i<5; i++) { digest[i]=htonl(digest[i]); }
                 
-                std::string accept=base64_encode((char *)digest, 20);
+                std::string accept=common::base64_encode((char *)digest, 20);
                 
                 resp.status_code(http_status_code::SWITCHING_PROTOCOLS);
                 resp.set_header("Upgrade", "websocket");
@@ -670,5 +652,5 @@ namespace fibio { namespace http {
             resp.status_code(http_status_code::BAD_REQUEST);
             return true;
         }
-    }
+    }   // End of namespace websocket
 }}  // End of namespace fibio::http

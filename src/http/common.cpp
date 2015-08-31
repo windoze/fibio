@@ -12,6 +12,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/system/error_code.hpp>
@@ -549,6 +552,7 @@ namespace fibio { namespace http { namespace common {
         headers.clear();
         content_length=0;
         keep_alive=false;
+        chunked=false;
         parsed_url=parsed_url_type();
     }
     
@@ -929,5 +933,54 @@ namespace fibio { namespace http { namespace common {
     
     void cookie_jar::add_cookie(const common::cookie &c) {
         storage_.insert({c.domain, common::cookie_map()}).first->second[c.name]=c;
+    }
+    
+    //////////////////////////////////////////////////////////////////////////////////////////
+    // base64 codec
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+    const std::string base64_padding[] = {"", "==","="};
+    
+    std::string base64_encode(const char *begin, size_t sz) {
+        namespace bai = boost::archive::iterators;
+        
+        std::stringstream os;
+        
+        // convert binary values to base64 characters
+        typedef bai::base64_from_binary
+        // retrieve 6 bit integers from a sequence of 8 bit bytes
+        <bai::transform_width<const char *, 6, 8> > base64_enc; // compose all the above operations in to a new iterator
+        
+        std::copy(base64_enc(begin), base64_enc(begin + sz),
+                  std::ostream_iterator<char>(os));
+        
+        os << base64_padding[sz % 3];
+        return os.str();
+    }
+    
+    std::string base64_encode(const std::string &s) {
+        return base64_encode(s.data(), s.size());
+    }
+    
+    std::string base64_decode(const std::string& s) {
+        namespace bai = boost::archive::iterators;
+        
+        std::stringstream os;
+        
+        typedef bai::transform_width<bai::binary_from_base64<const char *>, 8, 6> base64_dec;
+        
+        unsigned int size = s.size();
+        
+        // Remove the padding characters, cf. https://svn.boost.org/trac/boost/ticket/5629
+        if (size && s[size - 1] == '=') {
+            --size;
+            if (size && s[size - 1] == '=') --size;
+        }
+        if (size == 0) return std::string();
+        
+        std::copy(base64_dec(s.data()), base64_dec(s.data() + size),
+                  std::ostream_iterator<char>(os));
+        
+        return os.str();
     }
 }}} // End of namespace fibio::http::common
