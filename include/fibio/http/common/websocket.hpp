@@ -9,6 +9,7 @@
 #ifndef fibio_http_common_websocket_hpp
 #define fibio_http_common_websocket_hpp
 
+#include <array>
 #include <cstdint>
 #include <iostream>
 
@@ -225,10 +226,20 @@ namespace fibio { namespace http { namespace websocket {
                 first=false;
             }
         }
+
+        template<typename Container>
+        void send(OPCODE op, const Container &c) {
+            send(op, std::begin(c), std::end(c));
+        }
         
         template<typename RandomIterator>
         void send_binary(RandomIterator begin, RandomIterator end) {
             send(OPCODE::BINARY, begin, end);
+        }
+
+        template<typename Container>
+        void send_binary(const Container &c) {
+            send_binary(std::begin(c), std::end(c));
         }
 
         template<typename RandomIterator>
@@ -236,10 +247,9 @@ namespace fibio { namespace http { namespace websocket {
             send(OPCODE::TEXT, begin, end);
         }
         
-        template<typename CharT, typename Traits, typename Allocator>
-        void send_text(const std::basic_string<CharT, Traits, Allocator> &s) {
-            static_assert(sizeof(CharT)==1, "Text message cannot contain wide char");
-            send_text(s.cbegin(), s.cend());
+        template<typename Container>
+        void send_text(const Container &c) {
+            send_text(std::begin(c), std::end(c));
         }
         
         template<typename RandomIterator>
@@ -247,19 +257,33 @@ namespace fibio { namespace http { namespace websocket {
             send(OPCODE::PING, begin, end);
         }
         
+        template<typename Container>
+        void ping(const Container &c) {
+            ping(std::begin(c), std::end(c));
+        }
+
         template<typename RandomIterator>
         void pong(RandomIterator begin, RandomIterator end) {
             send(OPCODE::PONG, begin, end);
         }
         
+        template<typename Container>
+        void pong(const Container &c) {
+            pong(std::begin(c), std::end(c));
+        }
+
         template<typename RandomIterator>
         void close(RandomIterator begin, RandomIterator end) {
             send(OPCODE::CLOSE, begin, end);
         }
         
+        template<typename Container>
+        void close(const Container &c) {
+            close(std::begin(c), std::end(c));
+        }
+
         void close() {
-            std::string s;
-            close(s.begin(), s.end());
+            close(std::string());
         }
         
         template<typename OutputIterator>
