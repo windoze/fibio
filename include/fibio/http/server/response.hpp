@@ -77,7 +77,7 @@ namespace fibio { namespace http {
         
         bool write_header(std::ostream &os);
         bool write();
-        std::unique_ptr<std::ostream> write_chunked();
+        bool write_chunked(std::function<bool(std::ostream &)> body_writer);
 
         boost::interprocess::basic_ovectorstream<std::string> raw_body_stream_;
         std::ostream *raw_stream_=nullptr;

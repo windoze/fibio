@@ -107,18 +107,19 @@ bool chunked_handler(server::request &req, server::response &resp, int n) {
     if(req.has_body()) {
         ss << req.body_stream().rdbuf();
     }
-    std::unique_ptr<std::ostream> body_stream(resp.write_chunked());
-    for (int i=0; i<n; i++) {
-        if (ss.str().empty()) {
-            (*body_stream) << "Hello, client\n";
-        } else {
-            (*body_stream) << ss.str();
+    return resp.write_chunked([&](std::ostream &os){
+        for (int i=0; i<n; i++) {
+            if (ss.str().empty()) {
+                os << "Hello, client\n";
+            } else {
+                os << ss.str();
+            }
+            // Each flush makes a new chunk
+            // Also auto-flush caused by full buffer makes a new chunk
+            os.flush();
         }
-        // Each flush makes a new chunk
-        // Also auto-flush caused by full buffer makes a new chunk
-        body_stream->flush();
-    }
-    return true;
+        return true;
+    });
 }
 
 bool chk(const std::string &user, const std::string &pass) {

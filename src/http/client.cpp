@@ -82,13 +82,16 @@ namespace fibio { namespace http {
         os.flush();
         return !os.eof() && !os.fail() && !os.bad();
     }
-    
-    std::unique_ptr<std::ostream> client_request::write_chunked(std::ostream &os) {
+
+    bool client_request::write_chunked(std::ostream &os, std::function<bool(std::ostream &)> body_writer) {
+        if(!body_writer)
+            return false;
         chunked=true;
-        if(!write_header(os)) { return std::unique_ptr<std::ostream>(); }
-        return std::unique_ptr<std::ostream>(new common::chunked_ostream(&os));
+        if(!write_header(os)) { return false; }
+        common::chunked_ostream cos(&os);
+        return body_writer(cos);
     }
-    
+
     //////////////////////////////////////////////////////////////////////////////////////////
     // client_response
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -258,12 +261,8 @@ namespace fibio { namespace http {
         if (!stream_->is_open() || stream_->eof() || stream_->fail() || stream_->bad()) return false;
         // Make sure there is no pending data in the last response
         resp.clear();
-        {
-            std::unique_ptr<std::ostream> body(req.write_chunked(*stream_));
-            if(!body || !body_writer(*body.get())) return false;
-        }
+        if(!req.write_chunked(*stream_, body_writer)) return false;
         if (!stream_->is_open() || stream_->eof() || stream_->fail() || stream_->bad()) return false;
-        //if (!stream_.is_open()) return false;
         return resp.read(*stream_) && (resp.status_code!=http_status_code::INVALID_STATUS);
     }
 

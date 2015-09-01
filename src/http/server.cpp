@@ -393,15 +393,15 @@ namespace fibio { namespace http {
         }
         return *this;
     }
-    
+
     bool server_response::write_header(std::ostream &os) {
-        if(response::header("Connection").empty()) {
-            response::set_header("Connection", keep_alive() ? "keep-alive" : "close");
+        if(common::response::header("Connection").empty()) {
+            common::response::set_header("Connection", keep_alive() ? "keep-alive" : "close");
         }
         if(chunked) {
             set_header("Transfer-Encoding", "chunked");
         } else {
-            response::set_header("Content-Length", boost::lexical_cast<std::string>(content_length()));
+            common::response::set_header("Content-Length", boost::lexical_cast<std::string>(content_length()));
         }
         if (!common::response::write_header(os)) return false;
         return !os.eof() && !os.fail() && !os.bad();
@@ -409,17 +409,20 @@ namespace fibio { namespace http {
     
     bool server_response::write() {
         // Write headers
-        if (!write_header(*raw_stream_)) return false;
+        if (!write_header(raw_stream())) return false;
         // Write body
         raw_stream_->write(&(raw_body_stream_.vector()[0]), raw_body_stream_.vector().size());
         raw_stream_->flush();
         return !raw_stream_->eof() && !raw_stream_->fail() && !raw_stream_->bad();
     }
 
-    std::unique_ptr<std::ostream> server_response::write_chunked() {
+    bool server_response::write_chunked(std::function<bool(std::ostream &)> body_writer) {
+        if(!body_writer)
+            throw server_error(http_status_code::INTERNAL_SERVER_ERROR);
         chunked=true;
-        if(!write_header(*raw_stream_)) { return std::unique_ptr<std::ostream>(); }
-        return std::unique_ptr<std::ostream>(new common::chunked_ostream(raw_stream_));
+        if(!write_header(raw_stream())) { return false; }
+        common::chunked_ostream cos(raw_stream_);
+        return body_writer(cos);
     }
     //////////////////////////////////////////////////////////////////////////////////////////
     // server
