@@ -51,8 +51,13 @@ bool handler(server::request &req, server::response &resp) {
     for(auto &p: req.parsed_url.query_params) {
         resp << "<TR><TD>" << p.first << "</TD><TD>" << p.second << "</TD></TR>\n";
     }
-    resp << "</TABLE>\n"
-    "</BODY></HTML>\n";
+    resp << "</TABLE>\n";
+    if (req.has_body()) {
+        resp.body_stream() << "<H1>Request body</H1>\n<DIV><PRE>";
+        resp.body_stream() << req.body_stream().rdbuf();
+        resp.body_stream() << "</PRE></DIV>" << std::endl;
+    }
+    resp << "</BODY></HTML>\n";
     return true;
 }
 

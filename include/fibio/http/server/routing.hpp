@@ -85,6 +85,17 @@ namespace fibio { namespace http {
             typedef detail::function_wrapper<utility::make_function_type<F>> wrapper;
             return wrapper(utility::make_function(std::forward<F>(f))).call(req, resp);
         }
+
+        inline void continue_processor(server::request &req, server::response &resp)
+        {
+            // This function will only be called when request is "matched",
+            // that means all header-based checks are passed.
+            // We just send 100 response back immediately
+            if(boost::iequals(req.header("Expect"), "100-continue")) {
+                resp.raw_stream() << "HTTP/1.1 100 Continue\r\n\r\n";
+                resp.raw_stream().flush();
+            }
+        }
     }
     
     typedef std::function<bool(server::request &)> match;
@@ -300,7 +311,11 @@ namespace fibio { namespace http {
     {
         return [=](server::request &req, server::response &resp)->bool {
             parse_url(req.url, req.parsed_url);
-            for(auto &e : table) if(e.first(req)) return e.second(req, resp);
+            for(auto &e : table) if(e.first(req)) {
+                // All header-based checks are passed, server should send 100 response
+                detail::continue_processor(req, resp);
+                return e.second(req, resp);
+            }
             return default_handler(req, resp);
         };
     }
@@ -310,7 +325,11 @@ namespace fibio { namespace http {
     {
         return [=](server::request &req, server::response &resp)->bool {
             parse_url(req.url, req.parsed_url);
-            for(auto &e : table) if(e.first(req)) return e.second(req, resp);
+            for(auto &e : table) if(e.first(req)) {
+                // All header-based checks are passed, server should send 100 response
+                detail::continue_processor(req, resp);
+                return e.second(req, resp);
+            }
             return default_handler(req, resp);
         };
     }
