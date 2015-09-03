@@ -18,10 +18,10 @@ namespace fibio { namespace fibers { namespace detail {
     , started_(false)
     {}
     
-    fiber_ptr_t scheduler_object::make_fiber(fiber_data_base *entry) {
+    fiber_ptr_t scheduler_object::make_fiber(fiber_data_base *entry, size_t stack_size) {
         std::lock_guard<std::mutex> guard(mtx_);
         fiber_count_++;
-        fiber_ptr_t ret(std::make_shared<fiber_object>(shared_from_this(), entry));
+        fiber_ptr_t ret(std::make_shared<fiber_object>(shared_from_this(), entry, stack_size));
         if (!started_) {
             started_=true;
         }
@@ -29,10 +29,10 @@ namespace fibio { namespace fibers { namespace detail {
         return ret;
     }
     
-    fiber_ptr_t scheduler_object::make_fiber(std::shared_ptr<boost::asio::strand> s, fiber_data_base *entry) {
+    fiber_ptr_t scheduler_object::make_fiber(std::shared_ptr<boost::asio::strand> s, fiber_data_base *entry, size_t stack_size) {
         std::lock_guard<std::mutex> guard(mtx_);
         fiber_count_++;
-        fiber_ptr_t ret(std::make_shared<fiber_object>(shared_from_this(), s, entry));
+        fiber_ptr_t ret(std::make_shared<fiber_object>(shared_from_this(), s, entry, stack_size));
         if (!started_) {
             started_=true;
         }

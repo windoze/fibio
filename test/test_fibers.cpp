@@ -95,7 +95,7 @@ void test_interrupted3() {
 }
 
 void test_interruptor(void (*t)()) {
-    fiber f(t);
+    fiber f(fiber::attributes(65536), t);
     f.interrupt();
     f.join();
 }

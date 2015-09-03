@@ -86,24 +86,34 @@ namespace fibio { namespace fibers { namespace detail {
     typedef BOOST_COROUTINE_STACK_ALLOCATOR<boost::coroutines::stack_traits> fibio_stack_allocator;
 #endif  // !defined(HAVE_VALGRIND_H)
     
-    fiber_object::fiber_object(scheduler_ptr_t sched, fiber_data_base *entry)
+    inline size_t adjusted_stack_size(size_t stack_size) {
+        if (stack_size==0) {
+            return fibio_stack_allocator::traits_type::default_size();
+        }
+        if (stack_size<fibio_stack_allocator::traits_type::minimum_size()) {
+            return fibio_stack_allocator::traits_type::minimum_size();
+        }
+        return stack_size;
+    }
+    
+    fiber_object::fiber_object(scheduler_ptr_t sched, fiber_data_base *entry, size_t stack_size)
     : sched_(sched)
     , fiber_strand_(std::make_shared<boost::asio::strand>(sched_->io_service_))
     , state_(READY)
     , entry_(entry)
     , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1),
-              boost::coroutines::attributes(),
+              boost::coroutines::attributes(adjusted_stack_size(stack_size)),
               fibio_stack_allocator() )
     , caller_(0)
     {}
     
-    fiber_object::fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, fiber_data_base *entry)
+    fiber_object::fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, fiber_data_base *entry, size_t stack_size)
     : sched_(sched)
     , fiber_strand_(strand)
     , state_(READY)
     , entry_(entry)
     , runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1),
-              boost::coroutines::attributes(),
+              boost::coroutines::attributes(adjusted_stack_size(stack_size)),
               fibio_stack_allocator() )
     , caller_(0)
     {}
@@ -437,12 +447,12 @@ namespace fibio { namespace fibers {
             switch(attr.policy) {
                 case attributes::scheduling_policy::normal: {
                     // Create an isolated fiber
-                    impl_=cf->sched_->make_fiber(data_.release());
+                    impl_=cf->sched_->make_fiber(data_.release(), attr.stack_size);
                     break;
                 }
                 case attributes::scheduling_policy::stick_with_parent: {
                     // Create a fiber shares strand with parent
-                    impl_=cf->sched_->make_fiber(current_fiber()->fiber_strand_, data_.release());
+                    impl_=cf->sched_->make_fiber(current_fiber()->fiber_strand_, data_.release(), attr.stack_size);
                     break;
                 }
                 default:

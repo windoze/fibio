@@ -73,8 +73,8 @@ namespace fibio { namespace fibers { namespace detail {
         typedef boost::coroutines::coroutine<state_t>::push_type caller_t;
         typedef std::shared_ptr<boost::asio::strand> strand_ptr_t;
         
-        fiber_object(scheduler_ptr_t sched, fiber_data_base *entry);
-        fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, fiber_data_base *entry);
+        fiber_object(scheduler_ptr_t sched, fiber_data_base *entry, size_t stack_size);
+        fiber_object(scheduler_ptr_t sched, strand_ptr_t strand, fiber_data_base *entry, size_t stack_size);
         ~fiber_object();
         
         void set_name(const std::string &s);

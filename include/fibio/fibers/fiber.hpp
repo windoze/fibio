@@ -97,8 +97,15 @@ namespace fibio { namespace fibers {
                 stick_with_parent,
             } policy;
             
+            /**
+             * Fiber stack size
+             * 0 uses default stack size
+             */
+            size_t stack_size=0;
+            
             /// constructor
-            constexpr attributes(scheduling_policy p) : policy(p) {}
+            constexpr attributes(size_t stack=0) : policy(normal), stack_size(stack) {}
+            constexpr attributes(scheduling_policy p, size_t stack=0) : policy(p), stack_size(stack) {}
         };
         
         /// Constructs new fiber object
