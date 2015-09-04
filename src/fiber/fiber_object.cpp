@@ -60,11 +60,12 @@ namespace fibio { namespace fibers { namespace detail {
     // will register stacks, so that Valgrind is not confused.
     template<typename traitsT>
     class valgrind_stack_allocator {
-        typedef traitsT traits_type;
         BOOST_COROUTINE_STACK_ALLOCATOR<traitsT> allocator;
         std::unordered_map<void*, unsigned> stack_ids;
         
     public:
+        typedef traitsT traits_type;
+        
         void inline allocate( boost::coroutines::stack_context &sc, std::size_t size) {
             allocator.allocate(sc, size);
             auto res = stack_ids.insert({sc.sp, VALGRIND_STACK_REGISTER(sc.sp, (((char*)sc.sp) - sc.size))});
