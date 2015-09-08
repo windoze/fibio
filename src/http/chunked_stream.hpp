@@ -114,15 +114,28 @@ namespace fibio { namespace http { namespace common {
                 int ret=0;
                 int c;
                 std::string sz;
+                int hex_numbers=0;
                 while((c = getchar()) != EOF
                       && detail::is_hex(c))
                 {
                     ret=ret*16+detail::hex_to_int(c);
+                    hex_numbers++;
+                    if (hex_numbers>8) {
+                        throw std::invalid_argument("Chunk size too big");
+                    }
+                }
+                if (c==';') {
+                    // There is a chunk-extension
+                    // TODO: Process chunk extension
+                    while ((c = getchar()) != EOF && c!='\r') {}
                 }
                 // Make sure it's "\r\n"
                 if (c=='\r') {
                     c=getchar();
                     assert(c=='\n');
+                    if (c!='\n') {
+                        throw std::invalid_argument("Invalid chunk header");
+                    }
                 }
                 return ret;
             }
@@ -198,7 +211,6 @@ namespace fibio { namespace http { namespace common {
             std::ostream *raw_stream_=nullptr;
             friend class fibio::http::common::chunked_ostream;
         };
-        
         
         class chunked_streambuf : public std::basic_streambuf<char> {
         public:
@@ -329,15 +341,28 @@ namespace fibio { namespace http { namespace common {
                 int ret=0;
                 int c;
                 std::string sz;
+                int hex_numbers=0;
                 while((c = getchar()) != EOF
                       && detail::is_hex(c))
                 {
                     ret=ret*16+detail::hex_to_int(c);
+                    hex_numbers++;
+                    if (hex_numbers>8) {
+                        throw std::invalid_argument("Chunk size too big");
+                    }
+                }
+                if (c==';') {
+                    // There is a chunk-extension
+                    // TODO: Process chunk extension
+                    while ((c = getchar()) != EOF && c!='\r') {}
                 }
                 // Make sure it's "\r\n"
                 if (c=='\r') {
                     c=getchar();
                     assert(c=='\n');
+                    if (c!='\n') {
+                        throw std::invalid_argument("Invalid chunk header");
+                    }
                 }
                 return ret;
             }

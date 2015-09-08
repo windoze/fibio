@@ -673,6 +673,7 @@ namespace fibio { namespace http { namespace common {
         headers.clear();
         content_length=0;
         keep_alive=false;
+        chunked=false;
     }
     
     const std::string &response::header(const std::string &name) const {

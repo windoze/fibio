@@ -243,9 +243,11 @@ namespace fibio { namespace http {
                     if(count>=max_keep_alive_) resp.keep_alive(false);
                     try {
                         if(!default_request_handler_(req, resp)) break;
+                        // Make sure we consumed all parts of the request
                         req.drop_body();
                     } catch(boost::bad_lexical_cast &e) {
                         resp.clear();
+                        resp.version(req.version);
                         resp.status_code(http_status_code::BAD_REQUEST);
                     } catch(server_error &e) {
                         resp.clear();
@@ -256,13 +258,17 @@ namespace fibio { namespace http {
                         if(!e.additional_headers.empty()) {
                             resp.headers.insert(e.additional_headers.begin(), e.additional_headers.end());
                         }
+                    } catch(std::invalid_argument &) {
+                        resp.clear();
+                        resp.version(req.version);
+                        resp.status_code(http_status_code::BAD_REQUEST);
+                        resp.keep_alive(false);
                     } catch(std::exception &e) {
                         resp.clear();
                         resp.version(req.version);
                         resp.status_code(http_status_code::INTERNAL_SERVER_ERROR);
                         resp.keep_alive(false);
                     }
-                    // Make sure we consumed all parts of the request
                     // Chunked response is written by handler
                     if(!resp.chunked) {
                         resp.body_stream().flush();
