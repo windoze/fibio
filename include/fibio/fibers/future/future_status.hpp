@@ -11,12 +11,15 @@
 
 #include <future>
 
-namespace fibio { namespace fibers {
-    using std::future_status;
-}}
-
 namespace fibio {
-    using std::future_status;
-}
+namespace fibers {
+
+using std::future_status;
+
+} // End of namespace fibers
+
+using std::future_status;
+
+} // End of namespace fibio
 
 #endif

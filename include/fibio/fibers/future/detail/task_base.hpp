@@ -21,13 +21,22 @@
 #include <boost/utility.hpp>
 #include <fibio/fibers/future/detail/shared_state.hpp>
 
-namespace fibio { namespace fibers { namespace detail {
-    template<typename R, typename ...Args>
-    struct task_base : public shared_state<R> {
-        typedef boost::intrusive_ptr<task_base>  ptr_t;
-        virtual ~task_base() {}
-        virtual void run(Args&&... args) = 0;
-    };
-}}} // End of namespace fibio::fibers::detail
+namespace fibio {
+namespace fibers {
+namespace detail {
+
+template <typename R, typename... Args>
+struct task_base : public shared_state<R>
+{
+    typedef boost::intrusive_ptr<task_base> ptr_t;
+
+    virtual ~task_base() {}
+
+    virtual void run(Args&&... args) = 0;
+};
+
+} // End of namespace detail
+} // End of namespace fibers
+} // End of namespace fibio
 
 #endif

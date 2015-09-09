@@ -21,142 +21,158 @@
 #include <boost/throw_exception.hpp>
 #include <fibio/fibers/detail/fiber_base.hpp>
 
-namespace fibio { namespace fibers { namespace asio { namespace detail {
-    template<typename T>
-    class yield_handler
-    {
-    public:
-        yield_handler(const yield_t &y)
-        : ec_(y.ec_)
-        , value_(0)
-        , fiber_(fibio::fibers::detail::get_current_fiber_ptr())
-        {}
-        
-        void operator()(T t)
-        {
-            // Async op completed, resume waiting fiber
-            *ec_ = boost::system::error_code();
-            *value_ = t;
-            fiber_->activate();
-        }
-        
-        void operator()(const boost::system::error_code &ec, T t)
-        {
-            // Async op completed, resume waiting fiber
-            *ec_ = ec;
-            *value_ = t;
-            fiber_->activate();
-        }
-        
-        //private:
-        boost::system::error_code *ec_;
-        T *value_;
-        fibio::fibers::detail::fiber_base::ptr_t fiber_;
-    };
-    
-    // Completion handler to adapt a void promise as a completion handler.
-    template<>
-    class yield_handler<void>
-    {
-    public:
-        yield_handler(const yield_t &y)
-        : ec_(y.ec_)
-        , fiber_(fibio::fibers::detail::get_current_fiber_ptr())
-        {}
-        
-        void operator()()
-        {
-            // Async op completed, resume waiting fiber
-            *ec_ = boost::system::error_code();
-            fiber_->activate();
-        }
-        
-        void operator()(boost::system::error_code const& ec)
-        {
-            // Async op completed, resume waiting fiber
-            *ec_ = ec;
-            fiber_->activate();
-        }
-        
-        //private:
-        boost::system::error_code *ec_;
-        fibio::fibers::detail::fiber_base::ptr_t fiber_;
-    };
-}}}}    // End of namespace fibio::fibers::asio::detail
+namespace fibio {
+namespace fibers {
+namespace asio {
+namespace detail {
 
-namespace boost { namespace asio {
-    template<typename T>
-    class async_result<fibio::fibers::asio::detail::yield_handler<T>>
+template <typename T>
+class yield_handler
+{
+public:
+    yield_handler(const yield_t& y)
+    : ec_(y.ec_), value_(0), fiber_(fibio::fibers::detail::get_current_fiber_ptr())
     {
-    public:
-        typedef T type;
-        
-        explicit async_result(fibio::fibers::asio::detail::yield_handler<T> &h)
-        {
-            out_ec_ = h.ec_;
-            if (!out_ec_) h.ec_ = & ec_;
-            h.value_ = & value_;
-        }
-        
-        type get()
-        {
-            // Wait until async op completed
-            fibio::fibers::detail::get_current_fiber_ptr()->pause();
-            if (!out_ec_ && ec_)
-                BOOST_THROW_EXCEPTION(boost::system::system_error(ec_));
-            return value_;
-        }
-        
-    private:
-        
-        boost::system::error_code *out_ec_;
-        boost::system::error_code ec_;
-        type value_;
-    };
+    }
 
-    template<>
-    class async_result<fibio::fibers::asio::detail::yield_handler<void>>
+    void operator()(T t)
     {
-    public:
-        typedef void  type;
-        
-        explicit async_result(fibio::fibers::asio::detail::yield_handler<void> &h)
-        {
-            out_ec_ = h.ec_;
-            if (!out_ec_) h.ec_ = & ec_;
-        }
-        
-        void get()
-        {
-            // Wait until async op completed
-            fibio::fibers::detail::get_current_fiber_ptr()->pause();
-            if (!out_ec_ && ec_)
-                BOOST_THROW_EXCEPTION(boost::system::system_error(ec_));
-        }
-        
-    private:
-        boost::system::error_code *out_ec_;
-        boost::system::error_code ec_;
-    };
-    
-    // Handler type specialisation for yield_t.
-    template<typename ReturnType>
-    struct handler_type<fibio::fibers::asio::yield_t, ReturnType()>
-    { typedef fibio::fibers::asio::detail::yield_handler<void> type; };
-    
-    // Handler type specialisation for yield_t.
-    template<typename ReturnType, typename Arg1>
-    struct handler_type<fibio::fibers::asio::yield_t, ReturnType(Arg1)>
-    { typedef fibio::fibers::asio::detail::yield_handler<Arg1> type; };
-    
-    // Handler type specialisation for yield_t.
-    template<typename ReturnType>
-    struct handler_type<fibio::fibers::asio::yield_t, ReturnType(boost::system::error_code)>
-    { typedef fibio::fibers::asio::detail::yield_handler<void> type; };
-    
-    // Handler type specialisation for yield_t.
-    template<typename ReturnType, typename Arg2>
-    struct handler_type<fibio::fibers::asio::yield_t, ReturnType( boost::system::error_code, Arg2)>
-    { typedef fibio::fibers::asio::detail::yield_handler<Arg2> type; };
-}}  // End of namespace boost::asio
+        // Async op completed, resume waiting fiber
+        *ec_ = boost::system::error_code();
+        *value_ = t;
+        fiber_->activate();
+    }
+
+    void operator()(const boost::system::error_code& ec, T t)
+    {
+        // Async op completed, resume waiting fiber
+        *ec_ = ec;
+        *value_ = t;
+        fiber_->activate();
+    }
+
+    // private:
+    boost::system::error_code* ec_;
+    T* value_;
+    fibio::fibers::detail::fiber_base::ptr_t fiber_;
+};
+
+// Completion handler to adapt a void promise as a completion handler.
+template <>
+class yield_handler<void>
+{
+public:
+    yield_handler(const yield_t& y)
+    : ec_(y.ec_), fiber_(fibio::fibers::detail::get_current_fiber_ptr())
+    {
+    }
+
+    void operator()()
+    {
+        // Async op completed, resume waiting fiber
+        *ec_ = boost::system::error_code();
+        fiber_->activate();
+    }
+
+    void operator()(boost::system::error_code const& ec)
+    {
+        // Async op completed, resume waiting fiber
+        *ec_ = ec;
+        fiber_->activate();
+    }
+
+    // private:
+    boost::system::error_code* ec_;
+    fibio::fibers::detail::fiber_base::ptr_t fiber_;
+};
+
+} // End of namespace detail
+} // End of namespace asio
+} // End of namespace fibers
+} // End of namespace fibio
+
+namespace boost {
+namespace asio {
+
+template <typename T>
+class async_result<fibio::fibers::asio::detail::yield_handler<T>>
+{
+public:
+    typedef T type;
+
+    explicit async_result(fibio::fibers::asio::detail::yield_handler<T>& h)
+    {
+        out_ec_ = h.ec_;
+        if (!out_ec_) h.ec_ = &ec_;
+        h.value_ = &value_;
+    }
+
+    type get()
+    {
+        // Wait until async op completed
+        fibio::fibers::detail::get_current_fiber_ptr()->pause();
+        if (!out_ec_ && ec_) BOOST_THROW_EXCEPTION(boost::system::system_error(ec_));
+        return value_;
+    }
+
+private:
+    boost::system::error_code* out_ec_;
+    boost::system::error_code ec_;
+    type value_;
+};
+
+template <>
+class async_result<fibio::fibers::asio::detail::yield_handler<void>>
+{
+public:
+    typedef void type;
+
+    explicit async_result(fibio::fibers::asio::detail::yield_handler<void>& h)
+    {
+        out_ec_ = h.ec_;
+        if (!out_ec_) h.ec_ = &ec_;
+    }
+
+    void get()
+    {
+        // Wait until async op completed
+        fibio::fibers::detail::get_current_fiber_ptr()->pause();
+        if (!out_ec_ && ec_) BOOST_THROW_EXCEPTION(boost::system::system_error(ec_));
+    }
+
+private:
+    boost::system::error_code* out_ec_;
+    boost::system::error_code ec_;
+};
+
+// Handler type specialisation for yield_t.
+template <typename ReturnType>
+struct handler_type<fibio::fibers::asio::yield_t, ReturnType()>
+{
+    typedef fibio::fibers::asio::detail::yield_handler<void> type;
+};
+
+// Handler type specialisation for yield_t.
+template <typename ReturnType, typename Arg1>
+struct handler_type<fibio::fibers::asio::yield_t, ReturnType(Arg1)>
+{
+    typedef fibio::fibers::asio::detail::yield_handler<Arg1> type;
+};
+
+// Handler type specialisation for yield_t.
+template <typename ReturnType>
+struct handler_type<fibio::fibers::asio::yield_t, ReturnType(boost::system::error_code)>
+{
+    typedef fibio::fibers::asio::detail::yield_handler<void> type;
+};
+
+// Handler type specialisation for yield_t.
+template <typename ReturnType, typename Arg2>
+struct handler_type<fibio::fibers::asio::yield_t, ReturnType(boost::system::error_code, Arg2)>
+{
+    typedef fibio::fibers::asio::detail::yield_handler<Arg2> type;
+};
+
+} // End of namespace asio
+} // End of namespace boost
 #endif

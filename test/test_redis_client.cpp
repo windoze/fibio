@@ -13,139 +13,151 @@
 using namespace fibio;
 using namespace fibio::redis;
 
-void test_get_set(client &c) {
+void test_get_set(client& c)
+{
     c.flushdb();
     c.set("k1", "v1");
-    assert(*c.get("k1")=="v1");
+    assert(*c.get("k1") == "v1");
     c.set("k1", "v2");
-    assert(*c.get("k1")=="v2");
+    assert(*c.get("k1") == "v2");
     assert(!c.get("nonexist"));
-    
+
     c.set("mykey", "10.5");
     c.incrbyfloat("mykey", "0.1");
-    assert(*(c.get("mykey"))=="10.6");
+    assert(*(c.get("mykey")) == "10.6");
 }
 
-void test_bitcount(client &c) {
+void test_bitcount(client& c)
+{
     c.flushdb();
     c.set("mykey", "foobar");
-    assert(c.bitcount("mykey")==26);
-    assert(c.bitcount("mykey", {0,0})==4);
-    assert(c.bitcount("mykey", {1,1})==6);
-    assert(c.bitcount("nonexist", {8,12})==0);
+    assert(c.bitcount("mykey") == 26);
+    assert(c.bitcount("mykey", {0, 0}) == 4);
+    assert(c.bitcount("mykey", {1, 1}) == 6);
+    assert(c.bitcount("nonexist", {8, 12}) == 0);
 }
 
-void test_sort(client &c) {
+void test_sort(client& c)
+{
     c.flushdb();
     c.lpush("mylist", {"c"});
     c.lpush("mylist", {"b", "a"});
-    assert((c.sort("mylist", client::sort_criteria().alpha())==std::list<std::string>{"a", "b", "c"}));
-    assert((c.sort("mylist", client::sort_criteria().alpha().desc())==std::list<std::string>{"c", "b", "a"}));
-    assert(c.sort("mylist", client::sort_criteria().alpha().desc(), "mylist2")==3);
-    assert((c.lrange("mylist2", 0, 100)==std::list<std::string>{"c", "b", "a"}));
+    assert((c.sort("mylist", client::sort_criteria().alpha())
+            == std::list<std::string>{"a", "b", "c"}));
+    assert((c.sort("mylist", client::sort_criteria().alpha().desc())
+            == std::list<std::string>{"c", "b", "a"}));
+    assert(c.sort("mylist", client::sort_criteria().alpha().desc(), "mylist2") == 3);
+    assert((c.lrange("mylist2", 0, 100) == std::list<std::string>{"c", "b", "a"}));
 }
 
-void test_pub() {
+void test_pub()
+{
     client c("127.0.0.1:37777");
     this_fiber::sleep_for(std::chrono::seconds(1));
     c.publish("abc", "123");
     c.publish("def", "456");
 }
 
-void test_sub(client &c) {
-    message_queue &q=c.subscribe({"abc", "def"});
+void test_sub(client& c)
+{
+    message_queue& q = c.subscribe({"abc", "def"});
     fiber pubber(test_pub);
     redis_message msg;
     q.pop(msg);
-    assert(msg.first=="abc");
-    assert(msg.second=="123");
+    assert(msg.first == "abc");
+    assert(msg.second == "123");
     q.pop(msg);
-    assert(msg.first=="def");
-    assert(msg.second=="456");
+    assert(msg.first == "def");
+    assert(msg.second == "456");
     c.unsubscribe({"abc", "def"});
     this_fiber::sleep_for(std::chrono::seconds(1));
     assert(!q.is_open());
     pubber.join();
 }
 
-void test_scan(client &c) {
+void test_scan(client& c)
+{
     c.flushdb();
     std::set<std::string> expected;
-    for (int i=42; i<442; i++) {
+    for (int i = 42; i < 442; i++) {
         std::string k("key");
-        k+=boost::lexical_cast<std::string>(i);
+        k += boost::lexical_cast<std::string>(i);
         std::string v("key");
-        v+=boost::lexical_cast<std::string>(i);
+        v += boost::lexical_cast<std::string>(i);
         c.set(k, v);
         expected.insert(k);
     }
-    
+
     std::set<std::string> keys;
-    for(auto i=c.scan(); i!=c.end(); ++i) {
+    for (auto i = c.scan(); i != c.end(); ++i) {
         keys.insert(*i);
     }
-    assert(keys==expected);
+    assert(keys == expected);
 }
 
-void test_sscan(client &c) {
+void test_sscan(client& c)
+{
     c.flushdb();
     std::set<std::string> expected;
-    for (int i=42; i<442; i++) {
+    for (int i = 42; i < 442; i++) {
         std::string k("key");
-        k+=boost::lexical_cast<std::string>(i);
+        k += boost::lexical_cast<std::string>(i);
         c.sadd("myset", {k});
         expected.insert(k);
     }
-    
+
     std::set<std::string> keys;
-    for(auto i=c.sscan("myset"); i!=c.end(); ++i) {
+    for (auto i = c.sscan("myset"); i != c.end(); ++i) {
         keys.insert(*i);
     }
-    assert(keys==expected);
+    assert(keys == expected);
 }
 
-void test_hscan(client &c) {
+void test_hscan(client& c)
+{
     c.flushdb();
     std::set<std::string> expected;
-    for (int i=42; i<442; i++) {
+    for (int i = 42; i < 442; i++) {
         std::string k("key");
-        k+=boost::lexical_cast<std::string>(i);
+        k += boost::lexical_cast<std::string>(i);
         std::string v("key");
-        v+=boost::lexical_cast<std::string>(i);
+        v += boost::lexical_cast<std::string>(i);
         c.hset("myhash", k, v);
         expected.insert(k);
     }
-    
+
     std::set<std::string> keys;
-    for(auto i=c.hscan("myhash"); i!=c.end(); ++i) {
+    for (auto i = c.hscan("myhash"); i != c.end(); ++i) {
         keys.insert(*i);
     }
-    assert(keys==expected);
+    assert(keys == expected);
 }
 
-void test_zscan(client &c) {
+void test_zscan(client& c)
+{
     c.flushdb();
     std::set<std::string> expected;
-    for (int i=42; i<442; i++) {
+    for (int i = 42; i < 442; i++) {
         std::string k("key");
-        k+=boost::lexical_cast<std::string>(i);
+        k += boost::lexical_cast<std::string>(i);
         c.zadd("myzset", {{1.2, k}});
         expected.insert(k);
     }
-    
+
     std::set<std::string> keys;
-    for(auto i=c.zscan("myzset"); i!=c.end(); ++i) {
+    for (auto i = c.zscan("myzset"); i != c.end(); ++i) {
         keys.insert(*i);
-        assert(i.score()==1.2);
+        assert(i.score() == 1.2);
     }
-    assert(keys==expected);
+    assert(keys == expected);
 }
 
-int fibio::main(int argc, char *argv[]) {
+int fibio::main(int argc, char* argv[])
+{
     popen("PATH=/usr/bin:/usr/local/bin redis-server --port 37777", "r");
     this_fiber::sleep_for(std::chrono::seconds(1));
     client c("127.0.0.1:37777");
-    
+
     test_get_set(c);
     test_bitcount(c);
     test_sort(c);
@@ -154,7 +166,7 @@ int fibio::main(int argc, char *argv[]) {
     test_sscan(c);
     test_hscan(c);
     test_zscan(c);
-    
+
     c.shutdown();
     std::cout << "main_fiber exiting" << std::endl;
     return 0;

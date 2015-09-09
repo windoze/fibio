@@ -14,55 +14,58 @@ using namespace ::apache::thrift::server;
 
 using boost::shared_ptr;
 
-using namespace  ::Test;
+using namespace ::Test;
 
+int count = 0;
 
-int count=0;
-class SomethingHandler : virtual public SomethingIf {
+class SomethingHandler : virtual public SomethingIf
+{
 public:
-    SomethingHandler() {
+    SomethingHandler()
+    {
         // Your initialization goes here
     }
-    
-    int32_t mul10(const int32_t n) {
+
+    int32_t mul10(const int32_t n)
+    {
         // Your implementation goes here
         count++;
-        return n*10;
+        return n * 10;
     }
 };
 
 std::unique_ptr<TFibioTCPServer> svr;
 
-void thrift_server() {
+void thrift_server()
+{
     shared_ptr<SomethingHandler> handler(new SomethingHandler());
     shared_ptr<TProcessor> processor(new SomethingProcessor(handler));
     shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
-    svr.reset(new TFibioTCPServer(processor,
-                                  "127.0.0.1:39090",
-                                  protocolFactory));
+    svr.reset(new TFibioTCPServer(processor, "127.0.0.1:39090", protocolFactory));
     svr->serve();
 }
 
-void thrift_client() {
+void thrift_client()
+{
     boost::shared_ptr<TTransport> transport(new TFibioTCPTransport("127.0.0.1:39090"));
     boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
     SomethingClient client(protocol);
     fibio::this_fiber::sleep_for(std::chrono::seconds(1));
     transport->open();
-    assert(client.mul10(8)==80);
-    assert(client.mul10(12)==120);
-    assert(client.mul10(42)==420);
+    assert(client.mul10(8) == 80);
+    assert(client.mul10(12) == 120);
+    assert(client.mul10(42) == 420);
     transport->close();
     svr->stop();
 }
 
-int fibio::main(int argc, char **argv) {
+int fibio::main(int argc, char** argv)
+{
     fibio::fiber_group g;
     g.create_fiber(thrift_server);
     g.create_fiber(thrift_client);
     g.join_all();
-    assert(count==3);
+    assert(count == 3);
     std::cout << "main_fiber exiting" << std::endl;
     return 0;
 }
-

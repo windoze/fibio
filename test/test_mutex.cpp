@@ -17,26 +17,28 @@ using namespace fibio;
 mutex m;
 recursive_mutex m1;
 
-void f(int n) {
+void f(int n)
+{
     boost::random::mt19937 rng;
-    boost::random::uniform_int_distribution<> three(1,3);
-    for (int i=0; i<100; i++) {
+    boost::random::uniform_int_distribution<> three(1, 3);
+    for (int i = 0; i < 100; i++) {
         unique_lock<mutex> lock(m);
         this_fiber::sleep_for(std::chrono::milliseconds(three(rng)));
-        //printf("f(%d)\n", n);
+        // printf("f(%d)\n", n);
     }
-    //printf("f(%d) exiting\n", n);
+    // printf("f(%d) exiting\n", n);
 }
 
-void f1(int n) {
+void f1(int n)
+{
     boost::random::mt19937 rng;
-    boost::random::uniform_int_distribution<> three(1,3);
-    for (int i=0; i<10; i++) {
+    boost::random::uniform_int_distribution<> three(1, 3);
+    for (int i = 0; i < 10; i++) {
         unique_lock<recursive_mutex> lock(m1);
         {
             unique_lock<recursive_mutex> lock(m1);
             this_fiber::sleep_for(std::chrono::milliseconds(three(rng)));
-            //printf("f1(%d)\n", n);
+            // printf("f1(%d)\n", n);
         }
         this_fiber::sleep_for(std::chrono::milliseconds(three(rng)));
     }
@@ -44,39 +46,43 @@ void f1(int n) {
 
 timed_mutex tm;
 
-void child() {
+void child()
+{
     this_fiber::yield();
-    bool ret=tm.try_lock_for(std::chrono::milliseconds(10));
-    ret=tm.try_lock_until(std::chrono::system_clock::now()+std::chrono::seconds(2));
+    bool ret = tm.try_lock_for(std::chrono::milliseconds(10));
+    ret = tm.try_lock_until(std::chrono::system_clock::now() + std::chrono::seconds(2));
     assert(ret);
     tm.unlock();
-    //printf("child()\n");
+    // printf("child()\n");
 }
 
-void parent() {
+void parent()
+{
     fiber f(child);
     tm.lock();
     this_fiber::sleep_for(std::chrono::seconds(1));
     tm.unlock();
-    //printf("parent():1\n");
+    // printf("parent():1\n");
     f.join();
-    //printf("parent():2\n");
+    // printf("parent():2\n");
 }
 
 recursive_timed_mutex rtm;
 
-void rchild() {
+void rchild()
+{
     this_fiber::yield();
-    bool ret=rtm.try_lock_for(std::chrono::milliseconds(10));
-    ret=rtm.try_lock_until(std::chrono::steady_clock::now()+std::chrono::seconds(2));
+    bool ret = rtm.try_lock_for(std::chrono::milliseconds(10));
+    ret = rtm.try_lock_until(std::chrono::steady_clock::now() + std::chrono::seconds(2));
     assert(ret);
     rtm.unlock();
-    //printf("child()\n");
+    // printf("child()\n");
 }
 
-void rparent() {
-    bool ret=rtm.try_lock();
-    ret=rtm.try_lock();
+void rparent()
+{
+    bool ret = rtm.try_lock();
+    ret = rtm.try_lock();
     assert(ret);
     rtm.unlock();
     rtm.unlock();
@@ -84,19 +90,20 @@ void rparent() {
     rtm.lock();
     this_fiber::sleep_for(std::chrono::seconds(1));
     rtm.unlock();
-    //printf("parent():1\n");
+    // printf("parent():1\n");
     f.join();
-    //printf("parent():2\n");
+    // printf("parent():2\n");
 }
 
-int fibio::main(int argc, char *argv[]) {
+int fibio::main(int argc, char* argv[])
+{
     fiber_group fibers;
     fibers.create_fiber(parent);
     fibers.create_fiber(rparent);
-    for (int i=0; i<10; i++) {
+    for (int i = 0; i < 10; i++) {
         fibers.create_fiber(f, i);
     }
-    for (int i=0; i<10; i++) {
+    for (int i = 0; i < 10; i++) {
         fibers.create_fiber(f1, i);
     }
     fibers.join_all();

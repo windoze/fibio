@@ -13,40 +13,46 @@
 #include <fibio/http/server/templates/mustache.hpp>
 #include <fibio/http/server/routing.hpp>
 
-namespace fibio { namespace http {
-    namespace detail {
-        template<typename Ret, typename ...Args>
-        struct mustache_controller;
-        
-        template<typename Ret, typename ...Args>
-        struct mustache_controller<std::function<Ret(Args...)>> {
-            typedef std::function<Ret(Args...)> model_type;
-            mustache_controller(const std::string &tmpl, model_type &&func)
-            : view_(mustache::compile(tmpl))
-            , model_(std::forward<model_type>(func))
-            {
-                static_assert(std::is_constructible<json::wvalue, Ret>::value,
-                              "Return value of model function must be compatible with json::wvalue");
-            }
-            
-            std::string operator()(Args&&... args) {
-                json::wvalue ctx(model_(std::forward<Args>(args)...));
-                return view_.render(ctx);
-            }
-            
-            mustache::template_t view_;
-            model_type model_;
-        };
-    }
-    
-    template<typename Fn>
-    server::request_handler mustache_(const std::string &tmpl,
-                                           Fn &&fn,
-                                           const std::string content_type="text/html")
+namespace fibio {
+namespace http {
+namespace detail {
+
+template <typename Ret, typename... Args>
+struct mustache_controller;
+
+template <typename Ret, typename... Args>
+struct mustache_controller<std::function<Ret(Args...)>>
+{
+    typedef std::function<Ret(Args...)> model_type;
+
+    mustache_controller(const std::string& tmpl, model_type&& func)
+    : view_(mustache::compile(tmpl)), model_(std::forward<model_type>(func))
     {
-        typedef typename utility::make_function_type<Fn> model_type;
-        detail::mustache_controller<model_type> controller(tmpl, model_type(std::forward<Fn>(fn)));
-        return with_content_type(content_type, controller);
+        static_assert(std::is_constructible<json::wvalue, Ret>::value,
+                      "Return value of model function must be compatible with json::wvalue");
     }
-}}  // End of namespace fibio::http
+
+    std::string operator()(Args&&... args)
+    {
+        json::wvalue ctx(model_(std::forward<Args>(args)...));
+        return view_.render(ctx);
+    }
+
+    mustache::template_t view_;
+    model_type model_;
+};
+
+} // End of namespace detail
+
+template <typename Fn>
+server::request_handler
+mustache_(const std::string& tmpl, Fn&& fn, const std::string content_type = "text/html")
+{
+    typedef typename utility::make_function_type<Fn> model_type;
+    detail::mustache_controller<model_type> controller(tmpl, model_type(std::forward<Fn>(fn)));
+    return with_content_type(content_type, controller);
+}
+
+} // End of namespace http
+} // End of namespace fibio
 #endif
