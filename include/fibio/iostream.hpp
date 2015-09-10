@@ -10,5 +10,6 @@
 #define fibio_stream_hpp
 
 #include <fibio/stream/iostream.hpp>
+#include <fibio/stream/fstream.hpp>
 
 #endif

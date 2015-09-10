@@ -35,6 +35,7 @@ set(FIBER_HDR
 	${CMAKE_SOURCE_DIR}/include/fibio/fibers/shared_mutex.hpp
 	${CMAKE_SOURCE_DIR}/include/fibio/future.hpp
 	${CMAKE_SOURCE_DIR}/include/fibio/iostream.hpp
+	${CMAKE_SOURCE_DIR}/include/fibio/stream/fstream.hpp
 	${CMAKE_SOURCE_DIR}/include/fibio/stream/iostream.hpp
 	${CMAKE_SOURCE_DIR}/include/fibio/stream/ssl.hpp
 	${CMAKE_SOURCE_DIR}/include/fibio/stream/streambuf.hpp
@@ -47,7 +48,8 @@ set(FIBER_SRC
 	fiber/future.cpp
 	fiber/mutex.cpp
 	fiber/scheduler_object.cpp
-	fiber/scheduler_object.hpp)
+	fiber/scheduler_object.hpp
+	fiber/stream.cpp)
 if((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
 	list(APPEND SRCS fiber/valgrind.h)
 endif((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
