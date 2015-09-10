@@ -108,8 +108,8 @@ basic_filebuf<CharT, Traits>::basic_filebuf()
 , cv_(nullptr)
 , st_()
 , st_last_()
-, om_(0)
-, cm_(0)
+, om_(std::ios_base::openmode(0))
+, cm_(std::ios_base::openmode(0))
 , owns_eb_(false)
 , owns_ib_(false)
 , always_noconv_(false)
@@ -171,8 +171,8 @@ basic_filebuf<CharT, Traits>::basic_filebuf(basic_filebuf&& rhs)
     rhs.file_ = 0;
     rhs.st_ = state_type();
     rhs.st_last_ = state_type();
-    rhs.om_ = 0;
-    rhs.cm_ = 0;
+    rhs.om_ = std::ios_base::openmode(0);
+    rhs.cm_ = std::ios_base::openmode(0);
     rhs.owns_eb_ = false;
     rhs.owns_ib_ = false;
     rhs.setg(0, 0, 0);
@@ -622,7 +622,7 @@ int basic_filebuf<CharT, Traits>::sync()
         if (update_st) st_ = state;
         extbufnext_ = extbufend_ = extbuf_;
         this->setg(0, 0, 0);
-        cm_ = 0;
+        cm_ = std::ios_base::openmode(0);
     }
     return 0;
 }
