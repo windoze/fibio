@@ -12,7 +12,7 @@
 #include <chrono>
 #include <boost/optional.hpp>
 #include <fibio/iostream.hpp>
-#include <fibio/redis/redis_proto.hpp>
+#include <fibio/db/redis/redis_proto.hpp>
 #include <fibio/concurrent/concurrent_queue.hpp>
 
 namespace fibio {

@@ -94,12 +94,13 @@ endif(WITH_HTTP)
 
 if(WITH_REDIS)
 	set(REDIS_HDR
-		${CMAKE_SOURCE_DIR}/include/fibio/redis/client.hpp
-		${CMAKE_SOURCE_DIR}/include/fibio/redis/redis_proto.hpp
+		${CMAKE_SOURCE_DIR}/include/fibio/db/redis.hpp
+		${CMAKE_SOURCE_DIR}/include/fibio/db/redis/client.hpp
+		${CMAKE_SOURCE_DIR}/include/fibio/db/redis/redis_proto.hpp
 	)
 	set(REDIS_SRC
-		redis/client.cpp
-		redis/redis_proto.cpp
+		db/redis/client.cpp
+		db/redis/redis_proto.cpp
 	)
 	list(APPEND HDRS ${REDIS_HDR})
 	list(APPEND SRCS ${REDIS_SRC})

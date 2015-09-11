@@ -6,7 +6,7 @@
 //  Copyright (c) 2014 0d0a.com. All rights reserved.
 //
 
-#include <fibio/redis/redis_proto.hpp>
+#include <fibio/db/redis/redis_proto.hpp>
 
 namespace fibio {
 namespace redis {

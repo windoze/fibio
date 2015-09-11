@@ -7,7 +7,7 @@
 //
 
 #include <set>
-#include <fibio/redis/client.hpp>
+#include <fibio/db/redis.hpp>
 #include <fibio/fiberize.hpp>
 
 using namespace fibio;

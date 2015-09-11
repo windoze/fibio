@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include <sstream>
-#include <fibio/redis/redis_proto.hpp>
+#include <fibio/db/redis/redis_proto.hpp>
 
 using namespace fibio::redis;
 

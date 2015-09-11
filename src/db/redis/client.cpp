@@ -8,7 +8,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <fibio/iostream.hpp>
-#include <fibio/redis/client.hpp>
+#include <fibio/db/redis/client.hpp>
 
 namespace fibio {
 namespace redis {
