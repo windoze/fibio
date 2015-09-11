@@ -10,6 +10,7 @@ before_install:
     # Download boost 1.5 and extract the source archive
   - wget --no-verbose --output-document=boost_1_56_0.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.56.0/boost_1_56_0.tar.bz2/download
   - export BOOST_ROOT="$TRAVIS_BUILD_DIR/../boost"
+  - export DEBIAN_FRONTEND=noninteractive
   - mkdir -p $BOOST_ROOT
   - tar jxf boost_1_56_0.tar.bz2 --strip-components=1 -C $BOOST_ROOT
   - wget http://www.us.apache.org/dist/thrift/0.9.2/thrift-0.9.2.tar.gz
@@ -19,7 +20,7 @@ before_install:
 
 install: 
     # Install GNU GCC 4.9 required by use of C++11
-  - sudo apt-get install -qq g++-4.9 gcc-4.9 libssl-dev zlib1g-dev cmake redis-server automake libtool flex bison pkg-config
+  - sudo apt-get -qq -y install g++-4.9 gcc-4.9 libssl-dev zlib1g-dev cmake redis-server automake libtool flex bison pkg-config mysql-server libmysqlcppconn-dev
   - (sudo rm -f /usr/bin/gcc; sudo ln -sf /usr/bin/gcc-4.9 /usr/bin/gcc)
   - (sudo rm -f /usr/bin/g++; sudo ln -sf /usr/bin/g++-4.9 /usr/bin/g++)
     # Build boost libraries required by ledger

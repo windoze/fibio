@@ -105,6 +105,28 @@ if(WITH_REDIS)
 	list(APPEND SRCS ${REDIS_SRC})
 endif(WITH_REDIS)
 
+if(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
+	set(MYSQL_HDR
+		${CMAKE_SOURCE_DIR}/include/fibio/db/mysql.hpp
+	)
+	set(MYSQL_SRC
+		db/mysql/connection.cpp
+		db/mysql/connection.hpp
+		db/mysql/database_metadata.cpp
+		db/mysql/database_metadata.hpp
+		db/mysql/driver.cpp
+		db/mysql/driver.hpp
+		db/mysql/prepared_statement.cpp
+		db/mysql/prepared_statement.hpp
+		db/mysql/resultset.cpp
+		db/mysql/resultset.hpp
+		db/mysql/statement.cpp
+		db/mysql/statement.hpp
+	)
+	list(APPEND HDRS ${MYSQL_HDR})
+	list(APPEND SRCS ${MYSQL_SRC})
+endif(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
+
 add_library(fibio ${HDRS} ${SRCS})
 target_link_libraries(${FIBIO_DEPS})
 

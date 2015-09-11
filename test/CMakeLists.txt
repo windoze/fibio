@@ -84,3 +84,10 @@ TARGET_LINK_LIBRARIES(test_thrift ${FIBIO_LIBS} ${THRIFT_LIBS})
 add_test(thrift test_thrift)
 endif(THRIFT_FOUND)
 
+IF(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
+	execute_process(COMMAND sh -c "mysql -u root < ${CMAKE_SOURCE_DIR}/test/prepare_test_mysql.sql")
+	add_executable(test_mysql_client test_mysql_client.cpp)
+	TARGET_LINK_LIBRARIES(test_mysql_client ${FIBIO_LIBS})
+	add_test(mysql_client test_mysql_client)
+ENDIF(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
+

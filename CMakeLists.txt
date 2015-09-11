@@ -3,10 +3,12 @@ project(fibio)
 
 option(WITH_REDIS "Build Redis library" ON)
 option(WITH_HTTP "Build HTTP library" ON)
+option(WITH_MYSQL "Build MySQL library" ON)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=256")
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-deprecated-register")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-deprecated-register -Wno-macro-redefined")
     set(CMAKE_LINK_FLAGS "${CMAKE_LINK_FLAGS} -stdlib=libc++")
 endif(APPLE)
 
@@ -41,6 +43,17 @@ INCLUDE_DIRECTORIES(AFTER ${CMAKE_SOURCE_DIR}/include)
 IF(WIN32)
 	list(APPEND FIBIO_DEPS wsock32 ws2_32)
 ENDIF(WIN32)
+
+IF(WITH_MYSQL)
+	find_package(MySQLConnectorCPP)
+	IF(MYSQLCONNECTORCPP_FOUND)
+		INCLUDE_DIRECTORIES(AFTER ${MYSQLCONNECTORCPP_INCLUDE_DIRS})
+		list(APPEND FIBIO_DEPS ${MYSQLCONNECTORCPP_LIBRARIES})
+		list(APPEND FIBIO_DEPS_INCS ${MYSQLCONNECTORCPP_INCLUDE_DIRS})
+	ELSE(MYSQLCONNECTORCPP_FOUND)
+		message("MySQL Connector/C++ is not found, disable MySQL support")
+	ENDIF(MYSQLCONNECTORCPP_FOUND)
+ENDIF(WITH_MYSQL)
 
 set(FIBIO_LIBS fibio ${FIBIO_DEPS})
 
