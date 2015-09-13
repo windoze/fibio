@@ -1,12 +1,29 @@
+sudo: false
 language: cpp
 compiler:
   - gcc
+addons:
+  apt:
+    sources:
+    - kalakris-cmake
+    - ubuntu-toolchain-r-test
+addons:
+  apt:
+    packages:
+    - g++-4.9
+    - gcc-4.9
+    - libssl-dev
+    - zlib1g-dev
+    - cmake
+    - redis-server
+    - automake
+    - libtool
+    - flex
+    - bison
+    - pkg-config
+    - libmysqlclient-dev
 
 before_install:
-    # Add software package repository, containing updated build toochain, i.e. GNU GCC 4.9
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test --yes
-  - sudo add-apt-repository ppa:kalakris/cmake --yes
-  - sudo apt-get update -qq
     # Download boost 1.5 and extract the source archive
   - wget --no-verbose --output-document=boost_1_56_0.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.56.0/boost_1_56_0.tar.bz2/download
   - export BOOST_ROOT="$TRAVIS_BUILD_DIR/../boost"
@@ -24,13 +41,10 @@ before_install:
 
 install: 
     # Install GNU GCC 4.9 required by use of C++11
-  - sudo apt-get -qq -y install g++-4.9 gcc-4.9 libssl-dev zlib1g-dev cmake redis-server automake libtool flex bison pkg-config mysql-server libmysqlclient-dev
-  - (sudo rm -f /usr/bin/gcc; sudo ln -sf /usr/bin/gcc-4.9 /usr/bin/gcc)
-  - (sudo rm -f /usr/bin/g++; sudo ln -sf /usr/bin/g++-4.9 /usr/bin/g++)
     # Build boost libraries required by ledger
   - (cd $BOOST_ROOT; ./bootstrap.sh --with-libraries=atomic,chrono,context,coroutine,iostreams,system,test,thread)
-  - (cd $BOOST_ROOT; sudo ./b2 threading=multi --prefix=/usr/local -d0 install)
-  - (cd $THRIFT_ROOT; ./configure --with-qt4=no --with-c_glib=no --with-csharp=no --with-java=no --with-erlang=no --with-nodejs=no --with-lua=no --with-python=no --with-perl=no --with-php=no --with-php_extensioo --with-ruby=no --with-haskell=no --with-go=no --with-d=no; sudo make -j4 install)
-  - (cd $CONNECTOR_ROOT; mkdir build; cd build; cmake ..; make -j4; sudo make -j4 install)
+  - (cd $BOOST_ROOT; ./b2 threading=multi --prefix=$HOME -d0 install)
+  - (cd $THRIFT_ROOT; ./configure --prefix=$HOME --with-qt4=no --with-c_glib=no --with-csharp=no --with-java=no --with-erlang=no --with-nodejs=no --with-lua=no --with-python=no --with-perl=no --with-php=no --with-php_extensioo --with-ruby=no --with-haskell=no --with-go=no --with-d=no; make -j4 install)
+  - (cd $CONNECTOR_ROOT; mkdir build; cd build; cmake -DCMAKE_INSTALL_PREFIX=$HOME ..; make -j4; make -j4 install)
 
-script: mkdir build && cd build && cmake ../ && make -j4 && make test
+script: mkdir $HOME/build && cd $HOME/build && cmake -DTHRIFT_HOME=$HOME -DBOOST_ROOT=$HOME -DMYSQLCONNECTORCPP_ROOT_DIR=$HOME ../ && make -j4 && ctest
