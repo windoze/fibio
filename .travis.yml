@@ -24,7 +24,6 @@ addons:
     - libmysqlclient-dev
 
 before_install:
-  - export CC=gcc-4.9
   - export CXX=g++-4.9
     # Download boost 1.56 and extract the source archive
   - wget --no-verbose --output-document=boost_1_56_0.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.56.0/boost_1_56_0.tar.bz2/download
