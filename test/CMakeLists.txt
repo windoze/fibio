@@ -91,3 +91,10 @@ IF(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
 	add_test(mysql_client test_mysql_client)
 ENDIF(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
 
+IF (WITH_CASSANDRA AND CASSANDRADRIVER_FOUND)
+	#EXECUTE_PROCESS(COMMAND sh -c "mysql -u root < ${CMAKE_SOURCE_DIR}/test/prepare_test_mysql.sql")
+	ADD_EXECUTABLE(test_cassandra test_cassandra.cpp)
+	TARGET_LINK_LIBRARIES(test_cassandra ${FIBIO_LIBS})
+	ADD_TEST(cassandra test_cassandra)
+ENDIF (WITH_CASSANDRA AND CASSANDRADRIVER_FOUND)
+
