@@ -18,6 +18,17 @@ namespace fibio {
 namespace fibers {
 namespace asio {
 
+    namespace detail {
+        /**
+         * HACK: Dummy allocator for void, as std::allocator<void> doesn't have construct and destroy
+         */
+        struct dummy_void_allocator : std::allocator<void> {
+            template<typename T>
+            void construct(void *, T) const {}
+            void destroy(void *) const {}
+        };
+    }
+
 /**
  * class use_future_t
  *
@@ -26,7 +37,7 @@ namespace asio {
  *
  * @see fibio::future
  */
-template <typename Allocator = std::allocator<void>>
+template <typename Allocator = detail::dummy_void_allocator>
 class use_future_t
 {
 public:
