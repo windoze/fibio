@@ -71,8 +71,8 @@ struct make_tuple_indices
     typedef typename make_indices_imp<Sp, tuple_indices<>, Ep>::type type;
 };
 
-#if defined(_WIN32) && (_MSC_VER >= 1900)
-// Visual C++ 2015 supports C++17 std::invoke
+#if (defined(_WIN32) && defined(_MSC_VER) && (_MSC_VER >= 1900)) || defined(__cpp_lib_invoke)
+// Uses std::invoke when available, Visual C++ 2015 supports std::invoke but not feature test macros
 using std::invoke;
 #else
 
