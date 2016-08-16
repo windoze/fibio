@@ -66,23 +66,25 @@ TARGET_LINK_LIBRARIES(test_ssl_stream ${FIBIO_LIBS})
 add_test(SSL_stream test_ssl_stream)
 ENDIF(OPENSSL_FOUND)
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/test)
-find_package(Thrift)
-if(THRIFT_FOUND)
-execute_process(COMMAND ${THRIFT_COMPILER} --gen cpp -out ${CMAKE_BINARY_DIR}/test ${CMAKE_SOURCE_DIR}/test/t.thrift)
-INCLUDE_DIRECTORIES(AFTER ${CMAKE_BINARY_DIR}/test)
-add_executable(test_thrift
-    test_thrift.cpp
-    ${CMAKE_BINARY_DIR}/test/Something.cpp
-    ${CMAKE_BINARY_DIR}/test/Something.h
-    ${CMAKE_BINARY_DIR}/test/t_constants.cpp
-    ${CMAKE_BINARY_DIR}/test/t_constants.h
-    ${CMAKE_BINARY_DIR}/test/t_types.cpp
-    ${CMAKE_BINARY_DIR}/test/t_types.h
-)
-TARGET_LINK_LIBRARIES(test_thrift ${FIBIO_LIBS} ${THRIFT_LIBS})
-add_test(thrift test_thrift)
-endif(THRIFT_FOUND)
+if(WITH_THRIFT)
+	set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/test)
+	find_package(Thrift)
+	if(THRIFT_FOUND)
+	execute_process(COMMAND ${THRIFT_COMPILER} --gen cpp -out ${CMAKE_BINARY_DIR}/test ${CMAKE_SOURCE_DIR}/test/t.thrift)
+	INCLUDE_DIRECTORIES(AFTER ${CMAKE_BINARY_DIR}/test)
+	add_executable(test_thrift
+		test_thrift.cpp
+		${CMAKE_BINARY_DIR}/test/Something.cpp
+		${CMAKE_BINARY_DIR}/test/Something.h
+		${CMAKE_BINARY_DIR}/test/t_constants.cpp
+		${CMAKE_BINARY_DIR}/test/t_constants.h
+		${CMAKE_BINARY_DIR}/test/t_types.cpp
+		${CMAKE_BINARY_DIR}/test/t_types.h
+	)
+	TARGET_LINK_LIBRARIES(test_thrift ${FIBIO_LIBS} ${THRIFT_LIBS})
+	add_test(thrift test_thrift)
+	endif(THRIFT_FOUND)
+endif(WITH_THRIFT)
 
 IF(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
 	execute_process(COMMAND sh -c "mysql -u root < ${CMAKE_SOURCE_DIR}/test/prepare_test_mysql.sql")
