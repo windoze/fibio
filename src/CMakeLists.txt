@@ -51,10 +51,12 @@ set(FIBER_SRC
 	fiber/scheduler_object.hpp
 	fiber/stream.cpp)
 if((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
-	list(APPEND SRCS fiber/valgrind.h)
+	list(APPEND SRCS fiber/valgrind/valgrind.h)
 endif((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
 list(APPEND HDRS ${FIBER_HDR})
 list(APPEND SRCS ${FIBER_SRC})
+
+INCLUDE_DIRECTORIES(AFTER ${CMAKE_SOURCE_DIR}/src/fiber)
 
 if(WITH_HTTP)
 	set(HTTP_HDR

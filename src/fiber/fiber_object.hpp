@@ -20,17 +20,17 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/system/error_code.hpp>
-#include <boost/coroutine/coroutine.hpp>
+#include <boost/coroutine2/coroutine.hpp>
 #include <fibio/fibers/exceptions.hpp>
 #include <fibio/fibers/detail/fiber_base.hpp>
 #include <fibio/fibers/detail/fiber_data.hpp>
 #include <fibio/fibers/detail/spinlock.hpp>
 
-#ifdef __APPLE_CC__
-// Clang on OS X doesn't support thread_local
-#define THREAD_LOCAL __thread
+#if defined(__APPLE_CC__) && (__apple_build_version__<8000000)
+// Clang on OS X doesn't support thread_local until Xcode 8.0
+#   define THREAD_LOCAL __thread
 #else
-#define THREAD_LOCAL thread_local
+#   define THREAD_LOCAL thread_local
 #endif
 
 #if defined(DEBUG) && !defined(NDEBUG)
@@ -77,8 +77,8 @@ struct fiber_object : std::enable_shared_from_this<fiber_object>, fiber_base
     };
 
     typedef std::deque<std::function<void()>> cleanup_queue_t;
-    typedef boost::coroutines::coroutine<state_t>::pull_type runner_t;
-    typedef boost::coroutines::coroutine<state_t>::push_type caller_t;
+    typedef boost::coroutines2::coroutine<state_t>::pull_type runner_t;
+    typedef boost::coroutines2::coroutine<state_t>::push_type caller_t;
     typedef std::shared_ptr<boost::asio::strand> strand_ptr_t;
 
     fiber_object(scheduler_ptr_t sched, fiber_data_base* entry, size_t stack_size);

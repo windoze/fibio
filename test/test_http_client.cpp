@@ -56,11 +56,11 @@ void the_url_client()
 {
     url_client uc;
     {
-        client::response& resp = uc.request("http://0d0a.com/");
+        client::response& resp = uc.request("http://www.w3.org/");
         assert(resp.status_code == http_status_code::OK);
     }
     {
-        client::response& resp = uc.request("https://github.com/");
+        client::response& resp = uc.request("https://www.w3.org/");
         assert(resp.status_code == http_status_code::OK);
     }
     {

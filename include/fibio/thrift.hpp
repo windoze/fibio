@@ -166,8 +166,7 @@ public:
     template <typename Processor>
     TFibioServer(const boost::shared_ptr<Processor>& processor,
                  const std::string& access_point,
-                 const boost::shared_ptr<TProtocolFactory>& protocolFactory,
-                 THRIFT_OVERLOAD_IF(Processor, TProcessor))
+                 const boost::shared_ptr<TProtocolFactory>& protocolFactory)
     : TServer(processor,
               boost::shared_ptr<TServerTransport>(), // Not used
               boost::shared_ptr<TTransportFactory>(new TTransportFactory),

@@ -15,26 +15,10 @@
 #include <algorithm>
 
 #if defined(HAVE_VALGRIND_H)
-#if BOOST_VERSION >= 105700
-//      For boost 1.57 and up, enable built-in valgrind support
 #define BOOST_USE_VALGRIND
-#else
-//      For boost 1.56 and earlier
-#include "valgrind.h"
-#include <unordered_map>
-
-#endif
 #endif // defined(HAVE_VALGRIND_H)
-#if defined(_WIN32)
-#include <boost/coroutine/standard_stack_allocator.hpp>
-#else
 
-#include <boost/coroutine/protected_stack_allocator.hpp>
-
-#endif
-
-#include <boost/coroutine/stack_context.hpp>
-
+#include <boost/coroutine2/all.hpp>
 #include <fibio/fibers/fiber.hpp>
 #include <fibio/fibers/fss.hpp>
 #include <fibio/fibers/mutex.hpp>
@@ -52,53 +36,12 @@ namespace fibers {
 namespace detail {
 
 #ifdef BOOST_USE_SEGMENTED_STACKS
-#define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_segmented_stack_allocator
+#define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines2::segmented_stack
 #else
-#if defined(_WIN32)
-#define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_standard_stack_allocator
-#else
-#define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines::basic_protected_stack_allocator
+#define BOOST_COROUTINE_STACK_ALLOCATOR boost::coroutines2::pooled_fixedsize_stack
 #endif
-#endif
-
-// Define a fibio_stack_allocator, use valgrind_stack_allocator when building
-//  with valgrind support
-// Valgrind support is built-in since Boost 1.57
-#if defined(HAVE_VALGRIND_H) && (BOOST_VERSION < 105700)
-// Wraps boost::coroutine::stack_allocator, and if Valgrind is installed
-// will register stacks, so that Valgrind is not confused.
-template <typename traitsT>
-class valgrind_stack_allocator
-{
-    BOOST_COROUTINE_STACK_ALLOCATOR<traitsT> allocator;
-    std::unordered_map<void*, unsigned> stack_ids;
-
-public:
-    typedef traitsT traits_type;
-
-    void inline allocate(boost::coroutines::stack_context& sc, std::size_t size)
-    {
-        allocator.allocate(sc, size);
-        auto res
-            = stack_ids.insert({sc.sp, VALGRIND_STACK_REGISTER(sc.sp, (((char*)sc.sp) - sc.size))});
-        (void)res;
-        assert(res.second);
-    }
-
-    void inline deallocate(boost::coroutines::stack_context& sc)
-    {
-        auto id = stack_ids.find(sc.sp);
-        assert(id != stack_ids.end());
-        VALGRIND_STACK_DEREGISTER(id->second);
-        stack_ids.erase(id);
-        allocator.deallocate(sc);
-    }
-};
-typedef valgrind_stack_allocator<boost::coroutines::stack_traits> fibio_stack_allocator;
-#else // defined(HAVE_VALGRIND_H)
-// Use default stack allocator when building w/o valgrind support
-typedef BOOST_COROUTINE_STACK_ALLOCATOR<boost::coroutines::stack_traits> fibio_stack_allocator;
-#endif // !defined(HAVE_VALGRIND_H)
+using namespace std::placeholders;
+typedef BOOST_COROUTINE_STACK_ALLOCATOR fibio_stack_allocator;
 
 inline size_t adjusted_stack_size(size_t stack_size)
 {
@@ -116,9 +59,7 @@ fiber_object::fiber_object(scheduler_ptr_t sched, fiber_data_base* entry, size_t
 , fiber_strand_(std::make_shared<boost::asio::strand>(sched_->io_service_))
 , state_(READY)
 , entry_(entry)
-, runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1),
-          boost::coroutines::attributes(adjusted_stack_size(stack_size)),
-          fibio_stack_allocator())
+, runner_(fibio_stack_allocator(adjusted_stack_size(stack_size)), std::bind(&fiber_object::runner_wrapper, this, _1))
 , caller_(0)
 {
 }
@@ -131,9 +72,7 @@ fiber_object::fiber_object(scheduler_ptr_t sched,
 , fiber_strand_(strand)
 , state_(READY)
 , entry_(entry)
-, runner_(std::bind(&fiber_object::runner_wrapper, this, std::placeholders::_1),
-          boost::coroutines::attributes(adjusted_stack_size(stack_size)),
-          fibio_stack_allocator())
+, runner_(fibio_stack_allocator(adjusted_stack_size(stack_size)), std::bind(&fiber_object::runner_wrapper, this, _1))
 , caller_(0)
 {
 }
@@ -200,7 +139,7 @@ void fiber_object::runner_wrapper(caller_t& c)
     try {
         cleaner c(mtx_, cleanup_queue_, fss_);
         entry_->run();
-    } catch (const boost::coroutines::detail::forced_unwind&) {
+    } catch (const boost::coroutines2::detail::forced_unwind&) {
         // Boost.Coroutine requirement
         throw;
     } catch (...) {
