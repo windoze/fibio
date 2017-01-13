@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-set(HDRS)
-set(SRCS)
+SET(HDRS)
+SET(SRCS)
 
-set(FIBER_HDR
+SET(FIBER_HDR
 	${CMAKE_SOURCE_DIR}/include/fibio/asio.hpp
 	${CMAKE_SOURCE_DIR}/include/fibio/concurrent/concurrent_queue.hpp
 	${CMAKE_SOURCE_DIR}/include/fibio/fiber.hpp
@@ -41,7 +41,7 @@ set(FIBER_HDR
 	${CMAKE_SOURCE_DIR}/include/fibio/stream/streambuf.hpp
 	${CMAKE_SOURCE_DIR}/include/fibio/thrift.hpp
 	${CMAKE_SOURCE_DIR}/include/fibio/utility.hpp)
-set(FIBER_SRC
+SET(FIBER_SRC
 	fiber/condition.cpp
 	fiber/fiber_object.cpp
 	fiber/fiber_object.hpp
@@ -50,16 +50,16 @@ set(FIBER_SRC
 	fiber/scheduler_object.cpp
 	fiber/scheduler_object.hpp
 	fiber/stream.cpp)
-if((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
-	list(APPEND SRCS fiber/valgrind/valgrind.h)
-endif((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
-list(APPEND HDRS ${FIBER_HDR})
-list(APPEND SRCS ${FIBER_SRC})
+IF((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
+	LIST(APPEND SRCS fiber/valgrind/valgrind.h)
+ENDIF((CMAKE_BUILD_TYPE MATCHES Debug) OR (NOT CMAKE_BUILD_TYPE))
+LIST(APPEND HDRS ${FIBER_HDR})
+LIST(APPEND SRCS ${FIBER_SRC})
 
 INCLUDE_DIRECTORIES(AFTER ${CMAKE_SOURCE_DIR}/src/fiber)
 
-if(WITH_HTTP)
-	set(HTTP_HDR
+IF(WITH_HTTP)
+	SET(HTTP_HDR
 		${CMAKE_SOURCE_DIR}/include/fibio/http/client/client.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/client/request.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http/client/response.hpp
@@ -84,35 +84,35 @@ if(WITH_HTTP)
 		${CMAKE_SOURCE_DIR}/include/fibio/http/server/templates/mustache_template.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http_client.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/http_server.hpp)
-	set(HTTP_SRC
+	SET(HTTP_SRC
 		http/chunked_stream.hpp
 		http/client.cpp
 		http/common.cpp
 		http/http_parser_merged.h
 		http/server.cpp)
-	list(APPEND HDRS ${HTTP_HDR})
-	list(APPEND SRCS ${HTTP_SRC})
-endif(WITH_HTTP)	
+	LIST(APPEND HDRS ${HTTP_HDR})
+	LIST(APPEND SRCS ${HTTP_SRC})
+ENDIF(WITH_HTTP)
 
-if(WITH_REDIS)
-	set(REDIS_HDR
+IF(WITH_REDIS)
+	SET(REDIS_HDR
 		${CMAKE_SOURCE_DIR}/include/fibio/db/redis.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/db/redis/client.hpp
 		${CMAKE_SOURCE_DIR}/include/fibio/db/redis/redis_proto.hpp
 	)
-	set(REDIS_SRC
+	SET(REDIS_SRC
 		db/redis/client.cpp
 		db/redis/redis_proto.cpp
 	)
-	list(APPEND HDRS ${REDIS_HDR})
-	list(APPEND SRCS ${REDIS_SRC})
-endif(WITH_REDIS)
+	LIST(APPEND HDRS ${REDIS_HDR})
+	LIST(APPEND SRCS ${REDIS_SRC})
+ENDIF(WITH_REDIS)
 
-if(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
-	set(MYSQL_HDR
+IF(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
+	SET(MYSQL_HDR
 		${CMAKE_SOURCE_DIR}/include/fibio/db/mysql.hpp
 	)
-	set(MYSQL_SRC
+	SET(MYSQL_SRC
 		db/mysql/connection.cpp
 		db/mysql/connection.hpp
 		db/mysql/database_metadata.cpp
@@ -126,9 +126,9 @@ if(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
 		db/mysql/statement.cpp
 		db/mysql/statement.hpp
 	)
-	list(APPEND HDRS ${MYSQL_HDR})
-	list(APPEND SRCS ${MYSQL_SRC})
-endif(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
+	LIST(APPEND HDRS ${MYSQL_HDR})
+	LIST(APPEND SRCS ${MYSQL_SRC})
+ENDIF(WITH_MYSQL AND MYSQLCONNECTORCPP_FOUND)
 
 IF (WITH_CASSANDRA AND CASSANDRADRIVER_FOUND)
 	SET(CASSANDRA_HDR ${CMAKE_SOURCE_DIR}/include/fibio/db/cassandra.hpp)
@@ -138,10 +138,10 @@ IF (WITH_CASSANDRA AND CASSANDRADRIVER_FOUND)
 ENDIF (WITH_CASSANDRA AND CASSANDRADRIVER_FOUND)
 
 ADD_LIBRARY(fibio ${HDRS} ${SRCS})
-target_link_libraries(${FIBIO_DEPS})
+TARGET_LINK_LIBRARIES(${FIBIO_DEPS})
 
 INSTALL(DIRECTORY ${CMAKE_SOURCE_DIR}/include/fibio DESTINATION include
 	FILES_MATCHING PATTERN "[a-z]*.hpp")
-INSTALL (TARGETS fibio EXPORT fibio-targets DESTINATION lib/fibio)
+INSTALL(TARGETS fibio EXPORT fibio-targets DESTINATION lib/fibio)
 INSTALL(EXPORT fibio-targets DESTINATION lib/fibio)
 INSTALL(FILES fibio-config.cmake DESTINATION lib/fibio)

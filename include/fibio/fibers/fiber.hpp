@@ -212,7 +212,7 @@ public:
     /**
      * returns the _id_ of the thread
      */
-    id get_id() const noexcept;
+    fiber::id get_id() const noexcept;
 
     /**
      * returns the number of concurrent fibers supported by the implementation

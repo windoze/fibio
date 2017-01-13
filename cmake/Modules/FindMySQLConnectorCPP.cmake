@@ -8,14 +8,14 @@
 # The user may wish to set, in the CMake GUI or otherwise, this variable:
 #  MYSQLCONNECTORCPP_ROOT_DIR - path to start searching for the module
 
-set(MYSQLCONNECTORCPP_ROOT_DIR
+SET(MYSQLCONNECTORCPP_ROOT_DIR
         "${MYSQLCONNECTORCPP_ROOT_DIR}"
         CACHE
         PATH
         "Where to start looking for this component.")
 
-if(WIN32)
-    find_path(MYSQLCONNECTORCPP_INCLUDE_DIR
+IF (WIN32)
+    FIND_PATH(MYSQLCONNECTORCPP_INCLUDE_DIR
             NAMES
             mysql_connection.h
             PATHS
@@ -25,7 +25,7 @@ if(WIN32)
             PATH_SUFFIXES
             include)
 
-    find_library(MYSQLCONNECTORCPP_LIBRARY
+    FIND_LIBRARY(MYSQLCONNECTORCPP_LIBRARY
             NAMES
             mysqlcppconn
             mysqlcppconn-static
@@ -34,15 +34,15 @@ if(WIN32)
             PATH_SUFFIXES
             lib)
 
-else()
-    find_path(MYSQLCONNECTORCPP_INCLUDE_DIR
+ELSE ()
+    FIND_PATH(MYSQLCONNECTORCPP_INCLUDE_DIR
             mysql_connection.h
             HINTS
             ${MYSQLCONNECTORCPP_ROOT_DIR}
             PATH_SUFFIXES
             include)
 
-    find_library(MYSQLCONNECTORCPP_LIBRARY
+    FIND_LIBRARY(MYSQLCONNECTORCPP_LIBRARY
             NAMES
             mysqlcppconn
             mysqlcppconn-static
@@ -51,23 +51,23 @@ else()
             PATH_SUFFIXES
             lib64
             lib)
-endif()
+ENDIF ()
 
-    mark_as_advanced(MYSQLCONNECTORCPP_INCLUDE_DIR
-            MYSQLCONNECTORCPP_LIBRARY)
+MARK_AS_ADVANCED(MYSQLCONNECTORCPP_INCLUDE_DIR
+        MYSQLCONNECTORCPP_LIBRARY)
 
-include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(MysqlConnectorCpp
-            DEFAULT_MSG
-            MYSQLCONNECTORCPP_INCLUDE_DIR
-            MYSQLCONNECTORCPP_LIBRARY)
+INCLUDE(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(MysqlConnectorCpp
+        DEFAULT_MSG
+        MYSQLCONNECTORCPP_INCLUDE_DIR
+        MYSQLCONNECTORCPP_LIBRARY)
 
-if(MYSQLCONNECTORCPP_FOUND)
-    set(MYSQLCONNECTORCPP_INCLUDE_DIRS
+IF (MYSQLCONNECTORCPP_FOUND)
+    SET(MYSQLCONNECTORCPP_INCLUDE_DIRS
             "${MYSQLCONNECTORCPP_INCLUDE_DIR}")
-# Add any dependencies here
-    set(MYSQLCONNECTORCPP_LIBRARIES
+    # Add any dependencies here
+    SET(MYSQLCONNECTORCPP_LIBRARIES
             "${MYSQLCONNECTORCPP_LIBRARY}")
-# Add any dependencies here
-    mark_as_advanced(MYSQLCONNECTORCPP_ROOT_DIR)
-endif() 
+    # Add any dependencies here
+    MARK_AS_ADVANCED(MYSQLCONNECTORCPP_ROOT_DIR)
+ENDIF ()

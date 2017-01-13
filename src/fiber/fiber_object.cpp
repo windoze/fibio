@@ -277,7 +277,7 @@ void fiber_object::join(fiber_ptr_t f)
         // f is already stopped, do nothing
         return;
     } else {
-        f->join_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
+        f->join_queue_.push_back([this, _=shared_from_this()]{ activate(); });
     }
 
     {
@@ -308,8 +308,7 @@ void fiber_object::join_and_rethrow(fiber_ptr_t f)
         propagate_exception(f);
         return;
     } else {
-        // std::cout << "fiber(pthis) blocked" << std::endl;
-        f->join_queue_.push_back(std::bind(&fiber_object::activate, shared_from_this()));
+        f->join_queue_.push_back([this, _=shared_from_this()]{ activate(); });
     }
 
     {
@@ -554,7 +553,7 @@ fiber::id get_id()
 
 bool is_a_fiber() noexcept(true)
 {
-    return current_fiber();
+    return bool(current_fiber());
 }
 
 namespace detail {
