@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(fibio)
 
 OPTION(BUILD_SHARED_LIBS "Build shared lib" OFF)
-OPTION(WITH_VALGRIND "Build with valgrind support" ON)
+OPTION(WITH_VALGRIND "Build with valgrind support" OFF)
 
 SET(CMAKE_CXX_STANDARD 14)
 
