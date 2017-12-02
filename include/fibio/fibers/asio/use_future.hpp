@@ -44,7 +44,7 @@ public:
     typedef Allocator allocator_type;
 
     /// Construct using default-constructed allocator.
-    BOOST_CONSTEXPR use_future_t() {}
+    constexpr use_future_t() {}
 
     /// Construct using specified allocator.
     explicit use_future_t(Allocator const& allocator) : allocator_(allocator) {}
@@ -60,11 +60,16 @@ public:
     allocator_type get_allocator() const { return allocator_; }
 
 private:
-    Allocator allocator_;
+    const Allocator allocator_;
 };
 
 /// The predefined instance of use_future_t can be used directly.
-BOOST_CONSTEXPR_OR_CONST use_future_t<> use_future;
+#ifdef _MSC_VER
+// Visual Studio still has bug about constexpr
+__declspec(selectany) use_future_t<> use_future;
+#else
+constexpr use_future_t<> use_future;
+#endif
 
 } // End of namespace asio
 } // End of namespace fibers
