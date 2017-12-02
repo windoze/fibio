@@ -60,7 +60,7 @@ public:
     allocator_type get_allocator() const { return allocator_; }
 
 private:
-    const Allocator allocator_;
+	const Allocator allocator_{};
 };
 
 /// The predefined instance of use_future_t can be used directly.
