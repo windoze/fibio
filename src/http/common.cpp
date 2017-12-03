@@ -243,7 +243,7 @@ struct request_parser
 
         // Set content length
         req_.content_length = parser_.content_length;
-        if (req_.content_length == ULONG_MAX) req_.content_length = 0;
+        if (req_.content_length == ULLONG_MAX) req_.content_length = 0;
 
         // Chunked
         if (boost::iequals(req_.header("Transfer-Encoding"), "chunked")) {
