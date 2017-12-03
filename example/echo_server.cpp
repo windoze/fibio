@@ -18,6 +18,7 @@
 
 using namespace fibio;
 std::string address("0::0");
+constexpr auto CONNECTION_TIMEOUT = std::chrono::seconds(3);
 
 // We don't need atomic or any other kind of synchronization as console and
 // main_watchdog fibers are always running in the same thread with main_fiber
@@ -117,7 +118,7 @@ void echo_servant(tcp_stream& s)
     watchdog_timer_t timer(asio::get_io_service());
 
     // Set connection timeout
-    timer.expires_from_now(std::chrono::seconds(3));
+    timer.expires_from_now(CONNECTION_TIMEOUT);
 
     // Start watchdog fiber, close connection on timeout
     // ASIO sockets are *not* thread-safe, watchdog must not run in
@@ -134,7 +135,7 @@ void echo_servant(tcp_stream& s)
     while (std::getline(s, line)) {
         s << line << std::endl;
         // Reset timeout timer on input
-        timer.expires_from_now(std::chrono::seconds(3));
+        timer.expires_from_now(CONNECTION_TIMEOUT);
     }
 
     // Ask watchdog to exit
