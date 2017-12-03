@@ -293,10 +293,7 @@ struct connection
             if (!first) {
                 op = OPCODE::CONTINUATION;
             }
-            RandomIterator frame_end = begin + max_payload_len_;
-            if (frame_end > end) {
-                frame_end = end;
-            }
+            RandomIterator frame_end = ((end - begin) > max_payload_len_) ? (begin + max_payload_len_) : end;
             send_one_frame(op, begin, frame_end, frame_end == end);
             begin = frame_end;
             first = false;
